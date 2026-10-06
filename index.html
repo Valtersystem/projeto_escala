@@ -1,0 +1,2361 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Protótipo de validação do app de escalas de ministérios — voluntário, líder e administração.">
+<meta name="theme-color" content="#4A3C8C" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F0D18" media="(prefers-color-scheme: dark)">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Escala">
+<link rel="manifest" href='data:application/manifest+json,{"name":"Escala do Minist%C3%A9rio","short_name":"Escala","start_url":"./","display":"standalone","background_color":"%23F4F3F8","theme_color":"%234A3C8C","orientation":"portrait"}'>
+<style>html{color-scheme:light dark}body{margin:0;font:14px system-ui;background:#F4F3F8}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Escala do Ministério</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+</head>
+<body>
+<style>
+:root{
+  --bg:#F4F3F8; --surface:#FFFFFF; --surface-2:#EFEDF5; --line:#E2DFEC; --line-2:#CFC9E0;
+  --ink:#191527; --ink-2:#4B4562; --ink-3:#7C7594;
+  --brand:#4A3C8C; --on-brand:#FFFFFF; --brand-soft:#ECE8FA; --brand-line:#CFC5F0;
+  --ok:#1D7A4E; --ok-soft:#E1F2E9; --ok-line:#B9DDCA;
+  --warn:#8F6203; --warn-soft:#FAF0D9; --warn-line:#E7D19A;
+  --crit:#AF3122; --crit-soft:#FBE7E3; --crit-line:#EFC2BA;
+  --shadow-1:0 1px 2px rgba(25,21,39,.06);
+  --shadow-2:0 2px 4px rgba(25,21,39,.05), 0 14px 34px -18px rgba(25,21,39,.35);
+  --shadow-3:0 -8px 40px -12px rgba(25,21,39,.28);
+  --r-m:14px; --r-l:20px;
+  --display:"Bricolage Grotesque","Trebuchet MS",system-ui,sans-serif;
+  --ui:"Instrument Sans","Helvetica Neue",Arial,system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F0D18; --surface:#191627; --surface-2:#221D36; --line:#2E2944; --line-2:#413A5E;
+    --ink:#EFECF8; --ink-2:#BAB4CE; --ink-3:#8C85A6;
+    --brand:#A899F5; --on-brand:#17122B; --brand-soft:#262046; --brand-line:#3D3566;
+    --ok:#63CD97; --ok-soft:#152E20; --ok-line:#23492F;
+    --warn:#E2B65C; --warn-soft:#2F2510; --warn-line:#4C3C17;
+    --crit:#F28C7D; --crit-soft:#341A17; --crit-line:#552923;
+    --shadow-1:0 1px 2px rgba(0,0,0,.4);
+    --shadow-2:0 2px 4px rgba(0,0,0,.3), 0 14px 34px -18px rgba(0,0,0,.8);
+    --shadow-3:0 -8px 40px -12px rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F0D18; --surface:#191627; --surface-2:#221D36; --line:#2E2944; --line-2:#413A5E;
+  --ink:#EFECF8; --ink-2:#BAB4CE; --ink-3:#8C85A6;
+  --brand:#A899F5; --on-brand:#17122B; --brand-soft:#262046; --brand-line:#3D3566;
+  --ok:#63CD97; --ok-soft:#152E20; --ok-line:#23492F;
+  --warn:#E2B65C; --warn-soft:#2F2510; --warn-line:#4C3C17;
+  --crit:#F28C7D; --crit-soft:#341A17; --crit-line:#552923;
+  --shadow-1:0 1px 2px rgba(0,0,0,.4);
+  --shadow-2:0 2px 4px rgba(0,0,0,.3), 0 14px 34px -18px rgba(0,0,0,.8);
+  --shadow-3:0 -8px 40px -12px rgba(0,0,0,.7);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--ui);
+  -webkit-font-smoothing:antialiased;font-size:15px;line-height:1.45}
+@media (min-width:900px){
+  body{background:radial-gradient(130% 100% at 50% -10%, var(--surface-2) 0%, var(--bg) 55%) fixed}
+}
+button{font:inherit;color:inherit;cursor:pointer;background:none;border:none;text-align:left}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px;border-radius:6px}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.001ms!important;transition-duration:.001ms!important}}
+
+.stage{display:flex;justify-content:center}
+@media (min-width:900px){.stage{min-height:100vh;align-items:center;padding:30px 20px}}
+.bezel{position:relative;width:100%}
+@media (min-width:900px){
+  .bezel{width:393px;padding:11px;border-radius:57px;
+    background:linear-gradient(155deg,#3a3a44 0%,#141419 26%,#0d0d11 60%,#33333c 100%);
+    box-shadow:0 0 0 1px rgba(255,255,255,.07) inset, 0 2px 3px rgba(255,255,255,.12) inset,
+               0 42px 70px -34px rgba(10,8,20,.65), 0 14px 32px -18px rgba(10,8,20,.5)}
+}
+.device{position:relative;width:100%;max-width:430px;margin:0 auto;background:var(--surface);
+  display:flex;flex-direction:column;height:100svh;min-height:100svh;overflow:hidden}
+@media (min-width:900px){
+  .device{width:371px;max-width:none;height:min(804px,calc(100vh - 86px));min-height:0;border-radius:46px}
+}
+.island,.home{display:none}
+@media (min-width:900px){
+  .island{display:block;position:absolute;top:23px;left:50%;transform:translateX(-50%);
+    width:104px;height:31px;border-radius:20px;background:#07070b;z-index:40;pointer-events:none}
+  .home{display:block;position:absolute;bottom:20px;left:50%;transform:translateX(-50%);
+    width:132px;height:5px;border-radius:3px;background:var(--ink);opacity:.3;z-index:40;pointer-events:none}
+}
+.statusbar{display:none}
+@media (min-width:900px){
+  .statusbar{display:flex;justify-content:space-between;align-items:center;flex:none;
+    height:52px;padding:8px 26px 0 30px;background:var(--surface);
+    font-size:14px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+  .statusbar .icons{display:flex;align-items:center;gap:6px;color:var(--ink)}
+}
+.appbar{display:flex;align-items:center;gap:12px;padding:14px 18px 10px;
+  padding-top:calc(14px + env(safe-area-inset-top));background:var(--surface);border-bottom:1px solid var(--line)}
+@media (min-width:900px){.appbar{padding-top:6px}}
+.mark{width:34px;height:34px;border-radius:11px;background:var(--brand);color:var(--on-brand);
+  display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:17px;flex:none}
+.appbar h1{margin:0;font-family:var(--display);font-size:17px;font-weight:700;letter-spacing:-.01em}
+.appbar .sub{font-size:11px;color:var(--ink-3);font-family:var(--mono);letter-spacing:.02em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--surface-2);border:1px solid var(--line);
+  display:grid;place-items:center;font-size:12.5px;font-weight:600;color:var(--ink-2);flex:none}
+.persona{padding:8px 14px 10px;background:var(--surface);border-bottom:1px solid var(--line)}
+.persona .hint{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:9.5px;
+  text-transform:uppercase;letter-spacing:.1em;color:var(--ink-3);margin:0 4px 6px}
+.persona .hint i{width:5px;height:5px;border-radius:50%;background:var(--warn);display:inline-block;flex:none}
+.seg{display:flex;gap:4px;background:var(--surface-2);border-radius:11px;padding:3px}
+.seg button{flex:1;min-height:34px;border-radius:9px;font-size:13px;font-weight:600;color:var(--ink-2);
+  text-align:center;transition:background .16s,color .16s,box-shadow .16s}
+.seg button[aria-selected="true"]{background:var(--surface);color:var(--brand);box-shadow:var(--shadow-1)}
+main{flex:1;overflow-y:auto;overscroll-behavior:contain;background:var(--bg);
+  padding:16px 14px calc(20px + env(safe-area-inset-bottom));position:relative}
+.screen{display:flex;flex-direction:column;gap:14px}
+.greet{margin:2px 4px 0}
+.greet h2{margin:0;font-family:var(--display);font-size:23px;font-weight:700;letter-spacing:-.02em;text-wrap:balance}
+.greet p{margin:3px 0 0;color:var(--ink-2);font-size:13.5px}
+.back{display:inline-flex;align-items:center;gap:6px;color:var(--brand);font-size:13.5px;font-weight:600;margin:0 4px}
+.eyebrow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:6px 4px -4px}
+.eyebrow span{font-family:var(--mono);font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-3)}
+.eyebrow button{font-size:12.5px;font-weight:600;color:var(--brand)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-m);box-shadow:var(--shadow-1)}
+.card.pad{padding:15px}
+.card.flat{box-shadow:none}
+.callout{border-radius:var(--r-l);overflow:hidden;border:1px solid var(--brand-line);box-shadow:var(--shadow-2)}
+.callout .top{background:var(--brand);color:var(--on-brand);padding:15px 16px}
+.callout .top .when{font-family:var(--mono);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;opacity:.85}
+.callout .top h3{margin:5px 0 0;font-family:var(--display);font-size:20px;font-weight:700;letter-spacing:-.015em;text-wrap:balance}
+.callout .top p{margin:6px 0 0;font-size:13px;opacity:.9;line-height:1.4}
+.callout .body{padding:14px 16px 16px;background:var(--surface)}
+.kv{display:grid;grid-template-columns:88px 1fr;gap:7px 12px;font-size:13.5px}
+.kv dt{color:var(--ink-3);font-family:var(--mono);font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;padding-top:2px}
+.kv dd{margin:0;color:var(--ink)}
+.actions{display:flex;gap:9px;margin-top:15px}
+.btn{min-height:46px;border-radius:12px;font-weight:600;font-size:14.5px;display:inline-flex;
+  align-items:center;justify-content:center;gap:7px;padding:0 16px;transition:transform .1s;text-align:center}
+.btn:active{transform:scale(.985)}
+.btn.primary{background:var(--brand);color:var(--on-brand);flex:1}
+.btn.ghost{background:var(--surface);border:1px solid var(--line-2);color:var(--ink-2);flex:1}
+.btn.soft{background:var(--brand-soft);color:var(--brand);border:1px solid var(--brand-line);flex:1}
+.btn.danger{background:var(--surface);border:1px solid var(--crit-line);color:var(--crit);flex:1}
+.btn.wide{width:100%}
+.btn.sm{min-height:38px;font-size:13px;padding:0 13px;border-radius:10px;flex:none}
+.btn[disabled]{opacity:.45;pointer-events:none}
+.pill{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:3px 9px;font-size:11.5px;
+  font-weight:600;border:1px solid transparent;white-space:nowrap}
+.pill i{width:6px;height:6px;border-radius:50%;background:currentColor;flex:none}
+.pill.ok{background:var(--ok-soft);color:var(--ok);border-color:var(--ok-line)}
+.pill.warn{background:var(--warn-soft);color:var(--warn);border-color:var(--warn-line)}
+.pill.crit{background:var(--crit-soft);color:var(--crit);border-color:var(--crit-line)}
+.pill.mut{background:var(--surface-2);color:var(--ink-3);border-color:var(--line)}
+.pill.brand{background:var(--brand-soft);color:var(--brand);border-color:var(--brand-line)}
+.list{display:flex;flex-direction:column}
+.row{display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid var(--line);width:100%}
+.row:last-child{border-bottom:none}
+.row .date{width:44px;flex:none;text-align:center;font-family:var(--mono)}
+.row .date span{display:block;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+.row .date b{display:block;font-size:18px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+.row .main{flex:1;min-width:0}
+.row .main strong{display:block;font-size:14.5px;font-weight:600}
+.row .main small{display:block;color:var(--ink-3);font-size:12.5px;margin-top:1px}
+.row .rail{width:3px;align-self:stretch;border-radius:3px;flex:none;margin:-2px 0}
+.chev{color:var(--ink-3);flex:none;transform:scaleX(-1)}
+.ini{width:36px;height:36px;border-radius:50%;flex:none;display:grid;place-items:center;
+  font-size:12.5px;font-weight:700;background:var(--brand-soft);color:var(--brand);border:1px solid var(--brand-line)}
+.ini.mut{background:var(--surface-2);color:var(--ink-3);border-color:var(--line)}
+.ini.sm{width:26px;height:26px;font-size:10px}
+.stack{display:flex;flex:none;gap:3px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-m);padding:11px 12px}
+.stat b{display:block;font-family:var(--display);font-size:21px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.stat span{display:block;font-size:11px;color:var(--ink-3);margin-top:2px;line-height:1.3}
+.posto{border-radius:var(--r-m);overflow:hidden;border:1px solid var(--line);background:var(--surface);box-shadow:var(--shadow-1)}
+.posto>header{padding:12px 14px;background:var(--surface-2);border-bottom:1px solid var(--line);
+  display:flex;align-items:flex-start;gap:10px}
+.posto>header .t{flex:1;min-width:0}
+.posto>header strong{display:block;font-size:14px;font-weight:700;line-height:1.3;text-wrap:balance}
+.posto>header small{display:block;font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--ink-3);margin-top:3px}
+.turno{display:flex;align-items:center;gap:11px;padding:11px 13px;border-bottom:1px solid var(--line);width:100%}
+.turno:last-child{border-bottom:none}
+.box{width:24px;height:24px;border-radius:7px;border:2px solid var(--line-2);flex:none;display:grid;place-items:center;
+  color:transparent;transition:background .14s,border-color .14s}
+[aria-pressed="true"]>.box{background:var(--brand);border-color:var(--brand);color:var(--on-brand)}
+.turno .t{flex:1;min-width:0}
+.turno .t strong{display:block;font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums}
+.turno .t small{display:block;font-size:12px;color:var(--ink-3);margin-top:1px}
+.turno.cheio{opacity:.5}
+.vagas{font-family:var(--mono);font-size:10px;color:var(--ink-3);white-space:nowrap;flex:none;text-align:right;
+  text-transform:uppercase;letter-spacing:.06em}
+.vagas b{display:block;font-size:14px;color:var(--ink-2);letter-spacing:0}
+.sticky{position:sticky;bottom:0;margin:6px -14px calc(-20px - env(safe-area-inset-bottom));
+  padding:12px 14px calc(14px + env(safe-area-inset-bottom));background:var(--surface);
+  border-top:1px solid var(--line);box-shadow:var(--shadow-3);z-index:5}
+.sticky .lbl{font-size:12px;color:var(--ink-3);margin-bottom:9px;display:flex;justify-content:space-between;gap:10px}
+.orient{font-size:13px;line-height:1.55;color:var(--ink-2);white-space:pre-wrap}
+details.card{padding:0}
+details.card>summary{padding:13px 15px;font-weight:600;font-size:14px;cursor:pointer;list-style:none;
+  display:flex;justify-content:space-between;align-items:center;gap:10px}
+details.card>summary::-webkit-details-marker{display:none}
+details.card>summary::after{content:"+";font-family:var(--mono);color:var(--ink-3);font-size:17px}
+details.card[open]>summary::after{content:"–"}
+details.card>div{padding:0 15px 15px}
+.prog{height:7px;border-radius:4px;background:var(--surface-2);overflow:hidden;display:flex;gap:2px}
+.prog i{display:block;height:100%;background:var(--brand);border-radius:4px}
+.prog i.pend{background:var(--warn)}
+.bars{display:flex;flex-direction:column;gap:2px}
+.bar{display:grid;grid-template-columns:82px 1fr 40px;align-items:center;gap:10px;padding:7px 0;width:100%}
+.bar .nm{font-size:13px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar .tr{height:16px;background:var(--surface-2);border-radius:4px;overflow:hidden;position:relative}
+.bar .tr i{display:block;height:100%;background:var(--brand);border-radius:0 4px 4px 0}
+.bar .vl{font-family:var(--mono);font-size:12.5px;text-align:right;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.bar[aria-current="true"] .nm,.bar[aria-current="true"] .vl{color:var(--ink);font-weight:600}
+.readout{margin-top:10px;padding-top:10px;border-top:1px solid var(--line);font-size:12.5px;color:var(--ink-2);min-height:20px}
+.readout b{color:var(--ink)}
+.alert{display:flex;gap:10px;padding:12px 13px;border-radius:var(--r-m);font-size:13px;line-height:1.4;align-items:flex-start}
+.alert.warn{background:var(--warn-soft);color:var(--warn);border:1px solid var(--warn-line)}
+.alert.crit{background:var(--crit-soft);color:var(--crit);border:1px solid var(--crit-line)}
+.alert.ok{background:var(--ok-soft);color:var(--ok);border:1px solid var(--ok-line)}
+.alert.info{background:var(--brand-soft);color:var(--brand);border:1px solid var(--brand-line)}
+.alert b{display:block;font-weight:700;margin-bottom:1px}
+.alert svg{flex:none;margin-top:1px}
+.chips{display:flex;gap:7px;overflow-x:auto;padding:2px 4px 4px;margin:0 -4px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{border:1px solid var(--line-2);background:var(--surface);border-radius:999px;padding:7px 13px;
+  font-size:12.5px;font-weight:500;color:var(--ink-2);white-space:nowrap;min-height:34px;text-align:center}
+.chip[aria-pressed="true"]{background:var(--brand);border-color:var(--brand);color:var(--on-brand)}
+.track{width:46px;height:28px;border-radius:999px;background:var(--line-2);position:relative;flex:none;transition:background .18s}
+.track::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;
+  background:#fff;box-shadow:var(--shadow-1);transition:transform .18s}
+[aria-pressed="true"]>.track{background:var(--brand)}
+[aria-pressed="true"]>.track::after{transform:translateX(18px)}
+.form{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-m);overflow:hidden;margin:0 4px}
+.field{padding:10px 14px;border-bottom:1px solid var(--line);position:relative}
+.field:last-child{border-bottom:none}
+.field label{display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--ink-3);margin-bottom:3px}
+.field input,.field textarea,.field select{width:100%;border:none;background:none;font:inherit;
+  color:var(--ink);outline:none;resize:vertical;min-height:26px;padding:0}
+.field select{appearance:none;-webkit-appearance:none;padding-right:18px}
+.field.sel::after{content:"";position:absolute;right:16px;bottom:19px;width:7px;height:7px;
+  border-right:2px solid var(--ink-3);border-bottom:2px solid var(--ink-3);transform:rotate(45deg);pointer-events:none}
+.field input::placeholder,.field textarea::placeholder{color:var(--line-2)}
+.duo{display:grid;grid-template-columns:1fr 1fr}
+.duo .field{border-right:1px solid var(--line)}
+.duo .field:last-child{border-right:none}
+.json{font-family:var(--mono);font-size:10.5px;line-height:1.5;min-height:120px}
+.tabbar{display:flex;background:var(--surface);border-top:1px solid var(--line);
+  padding-bottom:env(safe-area-inset-bottom);flex:none}
+@media (min-width:900px){.tabbar{padding-bottom:22px}.toast{bottom:98px}.sheet{padding-bottom:22px}}
+.tabbar button{flex:1;min-height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;font-size:9.5px;font-weight:600;color:var(--ink-3);position:relative;text-align:center;padding:0 2px}
+.tabbar button[aria-selected="true"]{color:var(--brand)}
+.tabbar .badge{position:absolute;top:8px;left:calc(50% + 5px);min-width:16px;height:16px;border-radius:8px;
+  background:var(--crit);color:#fff;font-size:9.5px;display:grid;place-items:center;padding:0 4px;font-weight:700}
+.scrim{position:absolute;inset:0;background:rgba(15,13,24,.5);opacity:0;pointer-events:none;transition:opacity .2s;z-index:20}
+.scrim.on{opacity:1;pointer-events:auto}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:var(--surface);border-radius:22px 22px 0 0;
+  box-shadow:var(--shadow-3);transform:translateY(101%);transition:transform .26s cubic-bezier(.32,.72,0,1);z-index:21;
+  max-height:88%;display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom)}
+.sheet.on{transform:translateY(0)}
+.sheet .grab{width:38px;height:4px;border-radius:3px;background:var(--line-2);margin:9px auto 4px;flex:none}
+.sheet h3{margin:6px 18px 2px;font-family:var(--display);font-size:18px;font-weight:700;letter-spacing:-.01em;text-wrap:balance}
+.sheet .cap{margin:0 18px 10px;font-size:12.5px;color:var(--ink-3)}
+.sheet .scroll{overflow-y:auto;padding:0 0 12px}
+.sheet .foot{padding:12px 16px calc(14px + env(safe-area-inset-bottom));border-top:1px solid var(--line)}
+.toast{position:absolute;left:14px;right:14px;bottom:76px;background:var(--ink);color:var(--bg);
+  border-radius:13px;padding:12px 15px;font-size:13.5px;font-weight:500;box-shadow:var(--shadow-2);
+  transform:translateY(14px);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:30;
+  display:flex;gap:9px;align-items:center}
+.toast.on{opacity:1;transform:translateY(0)}
+.empty{text-align:center;padding:26px 20px}
+.empty .ic{width:46px;height:46px;border-radius:14px;background:var(--surface-2);color:var(--ink-3);
+  display:grid;place-items:center;margin:0 auto 12px}
+.empty b{display:block;color:var(--ink);font-family:var(--display);font-size:16px;margin-bottom:5px;letter-spacing:-.01em}
+.empty p{margin:0 auto;color:var(--ink-3);font-size:13px;max-width:30ch;line-height:1.5}
+.empty .btn{margin-top:15px}
+.cal{padding:13px 11px 15px}
+.cal .hd{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 3px 11px}
+.cal .hd b{font-family:var(--display);font-size:15.5px;font-weight:700;letter-spacing:-.01em}
+.cal .nav{display:flex;gap:5px;flex:none}
+.cal .nav button{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;
+  color:var(--ink-2);border:1px solid var(--line);background:var(--surface)}
+.cal .nav button[disabled]{opacity:.35}
+.cal .wk{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:5px}
+.cal .wk span{text-align:center;font-family:var(--mono);font-size:9.5px;color:var(--ink-3);letter-spacing:.04em}
+.cal .gd{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.dcell{aspect-ratio:1;min-height:40px;border-radius:12px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:3px;font-size:13.5px;font-variant-numeric:tabular-nums;
+  color:var(--ink-2);border:1px solid transparent;background:none;padding:0}
+.dcell.vazio{visibility:hidden}
+.dcell.hoje{border-color:var(--line-2);color:var(--ink);font-weight:700}
+.dcell.aguard{background:var(--surface-2);border-color:var(--line-2);color:var(--ink);font-weight:600}
+.dcell.conf{background:var(--brand);border-color:var(--brand);color:var(--on-brand);font-weight:700}
+.dcell[aria-pressed="true"]{box-shadow:0 0 0 2px var(--brand)}
+.dcell .dot{width:4px;height:4px;border-radius:50%;background:currentColor}
+.legenda{display:flex;flex-wrap:wrap;gap:13px;margin-top:13px;padding-top:12px;border-top:1px solid var(--line);
+  font-size:11.5px;color:var(--ink-3)}
+.legenda span{display:inline-flex;align-items:center;gap:6px}
+.legenda i{width:13px;height:13px;border-radius:5px;display:inline-block;border:1px solid var(--line-2);background:var(--surface-2)}
+.legenda i.c{background:var(--brand);border-color:var(--brand)}
+.legenda i.h{background:none;border-color:var(--line-2)}
+.legenda i.x{background:var(--crit);border-color:var(--crit)}
+.dcell.choque{background:var(--crit);border-color:var(--crit);color:#fff}
+.step{display:grid;grid-template-columns:24px 1fr;gap:11px;padding:11px 14px;border-bottom:1px solid var(--line);align-items:flex-start}
+.step:last-child{border-bottom:none}
+.step .n{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;
+  font-family:var(--mono);font-size:11px;font-weight:600;background:var(--surface-2);color:var(--ink-3)}
+.step.done .n{background:var(--ok-soft);color:var(--ok);border:1px solid var(--ok-line)}
+.step.now .n{background:var(--brand);color:var(--on-brand)}
+.step b{display:block;font-size:14px;font-weight:600}
+.step small{display:block;font-size:12.5px;color:var(--ink-3);margin-top:1px}
+</style>
+
+<div class="stage">
+<div class="bezel">
+<div class="device">
+  <div class="statusbar"><span>9:41</span><span class="icons">
+    <svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor" aria-hidden="true"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.5" width="3" height="6.5" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg>
+    <svg width="17" height="12" viewBox="0 0 17 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M1.4 4.2a10.5 10.5 0 0 1 14.2 0"/><path d="M4.1 7.1a6.6 6.6 0 0 1 8.8 0"/><path d="M6.9 9.9a2.8 2.8 0 0 1 3.2 0"/></svg>
+    <svg width="25" height="12" viewBox="0 0 25 12" fill="none" aria-hidden="true"><rect x="0.6" y="0.6" width="21" height="10.8" rx="3.2" stroke="currentColor" stroke-opacity=".45" stroke-width="1.1"/><rect x="2.2" y="2.2" width="15" height="7.6" rx="2" fill="currentColor"/><path d="M23.2 4.2v3.6a2 2 0 0 0 0-3.6z" fill="currentColor" fill-opacity=".45"/></svg>
+  </span></div>
+
+  <header class="appbar">
+    <div class="mark">E</div>
+    <div style="flex:1;min-width:0">
+      <h1>Escala</h1>
+      <div class="sub" id="app-sub">SEM DADOS</div>
+    </div>
+    <div class="avatar" id="app-avatar">—</div>
+  </header>
+
+  <div class="persona">
+    <div class="hint"><i></i> Protótipo · trocar de perfil</div>
+    <div class="seg" role="tablist" aria-label="Perfil de usuário">
+      <button role="tab" data-persona="adm" aria-selected="true">Adm</button>
+      <button role="tab" data-persona="lider" aria-selected="false">Líder</button>
+      <button role="tab" data-persona="voluntario" aria-selected="false">Voluntário</button>
+    </div>
+  </div>
+
+  <main id="main"><div class="screen" id="screen"></div></main>
+  <nav class="tabbar" id="tabbar" aria-label="Seções"></nav>
+
+  <div class="scrim" id="scrim"></div>
+  <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+    <div class="grab"></div>
+    <h3 id="sheet-title"></h3>
+    <p class="cap" id="sheet-cap"></p>
+    <div class="scroll" id="sheet-body"></div>
+    <div class="foot" id="sheet-foot"></div>
+  </div>
+  <div class="toast" id="toast"></div>
+</div>
+<div class="island" aria-hidden="true"></div>
+<div class="home" aria-hidden="true"></div>
+</div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ============ armazenamento ============ */
+var KEY="escala.proto.v1";
+var DB=vazio();
+function vazio(){
+  return {ministerios:[],postos:[],escalas:[],turnos:[],pessoas:[],disp:{},conf:{},
+          cultos:[],funcoes:[],func:{},trocas:[],avisos:[],
+          eu:{minLider:null,voluntario:null},cfg:{limite:3,prazoDias:5,orientacoes:""}};
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(DB));}catch(e){}}
+function seedCultos(d){
+  GRADE_PADRAO.forEach(function(o){
+    d.cultos.push({id:uid(),nome:o.nome,tipo:o.tipo,dia:o.dia,ordem:o.ordem||1,ini:o.ini,fim:o.fim});
+  });
+  return d;
+}
+function novoDB(){return seedCultos(vazio());}
+function load(){
+  try{
+    var r=localStorage.getItem(KEY);
+    if(r){var o=JSON.parse(r); if(o&&o.pessoas){DB=migra(Object.assign(vazio(),o));return;}}
+  }catch(e){}
+  DB=novoDB(); save();
+}
+function migra(d){
+  d.pessoas.forEach(function(p){
+    if(p.adm===undefined)p.adm=(p.papel==="adm");
+    if(!Array.isArray(p.minIds))p.minIds=[];
+    if(!Array.isArray(p.postoIds))p.postoIds=[];
+    if(p.ativo===undefined)p.ativo=true;
+    delete p.papel;
+  });
+  if(!Array.isArray(d.cultos))d.cultos=[];
+  if(!Array.isArray(d.funcoes))d.funcoes=[];
+  if(!d.func||typeof d.func!=="object")d.func={};
+  d.pessoas.forEach(function(p){if(!Array.isArray(p.funcaoIds))p.funcaoIds=[];});
+  if(!d.eu)d.eu={minLider:null,voluntario:null};
+  if(d.eu.minLider===undefined){
+    var alvo=null;
+    d.ministerios.forEach(function(m){if(m.liderId===d.eu.lider&&!alvo)alvo=m;});
+    d.eu={minLider:alvo?alvo.id:null,voluntario:d.eu.voluntario||null};
+  }
+  return d;
+}
+function uid(){return Math.random().toString(36).slice(2,9);}
+
+/* ============ utilidades ============ */
+var MESES=["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
+var SEM=["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
+function hoje(){return new Date();}
+function iso(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+function dia(d){var x=new Date(d+"T12:00:00");return {n:String(x.getDate()).padStart(2,"0"),sem:SEM[x.getDay()],mes:MESES[x.getMonth()],ord:x.getTime()};}
+function fmtMes(ym){var p=ym.split("-");return MESES[+p[1]-1]+" de "+p[0];}
+function fmtData(d){var x=dia(d);return x.n+" de "+x.mes;}
+function ymDe(d){return d.slice(0,7);}
+function shiftMes(ym,k){var p=ym.split("-");var d=new Date(+p[0],+p[1]-1+k,1);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");}
+function isoYMD(y,mo,d){return y+"-"+String(mo+1).padStart(2,"0")+"-"+String(d).padStart(2,"0");}
+function grade(ym){var p=ym.split("-"),y=+p[0],mo=+p[1]-1;
+  return {y:y,mo:mo,start:new Date(y,mo,1).getDay(),n:new Date(y,mo+1,0).getDate()};}
+function ini(n){var p=(n||"?").trim().split(/\s+/);return ((p[0][0]||"")+(p[1]?p[1][0]:"")).toUpperCase();}
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
+function by(arr,id){for(var i=0;i<arr.length;i++)if(arr[i].id===id)return arr[i];return null;}
+function pessoa(id){return by(DB.pessoas,id);}
+function nomeDe(id){var p=pessoa(id);return p?p.nome:"—";}
+function primeiro(id){return nomeDe(id).split(" ")[0];}
+function postosDo(minId){return DB.postos.filter(function(p){return p.minId===minId;});}
+function turnosDa(escId){return DB.turnos.filter(function(t){return t.escalaId===escId;}).sort(function(a,b){return dia(a.data).ord-dia(b.data).ord;});}
+function escalasDo(minId){return DB.escalas.filter(function(e){return e.minId===minId;}).sort(function(a,b){return a.mes<b.mes?1:-1;});}
+function equipeDe(minId){return DB.pessoas.filter(function(p){return p.minIds.indexOf(minId)>=0;});}
+function lideraDe(pid){return DB.ministerios.filter(function(m){return m.liderId===pid;});}
+function serveEm(p){return p.minIds.map(function(id){return by(DB.ministerios,id);}).filter(Boolean);}
+function rotulos(p){
+  var out=[];
+  if(p.adm)out.push({t:"Adm",k:"brand"});
+  lideraDe(p.id).forEach(function(m){out.push({t:"Líder · "+m.nome,k:"brand"});});
+  serveEm(p).forEach(function(m){if(m.liderId!==p.id)out.push({t:m.nome,k:"mut"});});
+  return out;
+}
+function hm(txt){
+  var m=String(txt||"").replace(",",".").match(/(\d{1,2})\s*[h:.]?\s*(\d{2})?/);
+  if(!m)return null;
+  var h=+m[1],mi=m[2]?+m[2]:0;
+  if(h>23||mi>59)return null;
+  return h*60+mi;
+}
+function faixa(t){var a=hm(t.ini),b=hm(t.fim);if(a==null)return null;if(b==null||b<=a)b=a+60;return [a,b];}
+function choca(t1,t2){
+  if(t1.data!==t2.data)return false;
+  var a=faixa(t1),b=faixa(t2);
+  if(!a||!b)return true;
+  return a[0]<b[1]&&b[0]<a[1];
+}
+function turnosFirmes(pid){
+  return DB.turnos.filter(function(t){
+    if(conf(t.id).indexOf(pid)<0)return false;
+    var e=by(DB.escalas,t.escalaId);
+    return e&&e.status!=="rascunho";
+  });
+}
+function conflitosDe(pid,turno){
+  return turnosFirmes(pid).filter(function(t){return t.id!==turno.id&&choca(turno,t);});
+}
+function mesmoDiaDe(pid,turno){
+  return turnosFirmes(pid).filter(function(t){return t.id!==turno.id&&t.data===turno.data&&!choca(turno,t);});
+}
+var DIAS=["domingo","segunda","terça","quarta","quinta","sexta","sábado"];
+var ORD={1:"1ª",2:"2ª",3:"3ª",4:"4ª",5:"5ª","-1":"última"};
+function rotuloCulto(c){
+  var art=(c.dia===0||c.dia===6)?"Todo":"Toda";
+  return c.tipo==="mensal"
+    ? (ORD[c.ordem]||"1ª")+" "+DIAS[c.dia]+" do mês"
+    : art+" "+DIAS[c.dia];
+}
+function ocorrencias(c,ym){
+  var g=grade(ym),out=[],n=0,d;
+  for(d=1;d<=g.n;d++){
+    if(new Date(g.y,g.mo,d).getDay()!==c.dia)continue;
+    if(c.tipo!=="mensal"){out.push(isoYMD(g.y,g.mo,d));continue;}
+    n++;
+    if(+c.ordem===n)out.push(isoYMD(g.y,g.mo,d));
+  }
+  if(c.tipo==="mensal"&&+c.ordem===-1){
+    out=[];var ult=null;
+    for(d=1;d<=g.n;d++)if(new Date(g.y,g.mo,d).getDay()===c.dia)ult=isoYMD(g.y,g.mo,d);
+    if(ult)out=[ult];
+  }
+  return out;
+}
+function proximasDatas(c,qtd){
+  var out=[],ym=ymDe(iso(hoje())),hj=iso(hoje());
+  for(var k=0;k<4&&out.length<qtd;k++){
+    ocorrencias(c,ym).forEach(function(d){if(d>=hj&&out.length<qtd)out.push(d);});
+    ym=shiftMes(ym,1);
+  }
+  return out;
+}
+function nomeCulto(t){
+  if(t.cultoNome)return t.cultoNome;
+  var c=t.cultoId&&by(DB.cultos,t.cultoId);
+  return c?c.nome:"";
+}
+function descreveTurno(t){
+  var po=by(DB.postos,t.postoId),m=minDoTurno(t);
+  return (m?m.nome+" · ":"")+(po?po.nome:"turno")+" "+t.ini+"–"+t.fim;
+}
+function funcoesDe(minId){return DB.funcoes.filter(function(x){return x.minId===minId;});}
+function nomeFunc(id){var f=by(DB.funcoes,id);return f?f.nome:"";}
+function funcsDo(tid,pid){var m=DB.func[tid];return (m&&Array.isArray(m[pid]))?m[pid]:[];}
+function setFuncs(tid,pid,ids){
+  if(!DB.func[tid])DB.func[tid]={};
+  if(ids&&ids.length)DB.func[tid][pid]=ids; else delete DB.func[tid][pid];
+  if(DB.func[tid]&&!Object.keys(DB.func[tid]).length)delete DB.func[tid];
+}
+function rotuloFuncs(tid,pid){return funcsDo(tid,pid).map(nomeFunc).filter(Boolean).join(" · ");}
+function tituloTurno(t){
+  var c=nomeCulto(t),po=by(DB.postos,t.postoId);
+  return (c?c+" · ":"")+(po?po.nome:"turno");
+}
+function disp(id){return DB.disp[id]||[];}
+function conf(id){return DB.conf[id]||[];}
+function minDoTurno(t){var e=by(DB.escalas,t.escalaId);return e?by(DB.ministerios,e.minId):null;}
+function avisar(para,txt){if(para)DB.avisos.push({id:uid(),para:para,txt:txt,lido:false,quando:Date.now()});}
+function avisosDe(pid){return DB.avisos.filter(function(a){return a.para===pid&&!a.lido;});}
+function trocaDo(turnoId,pid){
+  return DB.trocas.filter(function(x){return x.turnoId===turnoId&&x.estado==="aberto"&&(!pid||x.de===pid);})[0]||null;
+}
+function trocasAbertas(minId){
+  return DB.trocas.filter(function(x){
+    if(x.estado!=="aberto")return false;
+    var t=by(DB.turnos,x.turnoId); if(!t)return false;
+    var m=minDoTurno(t); return m&&m.id===minId;
+  });
+}
+function rotuloTurno(t){
+  var po=by(DB.postos,t.postoId),d=dia(t.data);
+  return (po?po.nome:"turno")+" · "+d.n+" de "+d.mes;
+}
+
+/* ============ estado de navegação ============ */
+var S={persona:"adm",tab:{adm:"minis",lider:"escalas",voluntario:"inicio"},view:null,arg:null,barSel:0,mesCal:null,diaSel:null};
+
+var TABS={
+  adm:[{id:"minis",l:"Ministérios",i:"grid"},{id:"cultos",l:"Cultos",i:"cal"},{id:"pessoas",l:"Pessoas",i:"users"},
+       {id:"rel",l:"Relatório",i:"chart"},{id:"cfg",l:"Ajustes",i:"gear"}],
+  lider:[{id:"escalas",l:"Escalas",i:"cal",badge:function(){var m=meuMin();return m?trocasAbertas(m.id).length:0;}},{id:"postos",l:"Postos",i:"grid"},
+         {id:"equipe",l:"Equipe",i:"users"},{id:"rel",l:"Relatório",i:"chart"},{id:"cfg",l:"Ajustes",i:"gear"}],
+  voluntario:[{id:"inicio",l:"Início",i:"home",badge:function(){var p=euVol();return p?avisosDe(p.id).length:0;}},{id:"aberta",l:"Disponibilidade",i:"cal"},
+              {id:"meus",l:"Minha escala",i:"check"},{id:"perfil",l:"Perfil",i:"user"}]
+};
+var ICON={
+  home:'<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
+  cal:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+  user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/>',
+  users:'<circle cx="9" cy="8" r="3.4"/><path d="M2.5 20c0-3.4 3-5.2 6.5-5.2s6.5 1.8 6.5 5.2"/><path d="M17 5.5a3.4 3.4 0 0 1 0 6.6M18.5 14.6c2 .7 3.2 2.2 3.2 4.4"/>',
+  grid:'<rect x="3" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.6"/>',
+  check:'<path d="M4 12.5 9.5 18 20 6.5"/>',
+  chart:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+  gear:'<circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M21.5 12h-3M5.5 12h-3M18.7 5.3l-2.1 2.1M7.4 16.6l-2.1 2.1M18.7 18.7l-2.1-2.1M7.4 7.4 5.3 5.3"/>',
+  back:'<path d="M15 5l-7 7 7 7"/>',
+  swap:'<path d="M4 8h13l-3.5-3.5M20 16H7l3.5 3.5"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  trash:'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
+  fwd:'<path d="M9 5l7 7-7 7"/>'
+};
+function svg(n,sz){return '<svg width="'+(sz||22)+'" height="'+(sz||22)+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+ICON[n]+'</svg>';}
+
+var $=function(s){return document.querySelector(s);};
+var screenEl=$("#screen"),mainEl=$("#main"),tabbarEl=$("#tabbar");
+var sheetEl=$("#sheet"),scrimEl=$("#scrim"),toastEl=$("#toast"),toastT=null;
+function toast(m){
+  toastEl.innerHTML=svg("check",18)+"<span>"+esc(m)+"</span>";
+  toastEl.classList.add("on");clearTimeout(toastT);
+  toastT=setTimeout(function(){toastEl.classList.remove("on");},2600);
+}
+function openSheet(t,c,b,f){
+  $("#sheet-title").textContent=t;$("#sheet-cap").textContent=c||"";
+  $("#sheet-body").innerHTML=b;
+  $("#sheet-foot").innerHTML=f||'<button class="btn ghost wide" data-act="fechar">Fechar</button>';
+  sheetEl.classList.add("on");scrimEl.classList.add("on");
+  setTimeout(function(){var i=$("#sheet-body input,#sheet-body select,#sheet-body textarea");if(i&&i.type!=="date")i.focus();},260);
+}
+function closeSheet(){sheetEl.classList.remove("on");scrimEl.classList.remove("on");}
+scrimEl.addEventListener("click",closeSheet);
+function v(id){var e=document.getElementById(id);return e?String(e.value).trim():"";}
+function campo(id,label,ph,val,type){
+  return '<div class="field"><label for="'+id+'">'+label+'</label>'+
+    '<input id="'+id+'" type="'+(type||"text")+'" placeholder="'+(ph||"")+'" value="'+esc(val||"")+'"></div>';
+}
+function select(id,label,opts,val){
+  return '<div class="field sel"><label for="'+id+'">'+label+'</label><select id="'+id+'">'+
+    opts.map(function(o){return '<option value="'+esc(o.v)+'"'+(o.v===val?" selected":"")+'>'+esc(o.l)+'</option>';}).join("")+
+    '</select></div>';
+}
+function vazioBox(icone,titulo,texto,btn){
+  return '<div class="card"><div class="empty"><div class="ic">'+svg(icone,22)+'</div>'+
+    '<b>'+esc(titulo)+'</b><p>'+texto+'</p>'+(btn||"")+'</div></div>';
+}
+function backBtn(l){return '<button class="back" data-act="voltar">'+svg("back",16)+esc(l)+"</button>";}
+
+/* ============ ADM ============ */
+function admMinis(){
+  if(S.view==="min")return admMinDetalhe(S.arg);
+  var h='<div class="greet"><h2>Ministérios</h2><p>'+(DB.ministerios.length?DB.ministerios.length+" cadastrado(s) · "+DB.pessoas.length+" pessoas":"Comece criando o primeiro ministério")+'</p></div>';
+  if(!DB.ministerios.length){
+    h+=vazioBox("grid","Nenhum ministério ainda",
+      "O ministério é a base de tudo: ele tem um líder, os postos e as escalas. Crie o primeiro para começar.",
+      '<button class="btn primary" data-act="novo-min">Criar ministério</button>');
+    h+=passos();
+    return h;
+  }
+  h+='<div class="card list">';
+  DB.ministerios.forEach(function(m){
+    var eq=equipeDe(m.id).length,po=postosDo(m.id).length;
+    h+='<button class="row" data-act="min" data-id="'+m.id+'">'+
+      '<span class="main"><strong>'+esc(m.nome)+'</strong>'+
+      '<small>'+(m.liderId?"Líder: "+esc(nomeDe(m.liderId)):"sem líder")+' · '+eq+' voluntário(s) · '+po+' posto(s)</small></span>'+
+      (m.liderId?'':'<span class="pill warn"><i></i>Sem líder</span>')+
+      '<span class="chev">'+svg("back",16)+'</span></button>';
+  });
+  h+='</div>';
+  h+='<button class="btn primary wide" data-act="novo-min">'+svg("plus",18)+'Criar ministério</button>';
+  h+='<p style="font-size:12.5px;color:var(--ink-3);text-align:center;margin:-4px 8px 0">O Adm cuida do ministério e de quem lidera. Postos, escalas e voluntários são do líder.</p>';
+  return h;
+}
+function passos(){
+  var temMin=DB.ministerios.length>0;
+  var temLider=DB.ministerios.some(function(m){return m.liderId;});
+  var temPosto=DB.postos.length>0;
+  var temVol=DB.pessoas.some(function(p){return p.minIds.length;});
+  function st(ok,agora,n,t,s){
+    return '<div class="step'+(ok?" done":(agora?" now":""))+'"><span class="n">'+(ok?"✓":n)+'</span>'+
+      '<span><b>'+t+'</b><small>'+s+'</small></span></div>';
+  }
+  return '<div class="eyebrow"><span>Por onde começar</span></div><div class="card list">'+
+    st(temMin,!temMin,1,"Criar o ministério","Perfil Adm · Ministérios")+
+    st(DB.cultos.length>0,temMin&&!DB.cultos.length,2,"Cadastrar a grade de cultos","Perfil Adm · Cultos (opcional, mas poupa digitação)")+
+    st(temLider,temMin&&!temLider,2,"Cadastrar e vincular o líder","Perfil Adm · Pessoas, depois abrir o ministério")+
+    st(temPosto,temLider&&!temPosto,3,"Criar os postos","Perfil Líder · Postos")+
+    st(temVol,temPosto&&!temVol,4,"Cadastrar os voluntários","Perfil Líder · Equipe")+
+    st(false,temVol,5,"Abrir a escala do mês","Perfil Líder · Escalas")+
+    '</div>';
+}
+function admMinDetalhe(id){
+  var m=by(DB.ministerios,id);
+  if(!m){S.view=null;return admMinis();}
+  var po=postosDo(m.id),eq=equipeDe(m.id),esc_=escalasDo(m.id);
+  var h=backBtn("Ministérios")+'<div class="greet"><h2>'+esc(m.nome)+'</h2><p>'+eq.length+' voluntário(s) · '+po.length+' posto(s) · '+esc_.length+' escala(s)</p></div>';
+  h+='<div class="eyebrow"><span>Líder responsável</span></div>';
+  if(m.liderId){
+    h+='<article class="card pad" style="display:flex;gap:12px;align-items:center">'+
+      '<span class="ini">'+ini(nomeDe(m.liderId))+'</span>'+
+      '<div style="flex:1;min-width:0"><strong>'+esc(nomeDe(m.liderId))+'</strong>'+
+      '<div style="font-size:12.5px;color:var(--ink-3)">'+esc(pessoa(m.liderId).tel||"sem telefone")+'</div></div>'+
+      '<button class="btn sm ghost" data-act="vincular" data-id="'+m.id+'">Trocar</button></article>';
+  }else{
+    var lideres=DB.pessoas.slice();
+    h+='<article class="card pad">'+
+      '<p style="margin:0 0 12px;color:var(--ink-3);font-size:13.5px;text-align:center">'+
+      (lideres.length?"Sem líder vinculado. A escala deste ministério não pode ser aberta.":"Nenhuma pessoa cadastrada ainda. Cadastre em Pessoas para poder vincular.")+'</p>'+
+      (lideres.length?'<button class="btn primary wide" data-act="vincular" data-id="'+m.id+'">Vincular líder</button>'
+                     :'<button class="btn soft wide" data-act="ir-pessoas">Ir para Pessoas</button>')+'</article>';
+  }
+  h+='<div class="eyebrow"><span>O que o líder já montou</span></div>';
+  h+='<div class="card list">'+
+    '<div class="row"><div class="main"><strong>Postos</strong><small>'+(po.length?po.map(function(x){return esc(x.nome);}).join(" · "):"nenhum ainda")+'</small></div><span class="pill mut">'+po.length+'</span></div>'+
+    '<div class="row"><div class="main"><strong>Voluntários</strong><small>'+(eq.length?eq.filter(function(p){return p.ativo;}).length+" ativos":"nenhum ainda")+'</small></div><span class="pill mut">'+eq.length+'</span></div>'+
+    '<div class="row"><div class="main"><strong>Escalas</strong><small>'+(esc_.length?esc_.map(function(e){return fmtMes(e.mes);}).join(" · "):"nenhuma ainda")+'</small></div><span class="pill mut">'+esc_.length+'</span></div>'+
+    '</div>';
+  h+='<div style="display:flex;gap:9px"><button class="btn ghost" data-act="renomear-min" data-id="'+m.id+'">Renomear</button>'+
+     '<button class="btn danger" data-act="excluir-min" data-id="'+m.id+'">Excluir</button></div>';
+  return h;
+}
+var GRADE_PADRAO=[
+  {nome:"Culto Fé",tipo:"semanal",dia:3,ini:"20h00",fim:"21h30"},
+  {nome:"Culto da Família",tipo:"semanal",dia:0,ini:"09h00",fim:"10h30"},
+  {nome:"Culto da Família",tipo:"semanal",dia:0,ini:"11h00",fim:"12h30"},
+  {nome:"Culto da Família",tipo:"semanal",dia:0,ini:"18h00",fim:"19h30"},
+  {nome:"Culto Legacy",tipo:"semanal",dia:6,ini:"19h00",fim:"21h30"},
+  {nome:"Culto Quarto de Guerra",tipo:"mensal",dia:5,ordem:1,ini:"20h00",fim:"21h30"},
+  {nome:"Culto Shine",tipo:"mensal",dia:5,ordem:2,ini:"20h00",fim:"21h30"},
+  {nome:"Culto Hero",tipo:"mensal",dia:5,ordem:3,ini:"20h00",fim:"21h30"}
+];
+function admCultos(){
+  var h='<div class="greet"><h2>Cultos</h2><p>'+
+    (DB.cultos.length?DB.cultos.length+" na grade da igreja":"A grade fixa que se repete todo mês")+'</p></div>';
+  if(!DB.cultos.length){
+    h+=vazioBox("cal","Nenhum culto cadastrado",
+      "Cadastre aqui os cultos que se repetem — quarta, domingo, sexta do mês. Depois o líder gera os turnos da escala a partir deles, sem digitar data por data.",
+      '<button class="btn primary" data-act="novo-culto">Cadastrar culto</button>'+
+      '<button class="btn soft wide" style="margin-top:9px" data-act="grade-padrao">Usar a grade que você me passou</button>');
+    return h;
+  }
+  var sem=DB.cultos.filter(function(c){return c.tipo!=="mensal";}).sort(function(a,b){return (a.dia-b.dia)||(hm(a.ini)-hm(b.ini));});
+  var men=DB.cultos.filter(function(c){return c.tipo==="mensal";}).sort(function(a,b){return (a.ordem-b.ordem)||(a.dia-b.dia);});
+  function linha(c){
+    return '<button class="row" data-act="culto" data-id="'+c.id+'">'+
+      '<span class="main"><strong>'+esc(c.nome)+'</strong>'+
+      '<small>'+esc(rotuloCulto(c))+' · '+esc(c.ini)+' às '+esc(c.fim)+'</small></span>'+
+      '<span class="chev">'+svg("back",16)+'</span></button>';
+  }
+  if(sem.length)h+='<div class="eyebrow"><span>Toda semana</span></div><div class="card list">'+sem.map(linha).join("")+'</div>';
+  if(men.length)h+='<div class="eyebrow"><span>Uma vez por mês</span></div><div class="card list">'+men.map(linha).join("")+'</div>';
+  var prox=[];
+  DB.cultos.forEach(function(c){proximasDatas(c,3).forEach(function(d){prox.push({d:d,c:c});});});
+  prox.sort(function(a,b){return dia(a.d).ord-dia(b.d).ord;});
+  if(prox.length){
+    h+='<div class="eyebrow"><span>Próximos cultos</span></div><div class="card list">';
+    prox.slice(0,5).forEach(function(o){
+      var dd=dia(o.d);
+      h+='<div class="row"><div class="date"><span>'+dd.sem+'</span><b>'+dd.n+'</b></div>'+
+        '<div class="main"><strong>'+esc(o.c.nome)+'</strong><small>'+esc(o.c.ini)+' às '+esc(o.c.fim)+'</small></div></div>';
+    });
+    h+='</div>';
+  }
+  h+='<button class="btn primary wide" data-act="novo-culto">'+svg("plus",18)+'Cadastrar culto</button>';
+  h+='<p style="font-size:12.5px;color:var(--ink-3);text-align:center;margin:-4px 8px 0">Os líderes usam esta grade para gerar os turnos do mês de uma vez.</p>';
+  return h;
+}
+function formCulto(c){
+  var dias=DIAS.map(function(d,i){return {v:String(i),l:d.charAt(0).toUpperCase()+d.slice(1)};});
+  return '<div class="form">'+
+    campo("f-cu-nome","Nome do culto","Ex.: Culto Fé",c?c.nome:"")+
+    select("f-cu-tipo","Repete",[{v:"semanal",l:"Toda semana"},{v:"mensal",l:"Uma vez por mês"}],c?c.tipo:"semanal")+
+    select("f-cu-dia","Dia da semana",dias,String(c?c.dia:0))+
+    select("f-cu-ordem","Qual semana do mês (só para mensal)",
+      [{v:"1",l:"1ª do mês"},{v:"2",l:"2ª do mês"},{v:"3",l:"3ª do mês"},{v:"4",l:"4ª do mês"},{v:"-1",l:"última do mês"}],
+      String(c&&c.ordem?c.ordem:1))+
+    '<div class="duo">'+campo("f-cu-ini","Começa","20h00",c?c.ini:"")+campo("f-cu-fim","Termina","21h30",c?c.fim:"")+'</div>'+
+    '</div>';
+}
+function admPessoas(){
+  var h='<div class="greet"><h2>Pessoas</h2><p>'+(DB.pessoas.length?DB.pessoas.length+" conta(s) cadastrada(s)":"Cadastre o adm, os líderes e os voluntários")+'</p></div>';
+  if(!DB.pessoas.length){
+    h+=vazioBox("users","Nenhuma pessoa ainda",
+      "Cadastre aqui quem vai usar o app. O papel define o que a pessoa enxerga: Adm, Líder ou Voluntário.",
+      '<button class="btn primary" data-act="nova-pessoa">Adicionar pessoa</button>');
+    return h;
+  }
+  var peso=function(p){return (p.adm?0:0)+(lideraDe(p.id).length?1:2);};
+  var lista=DB.pessoas.slice().sort(function(a,b){return (peso(a)-peso(b))||a.nome.localeCompare(b.nome);});
+  var multi=DB.pessoas.filter(function(p){return p.minIds.length>1||(lideraDe(p.id).length&&p.minIds.filter(function(x){return !lideraDe(p.id).some(function(m){return m.id===x;});}).length);});
+  if(multi.length)
+    h+='<div class="alert info">'+svg("users",18)+'<div><b>'+multi.length+' pessoa(s) em mais de um ministério</b>'+
+      'O app cruza os horários delas e avisa quando duas escalas batem no mesmo dia.</div></div>';
+  h+='<div class="card list">';
+  lista.forEach(function(p){
+    var rs=rotulos(p);
+    h+='<button class="row" data-act="pessoa" data-id="'+p.id+'">'+
+      '<span class="ini'+(p.ativo?"":" mut")+'">'+ini(p.nome)+'</span>'+
+      '<span class="main"><strong>'+esc(p.nome)+(p.ativo?"":" · inativo")+'</strong>'+
+      '<small>'+(rs.length?esc(rs.map(function(r){return r.t;}).join(" · ")):"sem ministério")+'</small></span>'+
+      (rs.length>1?'<span class="pill brand"><i></i>'+rs.length+' papéis</span>'
+        :(rs.length?'<span class="pill '+rs[0].k+'">'+(rs[0].k==="brand"?"<i></i>":"")+(rs[0].t.split(" · ")[0])+'</span>':'')) +
+      '</button>';
+  });
+  h+='</div>';
+  h+='<button class="btn primary wide" data-act="nova-pessoa">'+svg("plus",18)+'Adicionar pessoa</button>';
+  return h;
+}
+function admRel(){
+  var h='<div class="greet"><h2>Relatórios</h2><p>Consolidado de todos os ministérios</p></div>';
+  var comEsc=DB.ministerios.filter(function(m){return escalasDo(m.id).length;});
+  if(!comEsc.length){
+    h+=vazioBox("chart","Sem dados para mostrar",
+      "O relatório aparece quando existir pelo menos uma escala com turnos. O líder cria a escala no perfil dele.");
+    return h;
+  }
+  var dados=DB.ministerios.map(function(m){
+    var t=0,c=0;
+    escalasDo(m.id).forEach(function(e){turnosDa(e.id).forEach(function(x){t+=x.vagas;c+=Math.min(conf(x.id).length,x.vagas);});});
+    return {n:m.nome,pct:t?Math.round(c/t*100):0,t:t,c:c,lider:m.liderId};
+  });
+  var tot=dados.reduce(function(a,d){return a+d.t;},0),cob=dados.reduce(function(a,d){return a+d.c;},0);
+  var sel=dados[S.barSel]||dados[0];
+  h+='<div class="stats">'+
+    '<div class="stat"><b>'+DB.pessoas.filter(function(p){return p.minIds.length&&p.ativo;}).length+'</b><span>voluntários ativos</span></div>'+
+    '<div class="stat"><b>'+(tot?Math.round(cob/tot*100):0)+'%</b><span>cobertura geral</span></div>'+
+    '<div class="stat"><b>'+(tot-cob)+'</b><span>vagas em aberto</span></div></div>';
+  h+='<div class="eyebrow"><span>Cobertura por ministério</span></div>';
+  h+='<article class="card pad"><div class="bars">';
+  dados.forEach(function(d,i){
+    h+='<button class="bar" data-act="bar" data-i="'+i+'" aria-current="'+(i===S.barSel)+'">'+
+      '<span class="nm">'+esc(d.n)+'</span><span class="tr"><i style="width:'+d.pct+'%"></i></span>'+
+      '<span class="vl">'+d.pct+'%</span></button>';
+  });
+  h+='</div><div class="readout"><b>'+esc(sel.n)+'</b> · '+(sel.lider?"líder "+esc(primeiro(sel.lider)):"sem líder")+
+     ' · '+sel.c+' de '+sel.t+' vagas preenchidas</div></article>';
+  h+='<p style="font-size:12px;color:var(--ink-3);margin:-6px 8px 0">Cobertura = vagas preenchidas ÷ vagas abertas.</p>';
+  var pares=[];
+  DB.pessoas.forEach(function(pe){
+    turnosFirmes(pe.id).forEach(function(t1){
+      conflitosDe(pe.id,t1).forEach(function(t2){
+        var k=[pe.id,t1.id,t2.id].sort().join("|");
+        if(!pares.some(function(z){return z.k===k;}))pares.push({k:k,p:pe,a:t1,b:t2});
+      });
+    });
+  });
+  var multi=DB.pessoas.filter(function(pe){return pe.minIds.length>1;});
+  h+='<div class="eyebrow"><span>Pessoas em mais de um ministério</span></div>';
+  if(!multi.length){
+    h+='<div class="card"><div class="empty"><b>Ninguém ainda</b><p>Quando alguém servir em dois ministérios, o cruzamento de horários aparece aqui.</p></div></div>';
+  }else{
+    h+='<div class="card list">';
+    multi.forEach(function(pe){
+      var meus=pares.filter(function(z){return z.p.id===pe.id;});
+      h+='<div class="row"><span class="ini'+(meus.length?"":" mut")+'">'+ini(pe.nome)+'</span>'+
+        '<span class="main"><strong>'+esc(pe.nome)+'</strong><small>'+esc(serveEm(pe).map(function(x){return x.nome;}).join(" · "))+'</small></span>'+
+        (meus.length?'<span class="pill crit"><i></i>'+meus.length+' choque(s)</span>':'<span class="pill ok"><i></i>Sem choque</span>')+
+        '</div>';
+    });
+    h+='</div>';
+  }
+  if(pares.length){
+    h+='<div class="eyebrow"><span>Choques de horário</span></div><div class="card list">';
+    pares.slice(0,6).forEach(function(z){
+      var d=dia(z.a.data);
+      h+='<div class="row" style="align-items:flex-start"><span class="rail" style="background:var(--crit)"></span>'+
+        '<div class="date"><span>'+d.sem+'</span><b>'+d.n+'</b></div>'+
+        '<div class="main"><strong>'+esc(z.p.nome)+'</strong>'+
+        '<small>'+esc(descreveTurno(z.a))+'</small>'+
+        '<small>'+esc(descreveTurno(z.b))+'</small></div>'+
+        '<span class="pill crit"><i></i>Choque</span></div>';
+    });
+    h+='</div>';
+  }
+  var semLider=DB.ministerios.filter(function(m){return !m.liderId;});
+  if(semLider.length){
+    h+='<div class="alert warn">'+svg("users",18)+'<div><b>'+semLider.length+' ministério(s) sem líder</b>'+
+      esc(semLider.map(function(m){return m.nome;}).join(", "))+' — ninguém pode abrir a escala.</div></div>';
+  }
+  return h;
+}
+function admCfg(){
+  var h='<div class="greet"><h2>Ajustes gerais</h2><p>Valem para a igreja inteira</p></div>';
+  h+='<div class="eyebrow"><span>Papéis</span></div>';
+  h+='<div class="card list">'+
+    '<div class="row"><div class="main"><strong>Adm</strong><small>Ministérios, líderes, usuários e relatório geral</small></div>'+
+    '<span class="pill brand"><i></i>'+DB.pessoas.filter(function(p){return p.adm;}).length+'</span></div>'+
+    '<div class="row"><div class="main"><strong>Líder</strong><small>Escalas, postos, voluntários e relatório do próprio ministério</small></div>'+
+    '<span class="pill brand"><i></i>'+DB.ministerios.filter(function(m){return m.liderId;}).length+'</span></div>'+
+    '<div class="row"><div class="main"><strong>Voluntário</strong><small>Marca disponibilidade e vê os próprios turnos</small></div>'+
+    '<span class="pill mut">'+DB.pessoas.filter(function(p){return p.minIds.length;}).length+'</span></div>'+
+    '</div>';
+  h+='<div class="eyebrow"><span>Dados do protótipo</span></div>';
+  h+='<div class="card list">'+
+    '<div class="row"><div class="main"><strong>Onde ficam salvos</strong><small>Só neste navegador, neste aparelho</small></div></div>'+
+    '<div class="row"><div class="main"><strong>Grade de cultos</strong><small>Recriada sozinha a cada app zerado</small></div><span class="pill ok"><i></i>'+DB.cultos.length+'</span></div>'+
+    '<button class="row" data-act="exportar"><span class="main"><strong>Exportar</strong><small>Copiar tudo em JSON para levar a outro aparelho</small></span><span class="chev">'+svg("back",16)+'</span></button>'+
+    '<button class="row" data-act="importar"><span class="main"><strong>Importar</strong><small>Colar um JSON exportado antes</small></span><span class="chev">'+svg("back",16)+'</span></button>'+
+    '</div>';
+  h+='<button class="btn danger wide" data-act="apagar-tudo">'+svg("trash",17)+'Apagar todos os dados</button>';
+  h+='<div class="alert info">'+svg("gear",18)+'<div><b>Ainda não implementado</b>Login, senha e histórico de alterações entram depois da validação do fluxo.</div></div>';
+  return h;
+}
+
+/* ============ LÍDER ============ */
+function meuMin(){
+  var m=DB.eu.minLider&&by(DB.ministerios,DB.eu.minLider);
+  if(m&&m.liderId)return m;
+  var comLider=DB.ministerios.filter(function(x){return x.liderId;});
+  if(comLider.length){DB.eu.minLider=comLider[0].id;return comLider[0];}
+  return null;
+}
+function semLiderBox(){
+  return '<div class="greet"><h2>Líder</h2><p>Nenhum ministério tem líder ainda</p></div>'+
+    vazioBox("users","Sem ministério para liderar",
+      "No perfil <b>Adm</b>, crie um ministério, cadastre a pessoa e vincule-a como líder. Depois volte aqui.",
+      '<button class="btn primary" data-act="ir-adm">Ir para o perfil Adm</button>');
+}
+function trocaLider(m){
+  var lideres=DB.ministerios.filter(function(x){return x.liderId;});
+  if(lideres.length<2)return "";
+  return '<button class="row" data-act="trocar-eu-lider" style="background:var(--surface);border:1px solid var(--line);border-radius:var(--r-m)">'+
+    '<span class="ini sm">'+ini(nomeDe(m.liderId))+'</span>'+
+    '<span class="main"><strong style="font-size:13.5px">'+esc(nomeDe(m.liderId))+'</strong>'+
+    '<small>liderando '+esc(m.nome)+'</small></span>'+
+    '<span class="pill mut">trocar</span></button>';
+}
+function cardTrocas(m){
+  var ab=trocasAbertas(m.id);
+  if(!ab.length)return "";
+  var t0=by(DB.turnos,ab[0].turnoId);
+  return '<button class="alert crit" style="width:100%;text-align:left" data-act="ver-trocas">'+svg("swap",18)+
+    '<div><b>'+ab.length+' pedido(s) de substituição</b>'+
+    esc(primeiro(ab[0].de))+' não vai poder no '+esc(t0?rotuloTurno(t0):"turno")+
+    (ab.length>1?' e mais '+(ab.length-1):'')+'. Toque para resolver.</div></button>';
+}
+function liderTrocas(m){
+  var ab=trocasAbertas(m.id);
+  DB.avisos.forEach(function(a){if(a.para===m.liderId)a.lido=true;}); save();
+  var h=backBtn("Escalas")+'<div class="greet"><h2>Substituições</h2><p>'+
+    (ab.length?ab.length+' pedido(s) esperando você':'Nenhum pedido em aberto')+'</p></div>';
+  if(!ab.length){
+    h+=vazioBox("check","Nada pendente","Quando alguém não puder servir num turno, o pedido cai aqui — e a pessoa continua na escala até você resolver.");
+  }
+  ab.forEach(function(x){
+    var t=by(DB.turnos,x.turnoId); if(!t)return;
+    var po=by(DB.postos,t.postoId),d=dia(t.data);
+    var cands=candidatos(t,x.de);
+    h+='<article class="card pad">'+
+      '<div style="display:flex;align-items:center;gap:10px;margin-bottom:11px">'+
+      '<span class="pill crit"><i></i>Substituição</span>'+
+      '<span style="font-size:12.5px;color:var(--ink-3)">'+esc(d.n+" de "+d.mes+" · "+d.sem)+'</span></div>'+
+      '<div style="display:flex;align-items:center;gap:11px">'+
+      '<span class="ini">'+ini(nomeDe(x.de))+'</span>'+
+      '<span style="flex:1;min-width:0;font-size:13.5px"><b>'+esc(nomeDe(x.de))+'</b> não vai poder'+
+      '<small style="display:block;color:var(--ink-3);font-size:12.5px;margin-top:2px">'+
+      esc((po?po.nome:"posto")+" · "+t.ini+" às "+t.fim)+'</small></span></div>'+
+      '<div style="margin-top:11px;padding:10px 12px;background:var(--surface-2);border-radius:10px;font-size:13px">'+
+      '<b>'+esc(x.motivo)+'</b>'+(x.obs?'<div style="color:var(--ink-2);margin-top:3px">“'+esc(x.obs)+'”</div>':'')+'</div>'+
+      '<div style="font-size:12.5px;color:var(--ink-3);margin-top:10px">'+
+      (cands.length?cands.filter(function(c){return c.marcou;}).length+' pessoa(s) marcaram disponibilidade neste turno':'ninguém mais atende este posto')+'</div>'+
+      '<div class="actions"><button class="btn ghost" data-act="troca-manter" data-id="'+x.id+'">Manter</button>'+
+      '<button class="btn primary" data-act="troca-substituir" data-id="'+x.id+'">Resolver</button></div>'+
+      '</article>';
+  });
+  return h;
+}
+function candidatos(t,excluir){
+  var m=minDoTurno(t); if(!m)return [];
+  var c=conf(t.id);
+  return equipeDe(m.id).filter(function(p){
+    return p.ativo&&p.id!==excluir&&c.indexOf(p.id)<0&&
+      (!p.postoIds.length||p.postoIds.indexOf(t.postoId)>=0);
+  }).map(function(p){
+    return {p:p,marcou:disp(t.id).indexOf(p.id)>=0,carga:turnosFirmes(p.id).length};
+  }).sort(function(a,b){return (b.marcou-a.marcou)||(a.carga-b.carga);});
+}
+function liderEscalas(){
+  var m=meuMin(); if(!m)return semLiderBox();
+  if(S.view==="trocas")return liderTrocas(m);
+  if(S.view==="montar")return liderMontar(S.arg);
+  var lista=escalasDo(m.id),po=postosDo(m.id);
+  var h=trocaLider(m)+'<div class="greet"><h2>Escalas</h2><p>'+esc(m.nome)+'</p></div>'+cardTrocas(m);
+  if(!po.length){
+    h+=vazioBox("grid","Crie os postos primeiro",
+      "Uma escala é feita de turnos, e todo turno pertence a um posto (cozinha, balcão, recepção…).",
+      '<button class="btn primary" data-act="ir-postos">Criar postos</button>');
+    return h;
+  }
+  if(!lista.length){
+    h+=vazioBox("cal","Nenhuma escala ainda",
+      "Abra a escala de um mês, monte os turnos com data, horário e vagas, e libere para os voluntários marcarem.",
+      '<button class="btn primary" data-act="nova-escala">Abrir escala do mês</button>');
+    return h;
+  }
+  lista.forEach(function(e){
+    var ts=turnosDa(e.id);
+    var vagas=ts.reduce(function(a,t){return a+t.vagas;},0);
+    var c=ts.reduce(function(a,t){return a+Math.min(conf(t.id).length,t.vagas);},0);
+    var marcaram={};ts.forEach(function(t){disp(t.id).forEach(function(p){marcaram[p]=1;});});
+    var eq=equipeDe(m.id).length;
+    var pill=e.status==="rascunho"?'<span class="pill mut">Rascunho</span>'
+            :e.status==="aberta"?'<span class="pill brand"><i></i>Recolhendo</span>'
+            :'<span class="pill ok"><i></i>Publicada</span>';
+    h+='<article class="card callout"><div class="top">'+
+      '<div class="when">'+esc(fmtMes(e.mes))+'</div>'+
+      '<h3>'+(e.status==="rascunho"?ts.length+" turno(s) no rascunho"
+             :e.status==="aberta"?Object.keys(marcaram).length+" de "+eq+" já responderam"
+             :c+" de "+vagas+" vagas preenchidas")+'</h3>'+
+      '<p>'+(e.status==="rascunho"?"Monte os turnos e libere para a equipe marcar."
+            :e.status==="aberta"?"Prazo para responder: "+(e.prazo?fmtData(e.prazo):"sem prazo")+"."
+            :"Publicada — cada pessoa recebeu os turnos dela.")+'</p></div>'+
+      '<div class="body">'+
+      (vagas?'<div class="prog"><i style="width:'+(c/vagas*100)+'%"></i></div>':'')+
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:'+(vagas?"10px":"0")+'">'+
+      pill+'<span style="font-size:12px;color:var(--ink-3)">'+ts.length+' turno(s) · '+vagas+' vaga(s)</span></div>'+
+      '<div class="actions"><button class="btn primary wide" data-act="montar" data-id="'+e.id+'">'+
+      (e.status==="rascunho"?"Montar turnos":e.status==="aberta"?"Montar escala":"Ver escala")+'</button></div>'+
+      '</div></article>';
+  });
+  h+='<button class="btn soft wide" data-act="nova-escala">'+svg("plus",18)+'Abrir escala de outro mês</button>';
+  return h;
+}
+function liderMontar(escId){
+  var e=by(DB.escalas,escId);
+  if(!e){S.view=null;return liderEscalas();}
+  var m=by(DB.ministerios,e.minId),po=postosDo(e.minId),ts=turnosDa(e.id);
+  var h=backBtn("Escalas")+trocaLider(m)+'<div class="greet"><h2>'+esc(fmtMes(e.mes))+'</h2><p>'+
+    (e.status==="rascunho"?"Rascunho · ninguém vê ainda"
+     :e.status==="aberta"?"Recolhendo disponibilidade · prazo "+(e.prazo?fmtData(e.prazo):"sem prazo")
+     :"Publicada")+'</p></div>';
+  if(!ts.length){
+    h+=vazioBox("cal","Nenhum turno ainda",
+      DB.cultos.length
+        ? "Gere os turnos a partir da grade de cultos da igreja, ou crie um avulso para algo fora da grade."
+        : "Um turno é um dia de serviço: posto, data, horário e quantas vagas. Adicione o primeiro.",
+      (DB.cultos.length?'<button class="btn primary" data-act="gerar-cultos" data-id="'+e.id+'">Gerar dos cultos</button>':'')+
+      '<button class="btn '+(DB.cultos.length?"soft wide\" style=\"margin-top:9px":"primary")+'" data-act="novo-turno" data-id="'+e.id+'">Turno avulso</button>');
+    return h;
+  }
+  po.forEach(function(p){
+    var meus=ts.filter(function(t){return t.postoId===p.id;});
+    if(!meus.length)return;
+    h+='<section class="posto"><header><span class="t"><strong>'+esc(p.nome)+'</strong>'+
+      (p.desc?'<small>'+esc(p.desc)+'</small>':'')+'</span></header>';
+    meus.forEach(function(t){
+      var d=dia(t.data),c=conf(t.id),dp=disp(t.id);
+      var faltam=t.vagas-c.length;
+      var est=e.status==="rascunho"?"mut":(dp.length===0?"crit":(faltam>0?"warn":"ok"));
+      var txt=e.status==="rascunho"?t.vagas+" vaga(s)":(est==="crit"?"Vazio":(faltam>0?"faltam "+faltam:"OK"));
+      h+='<button class="turno" data-act="turno" data-id="'+t.id+'">'+
+        '<span class="t"><strong>'+d.n+"/"+esc(t.data.split("-")[1])+" · "+d.sem+" · "+esc(t.ini)+'</strong>'+
+        '<small>'+(nomeCulto(t)?esc(nomeCulto(t))+" · ":"")+
+          (e.status==="rascunho"?esc(t.ini)+" às "+esc(t.fim)
+                  :(dp.length?dp.length+" marcaram · "+c.length+" de "+t.vagas+" confirmados":"ninguém marcou"))+
+          (trocaDo(t.id)?' · <b style="color:var(--crit)">troca pedida</b>':'')+'</small></span>'+
+        (c.length?'<span class="stack">'+c.slice(0,3).map(function(pid){
+          var semF=funcoesDe(e.minId).length&&!funcsDo(t.id,pid).length;
+          return '<span class="ini sm'+(semF?" mut":"")+'">'+ini(nomeDe(pid))+'</span>';
+        }).join("")+'</span>':'')+
+        '<span class="pill '+est+'">'+(est==="mut"?"":"<i></i>")+txt+'</span></button>';
+    });
+    h+='</section>';
+  });
+  var orfaos=ts.filter(function(t){return !by(DB.postos,t.postoId);});
+  h+='<div style="display:flex;gap:9px">'+
+    (DB.cultos.length?'<button class="btn soft" data-act="gerar-cultos" data-id="'+e.id+'">'+svg("cal",17)+'Gerar dos cultos</button>':'')+
+    '<button class="btn ghost" data-act="novo-turno" data-id="'+e.id+'">'+svg("plus",17)+'Turno avulso</button></div>';
+  h+='<div class="sticky">';
+  if(e.status==="rascunho"){
+    h+='<div class="lbl"><span>Ninguém vê a escala enquanto for rascunho.</span></div>'+
+       '<button class="btn primary wide" data-act="abrir-escala" data-id="'+e.id+'">Liberar para a equipe marcar</button>';
+  }else if(e.status==="aberta"){
+    h+='<div class="lbl"><span>Confirme as pessoas tocando em cada turno.</span></div>'+
+       '<button class="btn primary wide" data-act="publicar" data-id="'+e.id+'">Fechar e publicar</button>';
+  }else{
+    h+='<div class="lbl"><span>Escala publicada.</span></div>'+
+       '<button class="btn ghost wide" data-act="reabrir" data-id="'+e.id+'">Reabrir para ajustes</button>';
+  }
+  h+='</div>';
+  return h;
+}
+function liderPostos(){
+  var m=meuMin(); if(!m)return semLiderBox();
+  var po=postosDo(m.id);
+  var h=trocaLider(m)+'<div class="greet"><h2>Postos</h2><p>'+esc(m.nome)+' · onde as pessoas servem</p></div>';
+  if(!po.length){
+    h+=vazioBox("grid","Nenhum posto ainda",
+      "Posto é a função ou o lugar: Cozinha, Balcão, Pequeno-almoço, Recepção. Cada turno da escala pertence a um posto.",
+      '<button class="btn primary" data-act="novo-posto">Criar posto</button>');
+    return h;
+  }
+  h+='<div class="card list">';
+  po.forEach(function(p){
+    var qtd=equipeDe(m.id).filter(function(x){return x.postoIds.indexOf(p.id)>=0;}).length;
+    h+='<button class="row" data-act="posto" data-id="'+p.id+'">'+
+      '<span class="main"><strong>'+esc(p.nome)+'</strong>'+
+      '<small>'+(p.desc?esc(p.desc)+" · ":"")+p.vagas+' vaga(s) por turno · '+qtd+' pessoa(s)</small></span>'+
+      '<span class="chev">'+svg("back",16)+'</span></button>';
+  });
+  h+='</div>';
+  h+='<button class="btn soft wide" data-act="novo-posto">'+svg("plus",18)+'Criar posto</button>';
+  h+=secaoFuncoes(m);
+  return h;
+}
+function secaoFuncoes(m){
+  var fs=funcoesDe(m.id);
+  var h='<div class="eyebrow"><span>Funções</span>'+(fs.length?'<button data-act="nova-funcao">Nova</button>':'')+'</div>';
+  if(!fs.length){
+    h+='<div class="card"><div class="empty"><div class="ic">'+svg("check",22)+'</div>'+
+      '<b>Nenhuma função ainda</b><p>Função é o que a pessoa faz no turno: câmera, mesa de som, fotografia, caixa. '+
+      'Você cria uma vez e reaproveita em toda escala.</p>'+
+      '<button class="btn primary" data-act="nova-funcao">Criar função</button></div></div>';
+    return h;
+  }
+  h+='<div class="card pad"><div class="chips" style="flex-wrap:wrap">'+
+    fs.map(function(x){return '<button class="chip" data-act="func-editar" data-id="'+x.id+'">'+esc(x.nome)+'</button>';}).join("")+
+    '<button class="chip" data-act="nova-funcao" style="border-style:dashed;color:var(--brand)">+ nova</button></div>'+
+    '<p style="font-size:12.5px;color:var(--ink-3);margin:11px 0 0">Ao confirmar alguém num turno você escolhe a função. Toque numa para renomear.</p></div>';
+  return h;
+}
+function liderEquipe(){
+  var m=meuMin(); if(!m)return semLiderBox();
+  if(S.view==="vol")return liderVolDetalhe(S.arg);
+  var eq=equipeDe(m.id);
+  var h=trocaLider(m)+'<div class="greet"><h2>Equipe</h2><p>'+esc(m.nome)+(eq.length?" · "+eq.filter(function(p){return p.ativo;}).length+" ativo(s) de "+eq.length:"")+'</p></div>';
+  if(!eq.length){
+    h+=vazioBox("users","Nenhum voluntário ainda",
+      "Cadastre quem serve no seu ministério. Eles entram no app para marcar disponibilidade.",
+      '<button class="btn primary" data-act="novo-vol">Cadastrar voluntário</button>');
+    return h;
+  }
+  var semPosto=eq.filter(function(p){return p.ativo&&!p.postoIds.length;});
+  if(semPosto.length)
+    h+='<div class="alert warn">'+svg("user",18)+'<div><b>'+semPosto.length+' pessoa(s) sem posto marcado</b>'+
+      esc(semPosto.map(function(p){return p.nome.split(" ")[0];}).join(", "))+' — toque no nome e marque os postos, senão a escala não chega direito para elas.</div></div>';
+  var esc_=escalasDo(m.id).filter(function(e){return e.status==="aberta";})[0];
+  var respondeu={};
+  if(esc_)turnosDa(esc_.id).forEach(function(t){disp(t.id).forEach(function(p){respondeu[p]=1;});});
+  h+='<div class="card list">';
+  eq.slice().sort(function(a,b){return a.nome.localeCompare(b.nome);}).forEach(function(p){
+    var postos=p.postoIds.map(function(x){var o=by(DB.postos,x);return o?o.nome:"";}).filter(Boolean);
+    h+='<button class="row" data-act="vol" data-id="'+p.id+'">'+
+      '<span class="ini'+(p.ativo?"":" mut")+'">'+ini(p.nome)+'</span>'+
+      '<span class="main"><strong>'+esc(p.nome)+
+      (lideraDe(p.id).some(function(x){return x.id===m.id;})?' <span class="pill brand" style="font-size:9.5px;padding:1px 6px">líder</span>':'')+'</strong>'+
+      '<small>'+(postos.length?esc(postos.join(" · ")):"sem posto marcado")+
+      (p.minIds.length>1?' · também em '+esc(serveEm(p).filter(function(x){return x.id!==m.id;}).map(function(x){return x.nome;}).join(", ")):'')+
+      '</small></span>'+
+      (!p.ativo?'<span class="pill mut">Inativo</span>'
+        :(!p.postoIds.length?'<span class="pill crit"><i></i>Sem posto</span>'
+        :(esc_?(respondeu[p.id]?'<span class="pill ok"><i></i>Respondeu</span>':'<span class="pill warn"><i></i>Sem resposta</span>'):'')))+
+      '</button>';
+  });
+  h+='</div>';
+  h+='<button class="btn primary wide" data-act="novo-vol">'+svg("plus",18)+'Cadastrar voluntário</button>';
+  return h;
+}
+function liderVolDetalhe(id){
+  var p=pessoa(id); if(!p){S.view=null;return liderEquipe();}
+  var m=meuMin();
+  var h=backBtn("Equipe")+
+    '<article class="card pad" style="display:flex;gap:13px;align-items:center">'+
+    '<span class="ini'+(p.ativo?"":" mut")+'" style="width:52px;height:52px;font-size:17px">'+ini(p.nome)+'</span>'+
+    '<div style="min-width:0"><strong style="font-size:17px;font-family:var(--display)">'+esc(p.nome)+'</strong>'+
+    '<div style="color:var(--ink-3);font-size:13px">'+esc(p.tel||"sem telefone")+'</div></div></article>';
+  var servidos=0;
+  DB.turnos.forEach(function(t){if(conf(t.id).indexOf(p.id)>=0)servidos++;});
+  h+='<div class="card list">'+
+    '<div class="row"><div class="main"><strong>Situação</strong><small>Inativo não recebe chamada de escala</small></div>'+
+    (p.ativo?'<span class="pill ok"><i></i>Ativo</span>':'<span class="pill mut">Inativo</span>')+'</div>'+
+    '<div class="row"><div class="main"><strong>Turnos confirmados</strong><small>Somando todas as escalas</small></div><span class="pill mut">'+servidos+'</span></div>'+
+    '</div>';
+  var fsm=funcoesDe(m.id);
+  if(fsm.length){
+    h+='<div class="eyebrow"><span>Funções que já faz</span></div>';
+    h+='<div class="card pad"><div class="chips" style="flex-wrap:wrap">'+
+      fsm.map(function(x){
+        return '<button class="chip" data-act="pessoa-func" data-id="'+p.id+'" data-f="'+x.id+'" aria-pressed="'+((p.funcaoIds||[]).indexOf(x.id)>=0)+'">'+esc(x.nome)+'</button>';
+      }).join("")+'</div>'+
+      '<p style="font-size:12.5px;color:var(--ink-3);margin:11px 0 0">Elas aparecem primeiro quando você for escalar essa pessoa.</p></div>';
+  }
+  h+='<div class="eyebrow"><span>Postos que atende</span></div>';
+  var po=postosDo(m.id);
+  h+='<div class="card pad">'+(po.length?'<div class="chips" style="flex-wrap:wrap">'+
+    po.map(function(x){return '<button class="chip" data-act="vol-posto" data-id="'+p.id+'" data-p="'+x.id+'" aria-pressed="'+(p.postoIds.indexOf(x.id)>=0)+'">'+esc(x.nome)+'</button>';}).join("")+
+    '</div><p style="font-size:12.5px;color:var(--ink-3);margin:11px 0 0">Ele só vê os turnos dos postos marcados.</p>'
+    :'<p style="margin:0;color:var(--ink-3);font-size:13px">Nenhum posto criado ainda.</p>')+'</div>';
+  var outros=serveEm(p).filter(function(x){return x.id!==m.id;});
+  if(outros.length)
+    h+='<div class="alert info">'+svg("users",18)+'<div><b>Também serve em '+esc(outros.map(function(x){return x.nome;}).join(", "))+'</b>'+
+      'Ao confirmar '+esc(primeiro(p.id))+' num turno, o app avisa se bater com a escala de lá.</div></div>';
+  h+='<div style="display:flex;gap:9px"><button class="btn ghost" data-act="editar-vol" data-id="'+p.id+'">Editar</button>'+
+    '<button class="btn '+(p.ativo?"danger":"soft")+'" data-act="ativar-vol" data-id="'+p.id+'">'+(p.ativo?"Inativar":"Reativar")+'</button></div>'+
+    '<button class="btn ghost wide" data-act="tirar-equipe" data-id="'+p.id+'">Tirar de '+esc(m.nome)+'</button>';
+  h+='<p style="font-size:12.5px;color:var(--ink-3);margin:0 8px">Inativar não apaga o histórico — a pessoa só deixa de receber chamadas.</p>';
+  return h;
+}
+function liderRel(){
+  var m=meuMin(); if(!m)return semLiderBox();
+  var eq=equipeDe(m.id),ts=[];
+  escalasDo(m.id).forEach(function(e){ts=ts.concat(turnosDa(e.id));});
+  var h=trocaLider(m)+'<div class="greet"><h2>Relatório</h2><p>'+esc(m.nome)+' · só o seu ministério</p></div>';
+  if(!ts.length||!eq.length){
+    h+=vazioBox("chart","Sem dados ainda",
+      "O relatório aparece quando houver equipe cadastrada e turnos na escala.");
+    return h;
+  }
+  var vagas=ts.reduce(function(a,t){return a+t.vagas;},0);
+  var cheias=ts.reduce(function(a,t){return a+Math.min(conf(t.id).length,t.vagas);},0);
+  var vazios=ts.filter(function(t){return disp(t.id).length===0;}).length;
+  var dados=eq.map(function(p){
+    var n=0;ts.forEach(function(t){if(conf(t.id).indexOf(p.id)>=0)n++;});
+    return {n:p.nome.split(" ")[0],v:n};
+  }).sort(function(a,b){return b.v-a.v;});
+  var max=Math.max(1,dados[0].v,DB.cfg.limite);
+  var sel=dados[S.barSel]||dados[0];
+  h+='<div class="stats">'+
+    '<div class="stat"><b>'+(vagas?Math.round(cheias/vagas*100):0)+'%</b><span>vagas preenchidas</span></div>'+
+    '<div class="stat"><b>'+vazios+'</b><span>turnos sem ninguém</span></div>'+
+    '<div class="stat"><b>'+eq.filter(function(p){return p.ativo;}).length+'</b><span>voluntários ativos</span></div></div>';
+  h+='<div class="eyebrow"><span>Turnos por pessoa</span></div>';
+  h+='<article class="card pad"><div class="bars">';
+  dados.forEach(function(d,i){
+    h+='<button class="bar" data-act="bar" data-i="'+i+'" aria-current="'+(i===S.barSel)+'">'+
+      '<span class="nm">'+esc(d.n)+'</span><span class="tr"><i style="width:'+(d.v/max*100)+'%"></i></span>'+
+      '<span class="vl">'+d.v+'</span></button>';
+  });
+  h+='</div><div class="readout"><b>'+esc(sel.n)+'</b> está em '+sel.v+' turno(s)'+
+     (sel.v>DB.cfg.limite?" — acima do limite de "+DB.cfg.limite:(sel.v===0?" — ainda não entrou em nenhum":""))+'.</div></article>';
+  var criticos=ts.filter(function(t){return disp(t.id).length===0;});
+  if(criticos.length){
+    h+='<div class="eyebrow"><span>Onde aperta</span></div><div class="card list">';
+    criticos.slice(0,5).forEach(function(t){
+      var p=by(DB.postos,t.postoId),d=dia(t.data);
+      h+='<div class="row"><span class="rail" style="background:var(--crit)"></span>'+
+        '<div class="main"><strong>'+(p?esc(p.nome):"posto removido")+' · '+d.n+"/"+t.data.split("-")[1]+'</strong>'+
+        '<small>ninguém marcou disponibilidade</small></div><span class="pill crit"><i></i>Vazio</span></div>';
+    });
+    h+='</div>';
+  }
+  return h;
+}
+function liderCfg(){
+  var m=meuMin(); if(!m)return semLiderBox();
+  var h=trocaLider(m)+'<div class="greet"><h2>Ajustes da escala</h2><p>'+esc(m.nome)+'</p></div>';
+  h+='<div class="eyebrow"><span>Regras</span></div>';
+  h+='<div class="card list">'+
+    '<button class="row" data-act="edit-limite"><span class="main"><strong>Máximo por pessoa</strong><small>Turnos no mesmo mês</small></span><span class="pill brand">'+DB.cfg.limite+'</span></button>'+
+    '<button class="row" data-act="edit-prazo"><span class="main"><strong>Prazo padrão</strong><small>Dias antes do mês começar</small></span><span class="pill brand">'+DB.cfg.prazoDias+' dias</span></button>'+
+    '</div>';
+  h+='<div class="eyebrow"><span>Orientações do ministério</span><button data-act="edit-orient">Editar</button></div>';
+  h+='<div class="card pad">'+(DB.cfg.orientacoes
+    ? '<div class="orient">'+esc(DB.cfg.orientacoes)+'</div>'
+    : '<p style="margin:0;color:var(--ink-3);font-size:13px">Nada escrito ainda. Esse texto aparece para o voluntário na hora de marcar e junto do turno confirmado — vestuário, horário de chegada, o que levar.</p>')+'</div>';
+  return h;
+}
+
+/* ============ VOLUNTÁRIO ============ */
+function euVol(){
+  var p=DB.eu.voluntario&&pessoa(DB.eu.voluntario);
+  if(p&&p.minIds.length)return p;
+  var v0=DB.pessoas.filter(function(x){return x.minIds.length;});
+  if(v0.length){DB.eu.voluntario=v0[0].id;return v0[0];}
+  return null;
+}
+function semVolBox(){
+  return '<div class="greet"><h2>Voluntário</h2><p>Nenhum voluntário cadastrado</p></div>'+
+    vazioBox("user","Sem voluntário para simular",
+      "No perfil <b>Líder</b>, aba Equipe, cadastre um voluntário. Depois volte aqui para ver o app pelos olhos dele.",
+      '<button class="btn primary" data-act="ir-equipe">Ir para Equipe</button>');
+}
+function trocaVol(p){
+  var vs=DB.pessoas.filter(function(x){return x.minIds.length;});
+  if(vs.length<2)return "";
+  return '<button class="row" data-act="trocar-eu-vol" style="background:var(--surface);border:1px solid var(--line);border-radius:var(--r-m)">'+
+    '<span class="ini sm">'+ini(p.nome)+'</span>'+
+    '<span class="main"><strong style="font-size:13.5px">'+esc(p.nome)+'</strong><small>simulando este voluntário</small></span>'+
+    '<span class="pill mut">trocar</span></button>';
+}
+function turnosMeus(p){
+  var out=[];
+  DB.turnos.forEach(function(t){
+    var e=by(DB.escalas,t.escalaId);
+    if(e&&e.status==="publicada"&&conf(t.id).indexOf(p.id)>=0)out.push(t);
+  });
+  return out.sort(function(a,b){return dia(a.data).ord-dia(b.data).ord;});
+}
+function volInicio(){
+  var p=euVol(); if(!p)return semVolBox();
+  var abertas=escalasAbertasDe(p),e=abertas[0],meus=turnosMeus(p);
+  var h=trocaVol(p)+'<div class="greet"><h2>Olá, '+esc(p.nome.split(" ")[0])+'</h2><p>'+
+    esc(p.minIds.map(function(m){var x=by(DB.ministerios,m);return x?x.nome:"";}).filter(Boolean).join(" · ")||"sem ministério")+'</p></div>';
+  var av=avisosDe(p.id);
+  if(av.length){
+    h+='<div class="eyebrow"><span>Avisos</span><button data-act="limpar-avisos">Marcar como lidos</button></div>';
+    h+='<div class="card list">';
+    av.slice().reverse().forEach(function(a){
+      h+='<div class="row"><span class="rail" style="background:var(--brand)"></span>'+
+        '<div class="main"><strong style="font-weight:500;font-size:13.5px">'+esc(a.txt)+'</strong></div></div>';
+    });
+    h+='</div>';
+  }
+  if(e){
+    var ts=[],jaMarcou=0;
+    abertas.forEach(function(x){
+      var tt=turnosDa(x.id);
+      tt=p.postoIds.length?tt.filter(function(t){return p.postoIds.indexOf(t.postoId)>=0||!postosDo(x.minId).some(function(o){return p.postoIds.indexOf(o.id)>=0;});}):tt;
+      ts=ts.concat(tt);
+    });
+    ts.forEach(function(t){if(disp(t.id).indexOf(p.id)>=0)jaMarcou++;});
+    if(jaMarcou){
+      h+='<div class="alert ok">'+svg("check",18)+'<div><b>Disponibilidade enviada</b>Você marcou '+jaMarcou+' turno(s). Dá para mudar até o prazo.</div></div>'+
+        '<button class="btn soft wide" data-act="ir-aberta">Rever o que marquei</button>';
+    }else{
+      h+='<article class="card callout"><div class="top">'+
+        '<div class="when">'+esc(fmtMes(e.mes))+(abertas.length>1?' e mais '+(abertas.length-1):'')+' · aberta</div>'+
+        '<h3>O líder precisa da sua disponibilidade</h3>'+
+        '<p>'+ts.length+' turno(s) abertos. Marque onde você pode servir.</p></div>'+
+        '<div class="body"><dl class="kv">'+
+        '<dt>Prazo</dt><dd><b>'+(e.prazo?esc(fmtData(e.prazo)):"sem prazo definido")+'</b></dd></dl>'+
+        '<div class="actions"><button class="btn primary wide" data-act="ir-aberta">Marcar minha disponibilidade</button></div>'+
+        '</div></article>';
+    }
+  }else{
+    h+=vazioBox("cal","Nenhuma escala aberta",
+      "Quando o líder liberar a escala do mês, o aviso aparece aqui e você marca onde pode servir.");
+  }
+  if(meus.length){
+    h+='<div class="eyebrow"><span>Meus próximos turnos</span><button data-act="ir-meus">Ver calendário</button></div>';
+    h+='<div class="card list">';
+    meus.slice(0,3).forEach(function(t){
+      var d=dia(t.data),po=by(DB.postos,t.postoId);
+      h+='<div class="row"><span class="rail" style="background:var(--ok)"></span>'+
+        '<div class="date"><span>'+d.sem+'</span><b>'+d.n+'</b></div>'+
+        '<div class="main"><strong>'+(nomeCulto(t)?esc(nomeCulto(t)):(po?esc(po.nome):"turno"))+'</strong>'+
+        '<small>'+esc(t.ini)+' às '+esc(t.fim)+(po?' · '+esc(po.nome):'')+'</small></div>'+
+        (rotuloFuncs(t.id,p.id)?'<span class="pill brand"><i></i>'+esc(rotuloFuncs(t.id,p.id))+'</span>'
+          :'<span class="pill ok"><i></i>Confirmado</span>')+'</div>';
+    });
+    h+='</div>';
+  }
+  if(DB.cfg.orientacoes)
+    h+='<details class="card"><summary>Orientações do ministério</summary><div class="orient">'+esc(DB.cfg.orientacoes)+'</div></details>';
+  return h;
+}
+function volSemEscala(p){
+  if(!p.minIds.length)
+    return vazioBox("users","Você não serve em nenhum ministério",
+      "Um líder precisa incluir você na equipe dele. Enquanto isso, nenhum turno chega até aqui.",
+      '<button class="btn primary" data-act="ir-equipe">Abrir o perfil Líder</button>');
+  var todas=[];p.minIds.forEach(function(mid){todas=todas.concat(escalasDo(mid));});
+  var rasc=todas.filter(function(x){return x.status==="rascunho";});
+  var pub=todas.filter(function(x){return x.status==="publicada";});
+  if(rasc.length)
+    return vazioBox("cal","A escala ainda é rascunho",
+      "Os turnos de <b>"+esc(fmtMes(rasc[0].mes))+"</b> já existem, mas o líder não liberou. No perfil Líder: Escalas › Montar › <b>Liberar para a equipe marcar</b>.",
+      '<button class="btn primary" data-act="ir-escalas">Abrir o perfil Líder</button>');
+  if(pub.length)
+    return vazioBox("check","Escala já publicada",
+      "A escala de "+esc(fmtMes(pub[0].mes))+" foi fechada. Os turnos em que você ficou estão em Minha escala.",
+      '<button class="btn primary" data-act="ir-meus">Ver minha escala</button>');
+  return vazioBox("cal","Nenhuma escala criada ainda",
+    "No perfil Líder, aba Escalas, abra a escala do mês e adicione os turnos.",
+    '<button class="btn primary" data-act="ir-escalas">Abrir o perfil Líder</button>');
+}
+function avisoConflito(p,t){
+  var cf=conflitosDe(p.id,t);
+  if(cf.length)
+    return '<div style="margin-top:6px;font-size:11.5px;color:var(--crit);font-weight:600;line-height:1.35">'+
+      '⚠ Choca com '+esc(descreveTurno(cf[0]))+'</div>';
+  var md=mesmoDiaDe(p.id,t);
+  if(md.length)
+    return '<div style="margin-top:6px;font-size:11.5px;color:var(--warn);line-height:1.35">'+
+      'Mesmo dia de '+esc(descreveTurno(md[0]))+'</div>';
+  return "";
+}
+function blocoTurnos(po,ts,p,fora){
+  var meus=ts.filter(function(t){return t.postoId===po.id;});
+  if(!meus.length)return "";
+  return '<section class="posto"><header><span class="t"><strong>'+esc(po.nome)+'</strong>'+
+    (po.desc?'<small>'+esc(po.desc)+'</small>':'')+'</span>'+
+    (fora?'<span class="pill mut">fora do seu perfil</span>':'')+'</header>'+
+    meus.map(function(t){
+      var d=dia(t.data),on=disp(t.id).indexOf(p.id)>=0;
+      var restam=t.vagas-conf(t.id).length;
+      var cf=conflitosDe(p.id,t).length>0;
+      return '<button class="turno" data-act="marcar" data-id="'+t.id+'" aria-pressed="'+on+'">'+
+        '<span class="box">'+svg("check",14)+'</span>'+
+        '<span class="t"><strong>'+d.n+' de '+d.mes+' · '+d.sem+(nomeCulto(t)?' · '+esc(nomeCulto(t)):'')+'</strong>'+
+        '<small>'+esc(t.ini)+' às '+esc(t.fim)+'</small>'+
+        avisoConflito(p,t)+'</span>'+
+        (cf?'<span class="pill crit" style="align-self:flex-start"><i></i>Choca</span>'
+           :'<span class="vagas"><b>'+(restam>0?restam:0)+'</b>'+(restam===1?"vaga":"vagas")+'</span>')+
+        '</button>';
+    }).join("")+'</section>';
+}
+function escalasAbertasDe(p){
+  var out=[];
+  p.minIds.forEach(function(mid){
+    escalasDo(mid).forEach(function(x){if(x.status==="aberta")out.push(x);});
+  });
+  return out;
+}
+function volAberta(){
+  var p=euVol(); if(!p)return semVolBox();
+  var abertas=escalasAbertasDe(p);
+  var h='<div class="greet"><h2>Disponibilidade</h2>'+
+    '<p>Marque <b>todos</b> os turnos em que você pode servir. Marcar não é estar escalado — o líder confirma depois.</p></div>';
+  if(!abertas.length)return h+volSemEscala(p);
+  var total=0,comConflito=0;
+  abertas.forEach(function(e){
+    var m=by(DB.ministerios,e.minId);
+    var ts=turnosDa(e.id);
+    h+='<div class="eyebrow"><span>'+esc(m?m.nome:"")+' · '+esc(fmtMes(e.mes))+'</span>'+
+      (e.prazo?'<span style="font-family:var(--ui);text-transform:none;letter-spacing:0;font-size:12px">até '+esc(fmtData(e.prazo))+'</span>':'')+'</div>';
+    if(!ts.length){
+      h+='<div class="card"><div class="empty"><b>Sem turnos</b><p>O líder liberou a escala mas ainda não adicionou turnos.</p></div></div>';
+      return;
+    }
+    var pos=postosDo(e.minId);
+    var meus=pos.filter(function(o){return p.postoIds.indexOf(o.id)>=0;});
+    var outros=pos.filter(function(o){return p.postoIds.indexOf(o.id)<0;});
+    if(!meus.length){
+      h+='<div class="alert warn">'+svg("user",18)+'<div><b>Você não está marcado em nenhum posto aqui</b>'+
+        'Por isso está vendo todos os turnos deste ministério. O líder ajusta em Equipe.</div></div>';
+      pos.forEach(function(po){h+=blocoTurnos(po,ts,p,false);});
+    }else{
+      meus.forEach(function(po){h+=blocoTurnos(po,ts,p,false);});
+      var extra=outros.map(function(po){return blocoTurnos(po,ts,p,true);}).join("");
+      if(extra)h+=extra;
+    }
+    ts.forEach(function(t){
+      if(disp(t.id).indexOf(p.id)>=0){total++;if(conflitosDe(p.id,t).length)comConflito++;}
+    });
+  });
+  if(DB.cfg.orientacoes)
+    h+='<details class="card"><summary>Orientações do ministério</summary><div class="orient">'+esc(DB.cfg.orientacoes)+'</div></details>';
+  if(abertas.length>1)
+    h+='<div class="alert info">'+svg("swap",18)+'<div><b>Você serve em '+abertas.length+' ministérios</b>'+
+      'Os turnos dos dois aparecem aqui. Quando um choca com o outro, o app marca em vermelho.</div></div>';
+  h+='<div class="sticky"><div class="lbl"><span id="cont">'+
+    (total?total+" turno(s) marcado(s)":"Nenhum turno marcado ainda")+'</span>'+
+    (comConflito?'<span style="color:var(--crit);font-weight:600">'+comConflito+' com choque</span>':'')+'</div>'+
+    '<button class="btn primary wide" data-act="enviar-disp" data-id="todas">Enviar disponibilidade</button></div>';
+  return h;
+}
+function agendaDe(p){
+  var conf_=[],aguard=[];
+  DB.turnos.forEach(function(t){
+    var e=by(DB.escalas,t.escalaId); if(!e)return;
+    if(e.status==="publicada"){ if(conf(t.id).indexOf(p.id)>=0)conf_.push(t); }
+    else if(disp(t.id).indexOf(p.id)>=0)aguard.push(t);
+  });
+  var ord=function(a,b){return dia(a.data).ord-dia(b.data).ord;};
+  return {conf:conf_.sort(ord),aguard:aguard.sort(ord)};
+}
+function linhaTurno(t,estado){
+  var d=dia(t.data),po=by(DB.postos,t.postoId),e=by(DB.escalas,t.escalaId);
+  var rf=estado==="conf"?rotuloFuncs(t.id,DB.eu.voluntario):"";
+  return '<div class="row" style="align-items:flex-start">'+
+    '<span class="rail" style="background:'+(estado==="conf"?"var(--ok)":"var(--warn)")+'"></span>'+
+    '<div class="date"><span>'+d.sem+'</span><b>'+d.n+'</b></div>'+
+    '<div class="main"><strong>'+(nomeCulto(t)?esc(nomeCulto(t)):(po?esc(po.nome):"turno"))+'</strong>'+
+    '<small>'+esc(t.ini)+' às '+esc(t.fim)+(nomeCulto(t)&&po?' · '+esc(po.nome):'')+'</small>'+
+    (rf?'<div style="margin-top:7px"><span class="pill brand"><i></i>'+esc(rf)+'</span></div>'
+       :(estado==="conf"?'<div style="margin-top:7px"><span class="pill mut">função a definir</span></div>':''))+
+    (estado==="conf"
+      ? (trocaDo(t.id,DB.eu.voluntario)
+          ? '<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:8px;align-items:center">'+
+            '<span class="pill crit"><i></i>Substituição pedida</span>'+
+            '<button class="btn sm ghost" data-act="cancelar-troca" data-id="'+t.id+'">Cancelar pedido</button></div>'
+          : '<button class="btn sm ghost" style="margin-top:9px" data-act="pedir-troca" data-id="'+t.id+'">Não vou poder</button>')
+      : '<div style="margin-top:8px"><span class="pill warn"><i></i>Aguardando o líder confirmar</span></div>')+
+    '</div></div>';
+}
+function volMeus(){
+  var p=euVol(); if(!p)return semVolBox();
+  var ag=agendaDe(p);
+  var hj=iso(hoje());
+  var porDia={};
+  ag.conf.forEach(function(t){ (porDia[t.data]=porDia[t.data]||{c:[],a:[]}).c.push(t); });
+  ag.aguard.forEach(function(t){ (porDia[t.data]=porDia[t.data]||{c:[],a:[]}).a.push(t); });
+  if(!S.mesCal){
+    var prox=ag.conf.filter(function(t){return t.data>=hj;})[0]||ag.conf[0]||ag.aguard[0];
+    S.mesCal=prox?ymDe(prox.data):ymDe(hj);
+  }
+  var g=grade(S.mesCal);
+  var h='<div class="greet"><h2>Minha escala</h2><p>'+
+    (ag.conf.length?ag.conf.length+' turno(s) confirmado(s)':'Nenhum turno confirmado ainda')+
+    (ag.aguard.length?' · '+ag.aguard.length+' aguardando':'')+'</p></div>';
+
+  h+='<section class="card cal">';
+  h+='<div class="hd"><b>'+esc(fmtMes(S.mesCal))+'</b><span class="nav">'+
+    '<button data-act="mes-cal" data-k="-1" aria-label="Mês anterior">'+svg("back",17)+'</button>'+
+    '<button data-act="mes-cal" data-k="1" aria-label="Próximo mês">'+svg("fwd",17)+'</button></span></div>';
+  h+='<div class="wk">'+["D","S","T","Q","Q","S","S"].map(function(d){return "<span>"+d+"</span>";}).join("")+'</div>';
+  h+='<div class="gd">';
+  for(var i=0;i<g.start;i++)h+='<span class="dcell vazio"></span>';
+  for(var d=1;d<=g.n;d++){
+    var iso_=isoYMD(g.y,g.mo,d),info=porDia[iso_];
+    var chq_=info&&info.c.length>1&&choca(info.c[0],info.c[1]);
+    var cls="dcell"+(iso_===hj?" hoje":"")+(info&&info.c.length?" conf":(info&&info.a.length?" aguard":""))+(chq_?" choque":"");
+    h+='<button class="'+cls+'" data-act="dia-cal" data-d="'+iso_+'" aria-pressed="'+(S.diaSel===iso_)+'"'+
+       (info?'':' aria-disabled="true"')+'>'+d+
+       (info?'<span class="dot"></span>':'')+'</button>';
+  }
+  h+='</div>';
+  h+='<div class="legenda">'+
+    '<span><i class="c"></i>Você serve</span>'+
+    '<span><i></i>Marcou, aguardando</span>'+
+    '<span><i class="h"></i>Hoje</span>'+
+    (ag.conf.some(function(t){return conflitosDe(p.id,t).length;})?'<span><i class="x"></i>Choque</span>':'')+'</div>';
+  h+='</section>';
+
+  var doMes=[];
+  ag.conf.forEach(function(t){if(ymDe(t.data)===S.mesCal)doMes.push({t:t,e:"conf"});});
+  ag.aguard.forEach(function(t){if(ymDe(t.data)===S.mesCal)doMes.push({t:t,e:"ag"});});
+  doMes.sort(function(x,y){return dia(x.t.data).ord-dia(y.t.data).ord;});
+  var lista=S.diaSel?doMes.filter(function(o){return o.t.data===S.diaSel;}):doMes;
+
+  if(S.diaSel){
+    h+='<div class="eyebrow"><span>'+esc(fmtData(S.diaSel))+'</span><button data-act="limpar-dia">Ver o mês</button></div>';
+  }else{
+    h+='<div class="eyebrow"><span>Turnos de '+esc(fmtMes(S.mesCal))+'</span></div>';
+  }
+  if(!lista.length){
+    h+='<div class="card"><div class="empty"><b>'+(S.diaSel?"Nada neste dia":"Nada neste mês")+'</b>'+
+      '<p>'+(ag.conf.length||ag.aguard.length?"Use as setas para ver outro mês.":"Quando o líder publicar a escala, os seus turnos aparecem aqui e no calendário.")+'</p></div></div>';
+  }else{
+    h+='<div class="card list">'+lista.map(function(o){return linhaTurno(o.t,o.e);}).join("")+'</div>';
+  }
+  var chqs=ag.conf.filter(function(t){return conflitosDe(p.id,t).length&&ymDe(t.data)===S.mesCal;});
+  if(chqs.length){
+    h+='<div class="alert crit">'+svg("swap",18)+'<div><b>Choque de escala em '+dia(chqs[0].data).n+' de '+dia(chqs[0].data).mes+'</b>'+
+      esc(descreveTurno(chqs[0]))+' e '+esc(descreveTurno(conflitosDe(p.id,chqs[0])[0]))+
+      '. Avise um dos líderes ou peça substituição.</div></div>';
+  }
+  if(ag.aguard.length&&!S.diaSel)
+    h+='<div class="alert info">'+svg("cal",18)+'<div><b>Aguardando não é escala</b>Os dias em cinza são os que você marcou. Eles só viram compromisso quando o líder publicar.</div></div>';
+  return h;
+}
+function volPerfil(){
+  var p=euVol(); if(!p)return semVolBox();
+  var mins=serveEm(p).map(function(m){return m.nome;});
+  var postos=p.postoIds.map(function(x){var o=by(DB.postos,x);if(!o)return "";var mm=by(DB.ministerios,o.minId);return (mm?mm.nome+" · ":"")+o.nome;}).filter(Boolean);
+  var lid=lideraDe(p.id);
+  var h='<div class="greet"><h2>Meu perfil</h2><p>Quem cadastrou você foi o líder do ministério</p></div>';
+  h+='<article class="card pad" style="display:flex;gap:13px;align-items:center">'+
+    '<span class="ini" style="width:52px;height:52px;font-size:17px">'+ini(p.nome)+'</span>'+
+    '<div style="min-width:0"><strong style="font-size:16px">'+esc(p.nome)+'</strong>'+
+    '<div style="color:var(--ink-3);font-size:13px">'+esc(mins.join(" · ")||"sem ministério")+'</div></div></article>';
+  h+='<div class="card list">'+
+    '<div class="row"><div class="main"><strong>Celular</strong><small>Usado para os avisos</small></div><span class="pill mut">'+esc(p.tel||"—")+'</span></div>'+
+    (lid.length?'<div class="row"><div class="main"><strong>Lidero</strong><small>'+esc(lid.map(function(m){return m.nome;}).join(" · "))+'</small></div><span class="pill brand"><i></i>'+lid.length+'</span></div>':'')+
+    '<div class="row"><div class="main"><strong>Sirvo em</strong><small>'+(mins.length?esc(mins.join(" · ")):"nenhum")+'</small></div><span class="pill mut">'+mins.length+'</span></div>'+
+    '<div class="row"><div class="main"><strong>Postos que atendo</strong><small>'+(postos.length?esc(postos.join(" · ")):"nenhum marcado")+'</small></div><span class="pill mut">'+postos.length+'</span></div>'+
+    '</div>';
+  var meusChq=turnosFirmes(p.id).filter(function(t){return conflitosDe(p.id,t).length;});
+  if(meusChq.length)
+    h+='<div class="alert crit">'+svg("swap",18)+'<div><b>'+meusChq.length+' choque(s) de horário</b>'+
+      'Você está escalado em dois lugares ao mesmo tempo. Veja em Minha escala.</div></div>';
+  h+='<div class="alert info">'+svg("user",18)+'<div><b>Quem muda isso é o líder</b>Se você passou a servir em outro posto, fale com ele — assim a escala continua batendo com a realidade.</div></div>';
+  return h;
+}
+
+/* ============ render ============ */
+var VIEWS={
+  "adm.minis":admMinis,"adm.cultos":admCultos,"adm.pessoas":admPessoas,"adm.rel":admRel,"adm.cfg":admCfg,
+  "lider.escalas":liderEscalas,"lider.postos":liderPostos,"lider.equipe":liderEquipe,"lider.rel":liderRel,"lider.cfg":liderCfg,
+  "voluntario.inicio":volInicio,"voluntario.aberta":volAberta,"voluntario.meus":volMeus,"voluntario.perfil":volPerfil
+};
+function subtitulo(){
+  if(S.persona==="adm")return "ADMINISTRAÇÃO";
+  if(S.persona==="lider"){var m=meuMin();return m?(m.nome+" · LÍDER").toUpperCase():"LÍDER · SEM MINISTÉRIO";}
+  var p=euVol();return p?(p.nome.split(" ")[0]+" · VOLUNTÁRIO").toUpperCase():"VOLUNTÁRIO";
+}
+function avatarTxt(){
+  if(S.persona==="adm"){var a=DB.pessoas.filter(function(p){return p.adm;})[0];return a?ini(a.nome):"AD";}
+  if(S.persona==="lider"){var m=meuMin();return m&&m.liderId?ini(nomeDe(m.liderId)):"—";}
+  var p=euVol();return p?ini(p.nome):"—";
+}
+function render(keep){
+  var top=keep?mainEl.scrollTop:0;
+  var key=S.persona+"."+S.tab[S.persona];
+  screenEl.innerHTML=(VIEWS[key]||function(){return "";})();
+  $("#app-sub").textContent=subtitulo();
+  $("#app-avatar").textContent=avatarTxt();
+  var th="";
+  TABS[S.persona].forEach(function(t){
+    var nb=0; try{nb=t.badge?t.badge():0;}catch(err){nb=0;}
+    th+='<button data-tab="'+t.id+'" aria-selected="'+(S.tab[S.persona]===t.id)+'">'+svg(t.i,20)+
+      '<span>'+t.l+'</span>'+(nb?'<span class="badge">'+nb+'</span>':'')+'</button>';
+  });
+  tabbarEl.innerHTML=th;
+  document.querySelectorAll("[data-persona]").forEach(function(b){
+    b.setAttribute("aria-selected",String(b.dataset.persona===S.persona));
+  });
+  mainEl.scrollTop=top;
+}
+function irPara(persona,tab){S.persona=persona;if(tab)S.tab[persona]=tab;S.view=null;closeSheet();render();}
+
+/* ============ formulários ============ */
+function formPessoa(p){
+  var lid=p?lideraDe(p.id):[];
+  return '<div class="form">'+
+    campo("f-nome","Nome completo","Nome e sobrenome",p?p.nome:"")+
+    campo("f-tel","Celular (WhatsApp)","(00) 0 0000-0000",p?p.tel:"","tel")+
+    '</div>'+
+    (DB.ministerios.length
+      ? '<div style="padding:13px 18px 0"><div class="eyebrow" style="margin:0 0 8px"><span>Serve como voluntário em</span></div>'+
+        '<div class="chips" style="flex-wrap:wrap">'+DB.ministerios.map(function(m){
+          return '<button class="chip" data-act="chip" data-p="'+m.id+'" aria-pressed="'+(p&&p.minIds.indexOf(m.id)>=0)+'">'+esc(m.nome)+'</button>';
+        }).join("")+'</div>'+
+        '<p style="font-size:12px;color:var(--ink-3);margin:9px 0 0">Pode marcar mais de um. Escolher aqui não torna a pessoa líder.</p></div>'
+      : '<p style="font-size:12.5px;color:var(--ink-3);margin:12px 18px 0">Nenhum ministério criado ainda.</p>')+
+    (lid.length?'<div style="padding:13px 18px 0"><div class="alert info" style="margin:0">'+svg("users",18)+
+      '<div><b>Lidera '+esc(lid.map(function(m){return m.nome;}).join(", "))+'</b>A liderança é definida na tela do ministério.</div></div></div>':"")+
+    '<div style="padding:13px 18px 4px"><div class="card list" style="margin:0">'+
+    '<button class="switch" data-act="sw-adm" aria-pressed="'+(p&&p.adm?"true":"false")+'" style="display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 14px;width:100%">'+
+    '<span style="font-size:14px;font-weight:500">Administrador<small style="display:block;color:var(--ink-3);font-size:12px;font-weight:400;margin-top:1px">Gere ministérios, líderes e usuários</small></span>'+
+    '<span class="track"></span></button></div></div>';
+}
+function sheetNovaPessoa(p){
+  openSheet(p?"Editar pessoa":"Adicionar pessoa",
+    p?"":"O papel define o que ela enxerga no app.",
+    formPessoa(p),
+    '<div style="display:flex;gap:9px">'+(p?'<button class="btn danger" data-act="excluir-pessoa" data-id="'+p.id+'">Excluir</button>':'')+
+    '<button class="btn primary" data-act="salvar-pessoa"'+(p?' data-id="'+p.id+'"':'')+'>Salvar</button></div>');
+}
+function planoGeracao(){
+  var box=document.getElementById("ger"); if(!box)return [];
+  var e=by(DB.escalas,box.dataset.esc); if(!e)return [];
+  var cs=[],ps=[];
+  box.querySelectorAll('[data-act="chip-ger"][aria-pressed="true"]').forEach(function(el){
+    if(el.dataset.c)cs.push(el.dataset.c); else if(el.dataset.p)ps.push(el.dataset.p);
+  });
+  var out=[],existentes=turnosDa(e.id);
+  cs.forEach(function(cid){
+    var c=by(DB.cultos,cid); if(!c)return;
+    ocorrencias(c,e.mes).forEach(function(d){
+      ps.forEach(function(pid){
+        var po=by(DB.postos,pid); if(!po)return;
+        var jaTem=existentes.some(function(t){return t.postoId===pid&&t.data===d&&t.ini===c.ini;})||
+                  out.some(function(t){return t.postoId===pid&&t.data===d&&t.ini===c.ini;});
+        if(jaTem)return;
+        out.push({id:uid(),escalaId:e.id,postoId:pid,data:d,ini:c.ini,fim:c.fim,
+                  vagas:po.vagas,cultoId:c.id,cultoNome:c.nome});
+      });
+    });
+  });
+  return out.sort(function(a,b){return dia(a.data).ord-dia(b.data).ord;});
+}
+function sheetFuncao(tid,pid,sel){
+  var t=by(DB.turnos,tid),m=minDoTurno(t),p=pessoa(pid);
+  if(!t||!m||!p)return;
+  var fs=funcoesDe(m.id);
+  var atuais=sel||funcsDo(tid,pid);
+  var sabe=p.funcaoIds||[];
+  var ordem=fs.slice().sort(function(a,b){return (sabe.indexOf(b.id)>=0)-(sabe.indexOf(a.id)>=0);});
+  openSheet("O que "+primeiro(pid)+" vai fazer?",
+    tituloTurno(t)+" · "+fmtData(t.data)+" · "+t.ini,
+    '<div id="fn" data-t="'+tid+'" data-p="'+pid+'">'+
+    (fs.length
+      ? '<div style="padding:0 18px 4px"><div class="chips" style="flex-wrap:wrap">'+
+        ordem.map(function(x){
+          return '<button class="chip" data-act="chip-func" data-f="'+x.id+'" aria-pressed="'+(atuais.indexOf(x.id)>=0)+'">'+
+            esc(x.nome)+(sabe.indexOf(x.id)>=0?' <span style="opacity:.65">já faz</span>':'')+'</button>';
+        }).join("")+'</div>'+
+        '<p style="font-size:12.5px;color:var(--ink-3);margin:11px 0 0">Pode marcar mais de uma.</p></div>'
+      : '<p style="padding:0 18px;font-size:13px;color:var(--ink-3)">Nenhuma função criada ainda. Crie a primeira abaixo.</p>')+
+    '<div style="padding:12px 18px 4px"><div class="form" style="margin:0">'+
+    '<div class="field"><label for="f-nf">Criar função nova</label>'+
+    '<div style="display:flex;gap:8px;align-items:center">'+
+    '<input id="f-nf" placeholder="Ex.: mesa de som" style="flex:1">'+
+    '<button class="btn sm soft" data-act="nova-func-inline" style="flex:none">Adicionar</button></div></div></div></div>',
+    '<div style="display:flex;gap:9px">'+
+    '<button class="btn ghost" data-act="func-limpar">Sem função</button>'+
+    '<button class="btn primary" data-act="func-ok">Salvar</button></div>');
+}
+function selFuncs(){
+  var box=document.getElementById("fn"); if(!box)return [];
+  var out=[];
+  box.querySelectorAll('[data-act="chip-func"][aria-pressed="true"]').forEach(function(el){out.push(el.dataset.f);});
+  return out;
+}
+function previaGeracao(){
+  var el=document.getElementById("prev"); if(!el)return;
+  var plano=planoGeracao();
+  var box=document.getElementById("ger");
+  var ps=box?box.querySelectorAll('[data-act="chip-ger"][data-p][aria-pressed="true"]').length:0;
+  el.innerHTML='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+ICON.cal+'</svg>'+
+    '<div>'+(!ps?"Escolha ao menos um posto."
+      :(plano.length?'<b>'+plano.length+' turno(s) serão criados</b>'+
+        esc(plano.slice(0,3).map(function(t){var d=dia(t.data);return d.n+"/"+t.data.split("-")[1]+" "+t.ini;}).join(" · "))+
+        (plano.length>3?" e mais "+(plano.length-3):"")
+      :"Nada novo a criar — esses turnos já existem."))+'</div>';
+}
+function proximoMes(){
+  var d=hoje();d.setDate(1);d.setMonth(d.getMonth()+1);
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");
+}
+function opcoesMes(){
+  var out=[],d=hoje();d.setDate(1);
+  for(var i=0;i<8;i++){
+    var ym=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");
+    out.push({v:ym,l:fmtMes(ym)});
+    d.setMonth(d.getMonth()+1);
+  }
+  return out;
+}
+
+/* ============ ações ============ */
+document.addEventListener("click",function(ev){
+  var t=ev.target.closest("[data-persona],[data-tab],[data-act]");
+  if(!t)return;
+  if(t.dataset.persona){S.persona=t.dataset.persona;S.view=null;S.diaSel=null;S.mesCal=null;closeSheet();render();return;}
+  if(t.dataset.tab){S.tab[S.persona]=t.dataset.tab;S.view=null;S.diaSel=null;S.mesCal=null;closeSheet();render();return;}
+  var a=t.dataset.act,id=t.dataset.id,m,p,e,x;
+
+  switch(a){
+  case "fechar": closeSheet(); break;
+  case "voltar": S.view=null; render(); break;
+  case "ir-adm": irPara("adm","minis"); break;
+  case "ir-pessoas": irPara("adm","pessoas"); break;
+  case "ir-postos": irPara("lider","postos"); break;
+  case "ir-equipe": irPara("lider","equipe"); break;
+  case "ir-escalas": irPara("lider","escalas"); break;
+  case "mes-cal": S.mesCal=shiftMes(S.mesCal,+t.dataset.k); S.diaSel=null; render(true); break;
+  case "dia-cal":
+    S.diaSel=(S.diaSel===t.dataset.d)?null:t.dataset.d;
+    S.mesCal=ymDe(t.dataset.d); render(true); break;
+  case "limpar-dia": S.diaSel=null; render(true); break;
+  case "ir-aberta": irPara("voluntario","aberta"); break;
+  case "ir-meus": irPara("voluntario","meus"); break;
+  case "bar": S.barSel=+t.dataset.i; render(true); break;
+
+  /* ---- ministérios ---- */
+  case "nova-funcao":
+    m=meuMin();
+    openSheet("Criar função","Ex.: câmera, mesa de som, fotografia, caixa da cantina.",
+      '<div class="form">'+campo("f-fn-nome","Nome da função","Ex.: mesa de som")+'</div>',
+      '<button class="btn primary wide" data-act="salvar-funcao">Criar</button>');
+    break;
+  case "salvar-funcao":
+    m=meuMin(); var fn=v("f-fn-nome"); if(!fn){toast("Escreva o nome da função.");return;}
+    DB.funcoes.push({id:uid(),minId:m.id,nome:fn}); save(); closeSheet();
+    toast("Função criada. Agora é só reaproveitar."); render(true); break;
+  case "func-editar":
+    x=by(DB.funcoes,id);
+    openSheet("Editar função","Renomear vale para todas as escalas, inclusive as antigas.",
+      '<div class="form">'+campo("f-fn-nome","Nome da função","",x.nome)+'</div>',
+      '<div style="display:flex;gap:9px"><button class="btn danger" data-act="excluir-funcao" data-id="'+id+'">Excluir</button>'+
+      '<button class="btn primary" data-act="renomear-funcao" data-id="'+id+'">Salvar</button></div>');
+    break;
+  case "renomear-funcao":
+    x=by(DB.funcoes,id); var nf=v("f-fn-nome"); if(nf)x.nome=nf;
+    save(); closeSheet(); toast("Função atualizada."); render(true); break;
+  case "excluir-funcao":
+    DB.funcoes=DB.funcoes.filter(function(o){return o.id!==id;});
+    Object.keys(DB.func).forEach(function(tid){
+      Object.keys(DB.func[tid]).forEach(function(pid){
+        DB.func[tid][pid]=DB.func[tid][pid].filter(function(z){return z!==id;});
+        if(!DB.func[tid][pid].length)delete DB.func[tid][pid];
+      });
+      if(!Object.keys(DB.func[tid]).length)delete DB.func[tid];
+    });
+    DB.pessoas.forEach(function(o){o.funcaoIds=(o.funcaoIds||[]).filter(function(z){return z!==id;});});
+    save(); closeSheet(); toast("Função removida."); render(true); break;
+  case "pessoa-func":
+    p=pessoa(id); var fid=t.dataset.f;
+    p.funcaoIds=p.funcaoIds||[];
+    var iF=p.funcaoIds.indexOf(fid);
+    if(iF>=0)p.funcaoIds.splice(iF,1); else p.funcaoIds.push(fid);
+    save(); t.setAttribute("aria-pressed",String(iF<0)); break;
+  case "def-func": sheetFuncao(id,t.dataset.p); break;
+  case "chip-func": t.setAttribute("aria-pressed",String(t.getAttribute("aria-pressed")!=="true")); break;
+  case "nova-func-inline":
+    var nn2=v("f-nf"); if(!nn2){toast("Escreva o nome da função.");return;}
+    var box2=document.getElementById("fn");
+    m=minDoTurno(by(DB.turnos,box2.dataset.t));
+    var novaF={id:uid(),minId:m.id,nome:nn2};
+    DB.funcoes.push(novaF); save();
+    sheetFuncao(box2.dataset.t,box2.dataset.p,selFuncs().concat([novaF.id]));
+    break;
+  case "func-ok":
+    var box3=document.getElementById("fn"); if(!box3)return;
+    var tid3=box3.dataset.t,pid3=box3.dataset.p,ids3=selFuncs();
+    setFuncs(tid3,pid3,ids3); save(); closeSheet();
+    toast(ids3.length?primeiro(pid3)+" · "+ids3.map(nomeFunc).join(" · "):"Sem função definida.");
+    render(true); break;
+  case "func-limpar":
+    var box4=document.getElementById("fn"); if(!box4)return;
+    setFuncs(box4.dataset.t,box4.dataset.p,[]); save(); closeSheet();
+    toast("Função removida."); render(true); break;
+
+  case "novo-culto":
+    openSheet("Cadastrar culto","Ele passa a valer para todos os ministérios.",formCulto(null),
+      '<button class="btn primary wide" data-act="salvar-culto">Cadastrar</button>');
+    break;
+  case "culto":
+    x=by(DB.cultos,id);
+    openSheet(x.nome,rotuloCulto(x)+" · "+x.ini+" às "+x.fim,
+      formCulto(x)+
+      '<div style="padding:12px 18px 0"><div class="eyebrow" style="margin:0 0 8px"><span>Próximas datas</span></div>'+
+      '<p style="margin:0;font-size:13px;color:var(--ink-2)">'+
+      (proximasDatas(x,4).map(function(d){return esc(fmtData(d));}).join(" · ")||"nenhuma nos próximos meses")+'</p></div>',
+      '<div style="display:flex;gap:9px"><button class="btn danger" data-act="excluir-culto" data-id="'+id+'">Excluir</button>'+
+      '<button class="btn primary" data-act="salvar-culto" data-id="'+id+'">Salvar</button></div>');
+    break;
+  case "salvar-culto":
+    var cn=v("f-cu-nome"); if(!cn){toast("Escreva o nome do culto.");return;}
+    var dados={nome:cn,tipo:v("f-cu-tipo")||"semanal",dia:+v("f-cu-dia")||0,
+      ordem:+v("f-cu-ordem")||1,ini:v("f-cu-ini")||"00h00",fim:v("f-cu-fim")||"00h00"};
+    if(id){x=by(DB.cultos,id);for(var kk in dados)x[kk]=dados[kk];}
+    else{dados.id=uid();DB.cultos.push(dados);}
+    save(); closeSheet(); toast(id?"Culto atualizado.":"Culto cadastrado."); render(true); break;
+  case "excluir-culto":
+    DB.cultos=DB.cultos.filter(function(o){return o.id!==id;});
+    save(); closeSheet(); toast("Culto removido da grade."); render(true); break;
+  case "grade-padrao":
+    GRADE_PADRAO.forEach(function(o){
+      DB.cultos.push({id:uid(),nome:o.nome,tipo:o.tipo,dia:o.dia,ordem:o.ordem||1,ini:o.ini,fim:o.fim});
+    });
+    save(); toast(GRADE_PADRAO.length+" cultos cadastrados. Confira os horários."); render(); break;
+
+  case "novo-min":
+    openSheet("Criar ministério","Depois você vincula o líder e ele monta o resto.",
+      '<div class="form">'+campo("f-min-nome","Nome do ministério","Ex.: Eventos, Louvor, Recepção")+'</div>',
+      '<button class="btn primary wide" data-act="salvar-min">Criar ministério</button>');
+    break;
+  case "salvar-min":
+    var nm=v("f-min-nome"); if(!nm){toast("Escreva o nome do ministério.");return;}
+    DB.ministerios.push({id:uid(),nome:nm,liderId:null}); save(); closeSheet();
+    toast("Ministério criado. Agora vincule o líder."); render(); break;
+  case "min": S.view="min"; S.arg=id; render(); break;
+  case "renomear-min":
+    m=by(DB.ministerios,id);
+    openSheet("Renomear ministério","",'<div class="form">'+campo("f-min-nome","Nome",""+"",m.nome)+'</div>',
+      '<button class="btn primary wide" data-act="salvar-renome" data-id="'+id+'">Salvar</button>');
+    break;
+  case "salvar-renome":
+    m=by(DB.ministerios,id); var nn=v("f-min-nome");
+    if(nn){m.nome=nn;save();} closeSheet(); toast("Nome atualizado."); render(); break;
+  case "excluir-min":
+    openSheet("Excluir ministério","Isso apaga os postos, as escalas e os turnos dele. As pessoas continuam cadastradas.",
+      '<div style="padding:0 18px 12px"><div class="alert crit" style="margin:0">'+svg("trash",18)+
+      '<div><b>Não dá para desfazer</b>Confirme só se você realmente quer apagar.</div></div></div>',
+      '<div style="display:flex;gap:9px"><button class="btn ghost" data-act="fechar">Cancelar</button>'+
+      '<button class="btn danger" data-act="excluir-min-ok" data-id="'+id+'">Excluir</button></div>');
+    break;
+  case "excluir-min-ok":
+    var postosIds=postosDo(id).map(function(o){return o.id;});
+    var escIds=escalasDo(id).map(function(o){return o.id;});
+    DB.turnos=DB.turnos.filter(function(tt){return escIds.indexOf(tt.escalaId)<0;});
+    DB.escalas=DB.escalas.filter(function(o){return o.minId!==id;});
+    DB.postos=DB.postos.filter(function(o){return o.minId!==id;});
+    DB.pessoas.forEach(function(o){
+      o.minIds=o.minIds.filter(function(z){return z!==id;});
+      o.postoIds=o.postoIds.filter(function(z){return postosIds.indexOf(z)<0;});
+    });
+    DB.ministerios=DB.ministerios.filter(function(o){return o.id!==id;});
+    save(); closeSheet(); S.view=null; toast("Ministério excluído."); render(); break;
+  case "vincular":
+    var cands=DB.pessoas.slice();
+    openSheet("Vincular líder","Quem assumir passa a gerir postos, escalas e voluntários deste ministério.",
+      cands.length?('<div class="card list flat" style="border:none">'+cands.map(function(o){
+        return '<button class="row" data-act="set-lider" data-id="'+id+'" data-p="'+o.id+'">'+
+          '<span class="ini">'+ini(o.nome)+'</span>'+
+          '<span class="main"><strong>'+esc(o.nome)+'</strong><small>'+
+            (rotulos(o).length?esc(rotulos(o).map(function(r){return r.t;}).join(" · ")):"sem ministério")+'</small></span>'+
+          '<span class="chev">'+svg("back",16)+'</span></button>';
+      }).join("")+'</div>'):'<div class="empty"><b>Ninguém cadastrado</b><p>Cadastre a pessoa em Pessoas antes de vincular.</p></div>',
+      '<button class="btn ghost wide" data-act="fechar">Cancelar</button>');
+    break;
+  case "set-lider":
+    m=by(DB.ministerios,id); p=pessoa(t.dataset.p);
+    m.liderId=p.id;
+    DB.eu.minLider=m.id; save(); closeSheet();
+    toast(primeiro(p.id)+" agora lidera "+m.nome+"."); render(true); break;
+
+  /* ---- pessoas ---- */
+  case "nova-pessoa": sheetNovaPessoa(null); break;
+  case "pessoa": sheetNovaPessoa(pessoa(id)); break;
+  case "salvar-pessoa":
+    var nome=v("f-nome"); if(!nome){toast("Escreva o nome da pessoa.");return;}
+    var sel0=[];document.querySelectorAll('#sheet-body [data-act="chip"][aria-pressed="true"]').forEach(function(c){sel0.push(c.dataset.p);});
+    var ehAdm=!!document.querySelector('#sheet-body [data-act="sw-adm"][aria-pressed="true"]');
+    if(id){
+      p=pessoa(id); p.nome=nome; p.tel=v("f-tel"); p.adm=ehAdm;
+      var saiu=p.minIds.filter(function(x){return sel0.indexOf(x)<0;});
+      p.minIds=sel0;
+      saiu.forEach(function(mid){
+        p.postoIds=p.postoIds.filter(function(pid3){var o=by(DB.postos,pid3);return !o||o.minId!==mid;});
+      });
+    }else{
+      p={id:uid(),nome:nome,tel:v("f-tel"),adm:ehAdm,minIds:sel0,postoIds:[],ativo:true};
+      DB.pessoas.push(p);
+    }
+    save(); closeSheet(); toast(id?"Pessoa atualizada.":"Pessoa cadastrada."); render(true); break;
+  case "sw-adm": t.setAttribute("aria-pressed",String(t.getAttribute("aria-pressed")!=="true")); break;
+  case "excluir-pessoa":
+    DB.ministerios.forEach(function(o){if(o.liderId===id)o.liderId=null;});
+    Object.keys(DB.disp).forEach(function(k){DB.disp[k]=DB.disp[k].filter(function(z){return z!==id;});});
+    Object.keys(DB.conf).forEach(function(k){DB.conf[k]=DB.conf[k].filter(function(z){return z!==id;});});
+    DB.pessoas=DB.pessoas.filter(function(o){return o.id!==id;});
+    if(DB.eu.lider===id)DB.eu.lider=null; if(DB.eu.voluntario===id)DB.eu.voluntario=null;
+    save(); closeSheet(); S.view=null; toast("Pessoa excluída."); render(); break;
+
+  /* ---- postos ---- */
+  case "novo-posto":
+    openSheet("Criar posto","Posto é a função ou o lugar onde a pessoa serve.",
+      '<div class="form">'+
+      campo("f-po-nome","Nome do posto","Ex.: Cantina · Cozinha")+
+      campo("f-po-desc","Descrição curta (opcional)","Ex.: salgados fritos e assados")+
+      campo("f-po-vagas","Vagas por turno","4","4","number")+
+      '</div>','<button class="btn primary wide" data-act="salvar-posto">Criar posto</button>');
+    break;
+  case "salvar-posto":
+    m=meuMin(); var pn=v("f-po-nome"); if(!pn){toast("Escreva o nome do posto.");return;}
+    DB.postos.push({id:uid(),minId:m.id,nome:pn,desc:v("f-po-desc"),vagas:Math.max(1,+v("f-po-vagas")||1)});
+    save(); closeSheet(); toast("Posto criado."); render(true); break;
+  case "posto":
+    x=by(DB.postos,id);
+    openSheet(x.nome,"Vagas padrão dos turnos deste posto.",
+      '<div class="form">'+
+      campo("f-po-nome","Nome do posto","",x.nome)+
+      campo("f-po-desc","Descrição curta","",x.desc)+
+      campo("f-po-vagas","Vagas por turno","",x.vagas,"number")+
+      '</div>',
+      '<div style="display:flex;gap:9px"><button class="btn danger" data-act="excluir-posto" data-id="'+id+'">Excluir</button>'+
+      '<button class="btn primary" data-act="atualizar-posto" data-id="'+id+'">Salvar</button></div>');
+    break;
+  case "atualizar-posto":
+    x=by(DB.postos,id); var xn=v("f-po-nome");
+    if(xn)x.nome=xn; x.desc=v("f-po-desc"); x.vagas=Math.max(1,+v("f-po-vagas")||1);
+    save(); closeSheet(); toast("Posto atualizado."); render(true); break;
+  case "excluir-posto":
+    DB.turnos=DB.turnos.filter(function(tt){return tt.postoId!==id;});
+    DB.pessoas.forEach(function(o){o.postoIds=o.postoIds.filter(function(z){return z!==id;});});
+    DB.postos=DB.postos.filter(function(o){return o.id!==id;});
+    save(); closeSheet(); toast("Posto excluído."); render(true); break;
+
+  /* ---- escalas e turnos ---- */
+  case "nova-escala":
+    m=meuMin();
+    var jaTem=escalasDo(m.id).map(function(o){return o.mes;});
+    var opts=opcoesMes().filter(function(o){return jaTem.indexOf(o.v)<0;});
+    if(!opts.length){toast("Todos os próximos meses já têm escala.");return;}
+    var pr=new Date(); pr.setDate(pr.getDate()+7);
+    openSheet("Abrir escala do mês","Você monta os turnos primeiro; a equipe só vê quando você liberar.",
+      '<div class="form">'+select("f-es-mes","Mês da escala",opts,opts[0].v)+
+      campo("f-es-prazo","Prazo para responder","",iso(pr),"date")+'</div>',
+      '<button class="btn primary wide" data-act="salvar-escala">Criar escala</button>');
+    break;
+  case "salvar-escala":
+    m=meuMin();
+    e={id:uid(),minId:m.id,mes:v("f-es-mes"),prazo:v("f-es-prazo"),status:"rascunho"};
+    DB.escalas.push(e); save(); closeSheet(); S.view="montar"; S.arg=e.id;
+    toast("Escala criada. Agora adicione os turnos."); render(); break;
+  case "montar": S.view="montar"; S.arg=id; render(); break;
+  case "gerar-cultos":
+    e=by(DB.escalas,id); m=by(DB.ministerios,e.minId);
+    var pos2=postosDo(m.id);
+    if(!pos2.length){toast("Crie um posto antes.");return;}
+    var comData=DB.cultos.map(function(c){return {c:c,ds:ocorrencias(c,e.mes)};}).filter(function(o){return o.ds.length;});
+    if(!comData.length){toast("Nenhum culto cai neste mês.");return;}
+    openSheet("Gerar turnos de "+fmtMes(e.mes),"Escolha os cultos e em quais postos o seu ministério serve.",
+      '<div id="ger" data-esc="'+e.id+'">'+
+      '<div style="padding:0 18px 8px"><div class="eyebrow" style="margin:0 0 8px"><span>Cultos deste mês</span></div>'+
+      '<div class="chips" style="flex-wrap:wrap">'+comData.map(function(o){
+        return '<button class="chip" data-act="chip-ger" data-c="'+o.c.id+'" aria-pressed="true">'+
+          esc(o.c.nome)+' · '+esc(o.c.ini)+' <span style="opacity:.7">('+o.ds.length+')</span></button>';
+      }).join("")+'</div></div>'+
+      '<div style="padding:10px 18px 8px"><div class="eyebrow" style="margin:0 0 8px"><span>Postos do ministério</span></div>'+
+      '<div class="chips" style="flex-wrap:wrap">'+pos2.map(function(o){
+        return '<button class="chip" data-act="chip-ger" data-p="'+o.id+'" aria-pressed="'+(pos2.length===1)+'">'+esc(o.nome)+'</button>';
+      }).join("")+'</div></div>'+
+      '<div style="padding:10px 18px 4px"><div class="alert info" style="margin:0" id="prev">'+svg("cal",18)+
+      '<div>Escolha ao menos um posto.</div></div></div></div>',
+      '<button class="btn primary wide" data-act="gerar-ok" data-id="'+e.id+'">Gerar turnos</button>');
+    previaGeracao(); break;
+  case "chip-ger":
+    t.setAttribute("aria-pressed",String(t.getAttribute("aria-pressed")!=="true"));
+    previaGeracao(); break;
+  case "gerar-ok":
+    var plano=planoGeracao();
+    if(!plano.length){toast("Escolha pelo menos um culto e um posto.");return;}
+    plano.forEach(function(o){DB.turnos.push(o);});
+    save(); closeSheet(); toast(plano.length+" turno(s) gerado(s)."); render(true); break;
+
+  case "novo-turno":
+    e=by(DB.escalas,id); m=by(DB.ministerios,e.minId);
+    var pos=postosDo(m.id);
+    if(!pos.length){toast("Crie um posto antes.");return;}
+    var d1=e.mes+"-01";
+    openSheet("Adicionar turno","Um dia de serviço: posto, data, horário e vagas.",
+      '<div class="form">'+
+      select("f-tu-posto","Posto",pos.map(function(o){return {v:o.id,l:o.nome};}),pos[0].id)+
+      (DB.cultos.length?select("f-tu-culto","Culto (opcional)",
+        [{v:"",l:"— fora da grade —"}].concat(DB.cultos.map(function(o){return {v:o.id,l:o.nome+" · "+o.ini};})),""):"")+
+      campo("f-tu-data","Data","",d1,"date")+
+      '<div class="duo">'+campo("f-tu-ini","Início","08h00","08h00")+campo("f-tu-fim","Fim","11h30","11h30")+'</div>'+
+      campo("f-tu-vagas","Vagas",""+pos[0].vagas,pos[0].vagas,"number")+
+      '</div>',
+      '<div style="display:flex;gap:9px"><button class="btn soft" data-act="salvar-turno" data-id="'+id+'" data-mais="1">Salvar e adicionar outro</button>'+
+      '<button class="btn primary" data-act="salvar-turno" data-id="'+id+'">Salvar</button></div>');
+    break;
+  case "salvar-turno":
+    e=by(DB.escalas,id);
+    var dt=v("f-tu-data"); if(!dt){toast("Escolha a data do turno.");return;}
+    var cSel=by(DB.cultos,v("f-tu-culto"));
+    DB.turnos.push({id:uid(),escalaId:e.id,postoId:v("f-tu-posto"),data:dt,
+      ini:v("f-tu-ini")||"00h00",fim:v("f-tu-fim")||"00h00",vagas:Math.max(1,+v("f-tu-vagas")||1),
+      cultoId:cSel?cSel.id:null,cultoNome:cSel?cSel.nome:""});
+    save();
+    if(t.dataset.mais){
+      var dd=document.getElementById("f-tu-data"); if(dd){var nd=new Date(dt+"T12:00:00");nd.setDate(nd.getDate()+7);dd.value=iso(nd);}
+      toast("Turno adicionado. Próximo?");
+    }else{closeSheet();toast("Turno adicionado.");}
+    render(true); break;
+  case "turno":
+    x=by(DB.turnos,id); e=by(DB.escalas,x.escalaId);
+    var po2=by(DB.postos,x.postoId),d2=dia(x.data);
+    if(e.status==="rascunho"){
+      openSheet((po2?po2.nome:"Turno")+" · "+d2.n+"/"+x.data.split("-")[1],d2.sem+", "+x.ini+" às "+x.fim,
+        '<div class="form">'+
+        campo("f-tu-data","Data","",x.data,"date")+
+        '<div class="duo">'+campo("f-tu-ini","Início","",x.ini)+campo("f-tu-fim","Fim","",x.fim)+'</div>'+
+        campo("f-tu-vagas","Vagas","",x.vagas,"number")+'</div>',
+        '<div style="display:flex;gap:9px"><button class="btn danger" data-act="excluir-turno" data-id="'+id+'">Excluir</button>'+
+        '<button class="btn primary" data-act="atualizar-turno" data-id="'+id+'">Salvar</button></div>');
+      break;
+    }
+    var c2=conf(x.id),dp2=disp(x.id);
+    var body="";
+    if(c2.length){
+      body+='<div style="padding:0 18px 6px"><div class="eyebrow" style="margin:0"><span>Confirmados ('+c2.length+'/'+x.vagas+')</span></div></div>'+
+        '<div class="card list flat" style="border:none">';
+      var mt=minDoTurno(x), temFunc=mt?funcoesDe(mt.id).length>0:false;
+      c2.forEach(function(pid){
+        var rf=rotuloFuncs(x.id,pid);
+        body+='<div class="row" style="flex-wrap:wrap"><span class="ini">'+ini(nomeDe(pid))+'</span>'+
+          '<span class="main"><strong>'+esc(nomeDe(pid))+'</strong>'+
+          (temFunc?'<small>'+(rf?esc(rf):'<span style="color:var(--warn)">sem função definida</span>')+'</small>':'')+'</span>'+
+          (temFunc?'<button class="btn sm soft" data-act="def-func" data-id="'+x.id+'" data-p="'+pid+'">'+(rf?"Trocar":"Definir")+'</button>':'')+
+          '<button class="btn sm ghost" data-act="desconfirmar" data-id="'+x.id+'" data-p="'+pid+'">Tirar</button></div>';
+      });
+      body+='</div>';
+    }
+    var livres=dp2.filter(function(pid){return c2.indexOf(pid)<0;});
+    body+='<div style="padding:10px 18px 6px"><div class="eyebrow" style="margin:0"><span>Marcaram disponibilidade ('+livres.length+')</span></div></div>';
+    if(!livres.length){
+      body+='<div class="empty"><b>Ninguém disponível</b><p>Nenhum voluntário marcou este turno. Vai precisar chamar alguém do posto.</p></div>';
+    }else{
+      body+='<div class="card list flat" style="border:none">';
+      livres.forEach(function(pid){
+        var carga=turnosFirmes(pid).length;
+        var cf=conflitosDe(pid,x);
+        body+='<div class="row" style="flex-wrap:wrap"><span class="ini'+(cf.length?" mut":"")+'">'+ini(nomeDe(pid))+'</span>'+
+          '<span class="main"><strong>'+esc(nomeDe(pid))+'</strong><small>'+carga+' turno(s) no total</small></span>'+
+          (cf.length?'<span class="pill crit"><i></i>Choca</span>'
+            :(carga>DB.cfg.limite?'<span class="pill warn"><i></i>Carga</span>':""))+
+          (cf.length?"":'<button class="btn sm soft" data-act="confirmar" data-id="'+x.id+'" data-p="'+pid+'">Confirmar</button>')+
+          (cf.length?'<div style="width:100%;margin-top:9px">'+
+            '<div style="font-size:12px;color:var(--crit);font-weight:600;line-height:1.4">⚠ já escalado em '+esc(descreveTurno(cf[0]))+'</div>'+
+            '<button class="btn sm ghost" style="margin-top:8px;width:100%" data-act="confirmar" data-id="'+x.id+'" data-p="'+pid+'">Confirmar mesmo assim</button></div>':"")+
+          '</div>';
+      });
+      body+='</div>';
+    }
+    openSheet((po2?po2.nome:"Turno")+" · "+d2.n+"/"+x.data.split("-")[1],
+      d2.sem+", "+x.ini+" às "+x.fim+" · "+x.vagas+" vaga(s)",body);
+    break;
+  case "atualizar-turno":
+    x=by(DB.turnos,id); var nd2=v("f-tu-data");
+    if(nd2)x.data=nd2; x.ini=v("f-tu-ini")||x.ini; x.fim=v("f-tu-fim")||x.fim;
+    x.vagas=Math.max(1,+v("f-tu-vagas")||1); save(); closeSheet(); toast("Turno atualizado."); render(true); break;
+  case "excluir-turno":
+    delete DB.disp[id]; delete DB.conf[id];
+    DB.turnos=DB.turnos.filter(function(o){return o.id!==id;});
+    save(); closeSheet(); toast("Turno excluído."); render(true); break;
+  case "confirmar":
+    x=by(DB.turnos,id);
+    var alvo=t.dataset.p;
+    var cfc=conflitosDe(alvo,x);
+    DB.conf[id]=conf(id).concat([alvo]); save(); closeSheet();
+    if(cfc.length){
+      avisar(alvo,"Atenção: você ficou escalado em dois lugares no mesmo horário — "+descreveTurno(x)+" e "+descreveTurno(cfc[0])+".");
+      save();
+      toast(primeiro(alvo)+" confirmado, mas choca com "+descreveTurno(cfc[0])+".");
+    }else toast(primeiro(alvo)+" confirmado.");
+    var mm2=minDoTurno(x);
+    if(mm2&&funcoesDe(mm2.id).length){
+      render(true);
+      setTimeout(function(){sheetFuncao(x.id,alvo);},280);
+    }else render(true);
+    break;
+  case "desconfirmar":
+    DB.conf[id]=conf(id).filter(function(z){return z!==t.dataset.p;});
+    setFuncs(id,t.dataset.p,[]); save(); closeSheet();
+    toast(primeiro(t.dataset.p)+" saiu do turno."); render(true); break;
+  case "abrir-escala":
+    e=by(DB.escalas,id);
+    if(!turnosDa(e.id).length){toast("Adicione pelo menos um turno.");return;}
+    e.status="aberta"; save(); toast("Escala liberada. A equipe já pode marcar."); render(true); break;
+  case "publicar":
+    e=by(DB.escalas,id);
+    var falt=turnosDa(e.id).filter(function(tt){return conf(tt.id).length<tt.vagas;}).length;
+    var chq=[];
+    turnosDa(e.id).forEach(function(tt){
+      conf(tt.id).forEach(function(pid4){
+        conflitosDe(pid4,tt).forEach(function(o){
+          if(o.escalaId!==tt.id)chq.push(primeiro(pid4)+" · "+dia(tt.data).n+"/"+tt.data.split("-")[1]);
+        });
+      });
+    });
+    chq=chq.filter(function(z,i){return chq.indexOf(z)===i;});
+    var mSF=by(DB.ministerios,e.minId),semFn=0;
+    if(mSF&&funcoesDe(mSF.id).length)
+      turnosDa(e.id).forEach(function(tt){conf(tt.id).forEach(function(pid6){if(!funcsDo(tt.id,pid6).length)semFn++;});});
+    openSheet("Publicar escala de "+fmtMes(e.mes),falt?falt+" turno(s) ainda incompletos":"Todos os turnos completos",
+      '<div style="padding:2px 18px 12px">'+
+      (semFn?'<div class="alert warn" style="margin:0 0 10px">'+svg("check",18)+
+        '<div><b>'+semFn+' pessoa(s) sem função definida</b>Elas vão receber "função a combinar". Dá para definir depois, mas o aviso já sai assim.</div></div>':'')+
+      (chq.length?'<div class="alert crit" style="margin:0 0 10px">'+svg("swap",18)+
+        '<div><b>'+chq.length+' pessoa(s) com choque de horário</b>'+esc(chq.slice(0,3).join(", "))+
+        ' — já estão escaladas em outro ministério no mesmo horário.</div></div>':'')+
+      (falt?'<div class="alert warn" style="margin:0 0 10px">'+svg("swap",18)+
+        '<div><b>Publicar assim mesmo?</b>Os turnos incompletos continuam visíveis como "precisa de gente".</div></div>':'')+
+      '<p style="font-size:13.5px;color:var(--ink-2);margin:0">Cada pessoa passa a ver só os turnos dela em "Minha escala".</p></div>',
+      '<div style="display:flex;gap:9px"><button class="btn ghost" data-act="fechar">Voltar</button>'+
+      '<button class="btn primary" data-act="publicar-ok" data-id="'+id+'">Publicar</button></div>');
+    break;
+  case "publicar-ok":
+    e=by(DB.escalas,id); e.status="publicada";
+    var avisados=0;
+    turnosDa(e.id).forEach(function(tt){
+      conf(tt.id).forEach(function(pid5){
+        var rf5=rotuloFuncs(tt.id,pid5);
+        avisar(pid5,"Escala publicada: "+(nomeCulto(tt)?nomeCulto(tt)+" · ":"")+fmtData(tt.data)+" às "+tt.ini+
+          (rf5?" — você fica em "+rf5:" — função a combinar com o líder")+".");
+        avisados++;
+      });
+    });
+    save(); closeSheet(); S.view=null; S.mesCal=null;
+    toast("Escala publicada. "+avisados+" aviso(s) enviado(s)."); render(); break;
+  case "reabrir":
+    e=by(DB.escalas,id); e.status="aberta"; save(); toast("Escala reaberta para ajustes."); render(true); break;
+
+  /* ---- equipe do líder ---- */
+  case "novo-vol":
+    m=meuMin();
+    var fora=DB.pessoas.filter(function(o){return o.minIds.indexOf(m.id)<0;});
+    if(fora.length){
+      openSheet("Adicionar à equipe","Quem já existe no app pode servir em mais de um ministério.",
+        '<div style="padding:0 18px 6px"><div class="eyebrow" style="margin:0"><span>Já cadastrados na igreja</span></div></div>'+
+        '<div class="card list flat" style="border:none">'+fora.map(function(o){
+          var rs=rotulos(o);
+          return '<button class="row" data-act="incluir-vol" data-p="'+o.id+'">'+
+            '<span class="ini">'+ini(o.nome)+'</span>'+
+            '<span class="main"><strong>'+esc(o.nome)+'</strong><small>'+
+            (rs.length?esc(rs.map(function(r){return r.t;}).join(" · ")):"sem ministério")+'</small></span>'+
+            '<span class="pill brand"><i></i>Incluir</span></button>';
+        }).join("")+'</div>',
+        '<button class="btn primary wide" data-act="novo-vol-form">Cadastrar pessoa nova</button>');
+      break;
+    }
+    /* falls through */
+  case "novo-vol-form":
+    m=meuMin();
+    openSheet("Cadastrar voluntário","Ele entra direto em "+m.nome+".",
+      '<div class="form">'+campo("f-nome","Nome completo","Nome e sobrenome")+
+      campo("f-tel","Celular (WhatsApp)","(00) 0 0000-0000","","tel")+'</div>'+
+      (postosDo(m.id).length?'<div style="padding:12px 18px 0"><div class="eyebrow" style="margin:0 0 8px"><span>Postos que atende</span></div>'+
+        '<div class="chips" style="flex-wrap:wrap">'+postosDo(m.id).map(function(o){
+          return '<button class="chip" data-act="chip" data-p="'+o.id+'" aria-pressed="false">'+esc(o.nome)+'</button>';}).join("")+'</div></div>':""),
+      '<button class="btn primary wide" data-act="salvar-vol">Cadastrar</button>');
+    break;
+  case "incluir-vol":
+    m=meuMin(); p=pessoa(t.dataset.p);
+    if(p.minIds.indexOf(m.id)<0)p.minIds.push(m.id);
+    save(); closeSheet(); S.view="vol"; S.arg=p.id;
+    toast(primeiro(p.id)+" entrou na equipe. Marque os postos dele."); render(); break;
+  case "salvar-vol":
+    m=meuMin(); var vn=v("f-nome"); if(!vn){toast("Escreva o nome.");return;}
+    var sel=[];document.querySelectorAll('#sheet-body [data-act="chip"][aria-pressed="true"]').forEach(function(c){sel.push(c.dataset.p);});
+    DB.pessoas.push({id:uid(),nome:vn,tel:v("f-tel"),adm:false,minIds:[m.id],postoIds:sel,ativo:true});
+    save(); closeSheet();
+    toast(sel.length?"Voluntário cadastrado.":"Cadastrado — falta marcar os postos dele.");
+    render(true); break;
+  case "chip": t.setAttribute("aria-pressed",String(t.getAttribute("aria-pressed")!=="true")); break;
+  case "vol": S.view="vol"; S.arg=id; render(); break;
+  case "vol-posto":
+    p=pessoa(id); var pid2=t.dataset.p;
+    var i2=p.postoIds.indexOf(pid2);
+    if(i2>=0)p.postoIds.splice(i2,1); else p.postoIds.push(pid2);
+    save(); t.setAttribute("aria-pressed",String(i2<0)); break;
+  case "editar-vol": sheetNovaPessoa(pessoa(id)); break;
+  case "tirar-equipe":
+    m=meuMin(); p=pessoa(id);
+    p.minIds=p.minIds.filter(function(z){return z!==m.id;});
+    p.postoIds=p.postoIds.filter(function(z){var o=by(DB.postos,z);return !o||o.minId!==m.id;});
+    save(); S.view=null; toast(primeiro(id)+" saiu da equipe de "+m.nome+"."); render(); break;
+  case "ativar-vol":
+    p=pessoa(id); p.ativo=!p.ativo; save();
+    toast(p.ativo?primeiro(id)+" reativado.":primeiro(id)+" não recebe mais chamadas."); render(true); break;
+  case "trocar-eu-lider":
+    var ls=DB.ministerios.filter(function(o){return o.liderId;});
+    openSheet("Liderar qual ministério?","Uma pessoa pode liderar mais de um — e servir como voluntária em outros.",
+      '<div class="card list flat" style="border:none">'+ls.map(function(o){
+        return '<button class="row" data-act="set-eu-lider" data-p="'+o.id+'">'+
+          '<span class="ini">'+ini(nomeDe(o.liderId))+'</span>'+
+          '<span class="main"><strong>'+esc(o.nome)+'</strong><small>líder: '+esc(nomeDe(o.liderId))+'</small></span>'+
+          '<span class="chev">'+svg("back",16)+'</span></button>';}).join("")+'</div>');
+    break;
+  case "set-eu-lider": DB.eu.minLider=t.dataset.p; save(); closeSheet(); S.view=null; S.mesCal=null; render(); break;
+  case "trocar-eu-vol":
+    var vs=DB.pessoas.filter(function(o){return o.minIds.length;});
+    openSheet("Simular qual voluntário?","O protótipo mostra o app pelos olhos dessa pessoa.",
+      '<div class="card list flat" style="border:none">'+vs.map(function(o){
+        return '<button class="row" data-act="set-eu-vol" data-p="'+o.id+'">'+
+          '<span class="ini">'+ini(o.nome)+'</span>'+
+          '<span class="main"><strong>'+esc(o.nome)+'</strong><small>'+(o.ativo?"ativo":"inativo")+'</small></span>'+
+          '<span class="chev">'+svg("back",16)+'</span></button>';}).join("")+'</div>');
+    break;
+  case "set-eu-vol": DB.eu.voluntario=t.dataset.p; save(); closeSheet(); S.view=null; S.mesCal=null; S.diaSel=null; render(); break;
+
+  /* ---- voluntário ---- */
+  case "marcar":
+    p=euVol(); var lista=disp(id),i3=lista.indexOf(p.id);
+    if(i3>=0)lista.splice(i3,1); else lista.push(p.id);
+    DB.disp[id]=lista; save();
+    t.setAttribute("aria-pressed",String(i3<0));
+    var n3=0,c3=0;
+    escalasAbertasDe(p).forEach(function(x){turnosDa(x.id).forEach(function(tt){
+      if(disp(tt.id).indexOf(p.id)>=0){n3++;if(conflitosDe(p.id,tt).length)c3++;}
+    });});
+    var cont=$("#cont");
+    if(cont)cont.textContent=n3?n3+" turno(s) marcado(s)":"Nenhum turno marcado ainda";
+    if(i3<0&&conflitosDe(p.id,by(DB.turnos,id)).length)
+      toast("Atenção: esse horário choca com outra escala sua.");
+    break;
+  case "enviar-disp":
+    p=euVol();
+    var n4=0,cflt=0;
+    escalasAbertasDe(p).forEach(function(x){turnosDa(x.id).forEach(function(tt){
+      if(disp(tt.id).indexOf(p.id)>=0){n4++;if(conflitosDe(p.id,tt).length)cflt++;}
+    });});
+    if(!n4){toast("Marque pelo menos um turno.");return;}
+    openSheet("Disponibilidade enviada","O líder recebe agora e monta a escala.",
+      '<div style="padding:2px 18px 12px"><p style="font-size:13.5px;color:var(--ink-2);margin:0 0 10px">'+
+      'Você marcou <b>'+n4+' turno(s)</b>. Isso ainda não é escala: o líder confirma quem fica em cada vaga.</p>'+
+      (cflt?'<div class="alert crit" style="margin:0 0 10px">'+svg("swap",18)+'<div><b>'+cflt+' turno(s) chocam com escala que você já tem</b>Os líderes veem esse aviso antes de te confirmar.</div></div>':'')+
+      '<div class="alert info" style="margin:0">'+svg("cal",18)+'<div>Dá para mudar sua resposta até o prazo.</div></div></div>',
+      '<button class="btn primary wide" data-act="enviado-ok">Entendi</button>');
+    break;
+  case "enviado-ok": closeSheet(); S.tab.voluntario="inicio"; render(); break;
+  case "pedir-troca":
+    x=by(DB.turnos,id);
+    openSheet("Pedir substituição",rotuloTurno(x)+" · "+x.ini+" às "+x.fim,
+      '<div style="padding:0 18px 10px"><div class="alert info" style="margin:0">'+svg("cal",18)+
+      '<div>Você <b>continua na escala</b> até o líder resolver. Ele decide quem entra no seu lugar.</div></div></div>'+
+      '<div class="form">'+
+      select("f-tr-motivo","Motivo",["Viagem","Trabalho","Saúde","Compromisso de família","Imprevisto","Outro motivo"]
+        .map(function(mo){return {v:mo,l:mo};}),"Viagem")+
+      '<div class="field"><label for="f-tr-obs">Quer explicar? (opcional)</label>'+
+      '<textarea id="f-tr-obs" rows="3" placeholder="Ex.: viajo no sábado e só volto na segunda."></textarea></div>'+
+      '</div>',
+      '<button class="btn primary wide" data-act="troca-ok" data-id="'+id+'">Enviar pedido ao líder</button>');
+    break;
+  case "troca-ok":
+    p=euVol(); x=by(DB.turnos,id); m=minDoTurno(x);
+    if(trocaDo(x.id,p.id)){closeSheet();toast("Você já tem um pedido aberto nesse turno.");return;}
+    DB.trocas.push({id:uid(),turnoId:x.id,de:p.id,motivo:v("f-tr-motivo")||"Outro motivo",
+      obs:v("f-tr-obs"),estado:"aberto",quando:Date.now()});
+    avisar(m&&m.liderId,primeiro(p.id)+" pediu substituição no "+rotuloTurno(x)+".");
+    save(); closeSheet(); toast("Pedido enviado ao líder."); render(true); break;
+  case "cancelar-troca":
+    p=euVol(); var tr=trocaDo(id,p.id);
+    if(tr){tr.estado="cancelado";
+      m=minDoTurno(by(DB.turnos,id));
+      avisar(m&&m.liderId,primeiro(p.id)+" cancelou o pedido de substituição.");
+      save();}
+    toast("Pedido cancelado. Você segue no turno."); render(true); break;
+  case "limpar-avisos":
+    p=euVol(); DB.avisos.forEach(function(a){if(a.para===p.id)a.lido=true;}); save(); render(true); break;
+
+  /* ---- líder resolve a substituição ---- */
+  case "ver-trocas": S.view="trocas"; render(); break;
+  case "troca-manter":
+    var tr2=by(DB.trocas,id); if(!tr2)return;
+    tr2.estado="resolvido"; tr2.res={tipo:"mantido"};
+    x=by(DB.turnos,tr2.turnoId);
+    avisar(tr2.de,"O líder pediu que você continue no "+rotuloTurno(x)+". Fale com ele se não der mesmo.");
+    save(); toast(primeiro(tr2.de)+" segue no turno."); render(true); break;
+  case "troca-substituir":
+    var tr3=by(DB.trocas,id); x=by(DB.turnos,tr3.turnoId);
+    var cs=candidatos(x,tr3.de);
+    var body='<div style="padding:0 18px 8px"><div class="eyebrow" style="margin:0"><span>Quem pode entrar</span></div></div>';
+    if(!cs.length){
+      body+='<div class="empty"><b>Ninguém disponível</b><p>Nenhuma outra pessoa do posto está livre. Você pode deixar a vaga em aberto.</p></div>';
+    }else{
+      body+='<div class="card list flat" style="border:none">'+cs.map(function(c){
+        var cf=conflitosDe(c.p.id,x);
+        return '<div class="row" style="flex-wrap:wrap"><span class="ini'+(cf.length?" mut":"")+'">'+ini(c.p.nome)+'</span>'+
+          '<span class="main"><strong>'+esc(c.p.nome)+'</strong><small>'+
+          (c.marcou?"marcou disponibilidade neste turno":"não marcou este dia")+' · '+c.carga+' turno(s) no total</small></span>'+
+          (cf.length?'<span class="pill crit"><i></i>Choca</span>':(c.marcou?'<span class="pill ok"><i></i>Livre</span>':''))+
+          (cf.length?"":'<button class="btn sm soft" data-act="troca-set" data-id="'+tr3.id+'" data-p="'+c.p.id+'">Escolher</button>')+
+          (cf.length?'<div style="width:100%;margin-top:9px">'+
+            '<div style="font-size:12px;color:var(--crit);font-weight:600;line-height:1.4">⚠ já escalado em '+esc(descreveTurno(cf[0]))+'</div>'+
+            '<button class="btn sm ghost" style="margin-top:8px;width:100%" data-act="troca-set" data-id="'+tr3.id+'" data-p="'+c.p.id+'">Escolher mesmo assim</button></div>':"")+
+          '</div>';
+      }).join("")+'</div>';
+    }
+    openSheet("Resolver substituição",rotuloTurno(x)+" · no lugar de "+primeiro(tr3.de),body,
+      '<button class="btn ghost wide" data-act="troca-vazio" data-id="'+tr3.id+'">Deixar a vaga em aberto</button>');
+    break;
+  case "troca-set":
+    var tr4=by(DB.trocas,id), sub=t.dataset.p; x=by(DB.turnos,tr4.turnoId);
+    var herda=funcsDo(x.id,tr4.de);
+    DB.conf[x.id]=conf(x.id).filter(function(z){return z!==tr4.de;}).concat([sub]);
+    setFuncs(x.id,tr4.de,[]); setFuncs(x.id,sub,herda);
+    tr4.estado="resolvido"; tr4.res={tipo:"substituido",para:sub};
+    avisar(tr4.de,primeiro(sub)+" assumiu o seu turno no "+rotuloTurno(x)+". Você está liberado.");
+    avisar(sub,"Você entrou no lugar de "+primeiro(tr4.de)+" no "+rotuloTurno(x)+" ("+x.ini+" às "+x.fim+")"+
+      (herda.length?" — função: "+herda.map(nomeFunc).join(" · "):"")+".");
+    save(); closeSheet(); toast(primeiro(sub)+" entrou no lugar de "+primeiro(tr4.de)+"."); render(true); break;
+  case "troca-vazio":
+    var tr5=by(DB.trocas,id); x=by(DB.turnos,tr5.turnoId);
+    DB.conf[x.id]=conf(x.id).filter(function(z){return z!==tr5.de;});
+    setFuncs(x.id,tr5.de,[]);
+    tr5.estado="resolvido"; tr5.res={tipo:"aberto"};
+    avisar(tr5.de,"Sua substituição no "+rotuloTurno(x)+" foi aceita. A vaga ficou em aberto.");
+    save(); closeSheet(); toast("Vaga aberta de novo nesse turno."); render(true); break;
+
+  /* ---- ajustes ---- */
+  case "edit-limite":
+    openSheet("Máximo de turnos por pessoa","No mesmo mês. O app avisa quando alguém passa disso.",
+      '<div class="form">'+campo("f-lim","Turnos","3",DB.cfg.limite,"number")+'</div>',
+      '<button class="btn primary wide" data-act="salvar-limite">Salvar</button>');
+    break;
+  case "salvar-limite": DB.cfg.limite=Math.max(1,+v("f-lim")||1); save(); closeSheet(); toast("Limite atualizado."); render(true); break;
+  case "edit-prazo":
+    openSheet("Prazo padrão","Quantos dias antes do mês começar a resposta é cobrada.",
+      '<div class="form">'+campo("f-pz","Dias","5",DB.cfg.prazoDias,"number")+'</div>',
+      '<button class="btn primary wide" data-act="salvar-prazo">Salvar</button>');
+    break;
+  case "salvar-prazo": DB.cfg.prazoDias=Math.max(0,+v("f-pz")||0); save(); closeSheet(); toast("Prazo atualizado."); render(true); break;
+  case "edit-orient":
+    openSheet("Orientações do ministério","Aparecem para o voluntário ao marcar e junto do turno confirmado.",
+      '<div class="form"><div class="field"><label for="f-or">Texto</label>'+
+      '<textarea id="f-or" rows="7" placeholder="Ex.: chegar 30 min antes; usar blusa preta; touca e luvas na cozinha.">'+esc(DB.cfg.orientacoes)+'</textarea></div></div>',
+      '<button class="btn primary wide" data-act="salvar-orient">Salvar</button>');
+    break;
+  case "salvar-orient": DB.cfg.orientacoes=v("f-or"); save(); closeSheet(); toast("Orientações salvas."); render(true); break;
+
+  /* ---- dados ---- */
+  case "exportar":
+    openSheet("Exportar dados","Copie este texto e guarde. Serve para levar os dados a outro aparelho.",
+      '<div class="form"><div class="field"><label for="f-json">JSON</label>'+
+      '<textarea id="f-json" class="json" rows="9" readonly>'+esc(JSON.stringify(DB))+'</textarea></div></div>',
+      '<button class="btn primary wide" data-act="copiar">Copiar</button>');
+    break;
+  case "copiar":
+    var ta=document.getElementById("f-json");
+    if(ta){ta.focus();ta.select();var ok=false;try{ok=document.execCommand("copy");}catch(err){}
+      if(!ok&&navigator.clipboard){navigator.clipboard.writeText(ta.value).then(function(){toast("Copiado.");},function(){toast("Selecione o texto e copie manualmente.");});return;}
+      toast(ok?"Copiado.":"Selecione o texto e copie manualmente.");}
+    break;
+  case "importar":
+    openSheet("Importar dados","Cole aqui o JSON exportado antes. Isso substitui tudo o que está no app.",
+      '<div class="form"><div class="field"><label for="f-imp">JSON</label>'+
+      '<textarea id="f-imp" class="json" rows="9" placeholder="{ ... }"></textarea></div></div>',
+      '<button class="btn primary wide" data-act="importar-ok">Importar e substituir</button>');
+    break;
+  case "importar-ok":
+    try{
+      var o2=JSON.parse(v("f-imp"));
+      if(!o2||!o2.pessoas)throw new Error("formato");
+      DB=Object.assign(vazio(),o2); save(); closeSheet(); S.view=null;
+      toast("Dados importados."); render();
+    }catch(err){toast("Esse texto não é um backup válido.");}
+    break;
+  case "apagar-tudo":
+    openSheet("Apagar todos os dados","Ministérios, postos, escalas, turnos e pessoas. A grade de cultos é recriada.",
+      '<div style="padding:0 18px 12px"><div class="alert crit" style="margin:0">'+svg("trash",18)+
+      '<div><b>Não dá para desfazer</b>Se quiser guardar antes, cancele e use Exportar. Os '+GRADE_PADRAO.length+' cultos voltam automaticamente para a próxima bateria de teste.</div></div></div>',
+      '<div style="display:flex;gap:9px"><button class="btn ghost" data-act="fechar">Cancelar</button>'+
+      '<button class="btn danger" data-act="apagar-ok">Apagar tudo</button></div>');
+    break;
+  case "apagar-ok":
+    DB=novoDB(); save(); closeSheet(); S.view=null; S.persona="adm"; S.tab.adm="minis";
+    toast("Tudo apagado. A grade de cultos voltou."); render(); break;
+  }
+});
+
+load(); render();
+})();
+</script>
+
+</body>
+</html>
