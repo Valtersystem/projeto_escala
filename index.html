@@ -393,8 +393,8 @@ function dadosExemplo(){
     {id:"po2",minId:"m2",nome:"Som",desc:"",vagas:2},
     {id:"po3",minId:"m3",nome:"Porta",desc:"",vagas:2}];
   d.pessoas=[
-    {id:"p1",nome:"Ana Lima",tel:"",adm:true,minIds:["m1"],postoIds:["po1"],ativo:true},
-    {id:"p2",nome:"Bruno Souza",tel:"",adm:false,minIds:["m1"],postoIds:["po1"],ativo:true},
+    {id:"p1",nome:"Ana Lima",tel:"",adm:true,minIds:["m1","m2"],postoIds:["po1","po2"],ativo:true},
+    {id:"p2",nome:"Bruno Souza",tel:"",adm:false,minIds:["m1","m2"],postoIds:["po1","po2"],ativo:true},
     {id:"p3",nome:"Carla Dias",tel:"",adm:false,minIds:["m1"],postoIds:["po1"],ativo:true},
     {id:"p4",nome:"Marcos Reis",tel:"",adm:false,minIds:["m2"],postoIds:["po2"],ativo:true},
     {id:"p5",nome:"Lucas Tavares",tel:"",adm:false,minIds:["m2"],postoIds:["po2"],ativo:true},
@@ -403,14 +403,17 @@ function dadosExemplo(){
     {id:"p8",nome:"Pedro Alves",tel:"",adm:false,minIds:["m3"],postoIds:["po3"],ativo:true},
     {id:"p9",nome:"Renata Lima",tel:"",adm:false,minIds:["m3"],postoIds:["po3"],ativo:true}];
   d.escalas=[
-    {id:"e1",minId:"m1",mes:"2026-11",prazo:"2026-11-01",status:"aberta"},
-    {id:"e2",minId:"m2",mes:"2026-11",prazo:"2026-11-01",status:"aberta"},
+    {id:"e1",minId:"m1",mes:"2026-11",prazo:"2026-11-01",status:"publicada"},
+    {id:"e2",minId:"m2",mes:"2026-11",prazo:"2026-11-01",status:"publicada"},
     {id:"e3",minId:"m3",mes:"2026-11",prazo:"2026-11-01",status:"aberta"}];
   d.turnos=[
     {id:"t1",escalaId:"e1",postoId:"po1",data:"2026-11-08",ini:"08h00",fim:"11h30",vagas:2,cultoId:null,cultoNome:""},
-    {id:"t2",escalaId:"e2",postoId:"po2",data:"2026-11-08",ini:"08h00",fim:"11h30",vagas:2,cultoId:null,cultoNome:""},
-    {id:"t3",escalaId:"e3",postoId:"po3",data:"2026-11-08",ini:"08h00",fim:"11h30",vagas:2,cultoId:null,cultoNome:""}];
-  d.eu={minLider:"p1",voluntario:"p2"};
+    {id:"t2",escalaId:"e2",postoId:"po2",data:"2026-11-08",ini:"10h00",fim:"12h00",vagas:2,cultoId:null,cultoNome:""},
+    {id:"t3",escalaId:"e3",postoId:"po3",data:"2026-11-08",ini:"08h00",fim:"11h30",vagas:2,cultoId:null,cultoNome:""},
+    {id:"t4",escalaId:"e1",postoId:"po1",data:"2026-11-15",ini:"08h00",fim:"11h30",vagas:2,cultoId:null,cultoNome:""}];
+  /* confirmados: Ana e Bruno têm turnos que se sobrepõem no dia 08/11 (choque) */
+  d.conf={t1:["p1","p3"],t2:["p1","p2"],t3:["p9"],t4:["p2"]};
+  d.eu={minLider:"p1",voluntario:"p1"};
   return d;
 }
 function load(){
