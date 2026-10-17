@@ -401,19 +401,25 @@ function dadosExemplo(){
     {id:"p6",nome:"Helena Costa",tel:"",adm:false,minIds:["m2"],postoIds:["po2"],ativo:true},
     {id:"p7",nome:"Juliana Prado",tel:"",adm:false,minIds:["m3"],postoIds:["po3"],ativo:true},
     {id:"p8",nome:"Pedro Alves",tel:"",adm:false,minIds:["m3"],postoIds:["po3"],ativo:true},
-    {id:"p9",nome:"Renata Lima",tel:"",adm:false,minIds:["m3"],postoIds:["po3"],ativo:true}];
+    {id:"p9",nome:"Renata Lima",tel:"",adm:false,minIds:["m3"],postoIds:["po3"],ativo:true},
+    {id:"p10",nome:"Rafael Mota",tel:"",adm:false,minIds:["m1","m2"],postoIds:["po1","po2"],ativo:true}];
   d.escalas=[
     {id:"e1",minId:"m1",mes:"2026-11",prazo:"2026-11-01",status:"publicada"},
     {id:"e2",minId:"m2",mes:"2026-11",prazo:"2026-11-01",status:"publicada"},
-    {id:"e3",minId:"m3",mes:"2026-11",prazo:"2026-11-01",status:"aberta"}];
+    {id:"e3",minId:"m3",mes:"2026-11",prazo:"2026-11-01",status:"aberta"},
+    {id:"e4",minId:"m1",mes:"2026-12",prazo:"2026-11-25",status:"aberta"},
+    {id:"e5",minId:"m2",mes:"2026-12",prazo:"2026-11-25",status:"aberta"}];
   d.turnos=[
     {id:"t1",escalaId:"e1",postoId:"po1",data:"2026-11-08",ini:"08h00",fim:"11h30",vagas:2,cultoId:null,cultoNome:""},
     {id:"t2",escalaId:"e2",postoId:"po2",data:"2026-11-08",ini:"10h00",fim:"12h00",vagas:2,cultoId:null,cultoNome:""},
     {id:"t3",escalaId:"e3",postoId:"po3",data:"2026-11-08",ini:"08h00",fim:"11h30",vagas:2,cultoId:null,cultoNome:""},
-    {id:"t4",escalaId:"e1",postoId:"po1",data:"2026-11-15",ini:"08h00",fim:"11h30",vagas:2,cultoId:null,cultoNome:""}];
+    {id:"t4",escalaId:"e1",postoId:"po1",data:"2026-11-15",ini:"08h00",fim:"11h30",vagas:2,cultoId:null,cultoNome:""},
+    /* dezembro, aberta: o Rafael pode se inscrever nos dois e ver o choque na hora */
+    {id:"t5",escalaId:"e4",postoId:"po1",data:"2026-12-06",ini:"08h00",fim:"11h30",vagas:2,cultoId:null,cultoNome:""},
+    {id:"t6",escalaId:"e5",postoId:"po2",data:"2026-12-06",ini:"10h00",fim:"12h00",vagas:2,cultoId:null,cultoNome:""}];
   /* confirmados: Ana e Bruno têm turnos que se sobrepõem no dia 08/11 (choque) */
   d.conf={t1:["p1","p3"],t2:["p1","p2"],t3:["p9"],t4:["p2"]};
-  d.eu={minLider:"p1",voluntario:"p1"};
+  d.eu={minLider:"p1",voluntario:"p10"};
   return d;
 }
 function load(){
@@ -503,6 +509,19 @@ function conflitosDe(pid,turno){
 }
 function mesmoDiaDe(pid,turno){
   return turnosFirmes(pid).filter(function(t){return t.id!==turno.id&&t.data===turno.data&&!choca(turno,t);});
+}
+/* turnos que o voluntário já marcou (disponível) em escalas abertas */
+function marcadosDe(pid){
+  return DB.turnos.filter(function(t){
+    var e=by(DB.escalas,t.escalaId);
+    return e&&e.status==="aberta"&&disp(t.id).indexOf(pid)>=0;
+  });
+}
+/* choques do voluntário: com turnos confirmados e com os que ele já marcou */
+function choquesDe(pid,turno){
+  return conflitosDe(pid,turno).concat(marcadosDe(pid).filter(function(t){
+    return t.id!==turno.id&&choca(turno,t);
+  }));
 }
 var DIAS=["domingo","segunda","terça","quarta","quinta","sexta","sábado"];
 var ORD={1:"1ª",2:"2ª",3:"3ª",4:"4ª",5:"5ª","-1":"última"};
@@ -1358,7 +1377,7 @@ function volSemEscala(p){
     '<button class="btn primary" data-act="ir-escalas">Abrir o perfil Líder</button>');
 }
 function avisoConflito(p,t){
-  var cf=conflitosDe(p.id,t);
+  var cf=choquesDe(p.id,t);
   if(cf.length)
     return '<div style="margin-top:6px;font-size:11.5px;color:var(--crit);font-weight:600;line-height:1.35">'+
       '⚠ Choca com '+esc(descreveTurno(cf[0]))+'</div>';
@@ -1377,7 +1396,7 @@ function blocoTurnos(po,ts,p,fora){
     meus.map(function(t){
       var d=dia(t.data),on=disp(t.id).indexOf(p.id)>=0;
       var restam=t.vagas-conf(t.id).length;
-      var cf=conflitosDe(p.id,t).length>0;
+      var cf=choquesDe(p.id,t).length>0;
       return '<button class="turno" data-act="marcar" data-id="'+t.id+'" aria-pressed="'+on+'">'+
         '<span class="box">'+svg("check",14)+'</span>'+
         '<span class="t"><strong>'+d.n+' de '+d.mes+' · '+d.sem+(nomeCulto(t)?' · '+esc(nomeCulto(t)):'')+'</strong>'+
@@ -1424,7 +1443,7 @@ function volAberta(){
       if(extra)h+=extra;
     }
     ts.forEach(function(t){
-      if(disp(t.id).indexOf(p.id)>=0){total++;if(conflitosDe(p.id,t).length)comConflito++;}
+      if(disp(t.id).indexOf(p.id)>=0){total++;if(choquesDe(p.id,t).length)comConflito++;}
     });
   });
   if(DB.cfg.orientacoes)
@@ -2224,21 +2243,14 @@ document.addEventListener("click",function(ev){
     p=euVol(); var lista=disp(id),i3=lista.indexOf(p.id);
     if(i3>=0)lista.splice(i3,1); else lista.push(p.id);
     DB.disp[id]=lista; save();
-    t.setAttribute("aria-pressed",String(i3<0));
-    var n3=0,c3=0;
-    escalasAbertasDe(p).forEach(function(x){turnosDa(x.id).forEach(function(tt){
-      if(disp(tt.id).indexOf(p.id)>=0){n3++;if(conflitosDe(p.id,tt).length)c3++;}
-    });});
-    var cont=$("#cont");
-    if(cont)cont.textContent=n3?n3+" turno(s) marcado(s)":"Nenhum turno marcado ainda";
-    if(i3<0&&conflitosDe(p.id,by(DB.turnos,id)).length)
+    if(i3<0&&choquesDe(p.id,by(DB.turnos,id)).length)
       toast("Atenção: esse horário choca com outra escala sua.");
-    break;
+    render(true); break;
   case "enviar-disp":
     p=euVol();
     var n4=0,cflt=0;
     escalasAbertasDe(p).forEach(function(x){turnosDa(x.id).forEach(function(tt){
-      if(disp(tt.id).indexOf(p.id)>=0){n4++;if(conflitosDe(p.id,tt).length)cflt++;}
+      if(disp(tt.id).indexOf(p.id)>=0){n4++;if(choquesDe(p.id,tt).length)cflt++;}
     });});
     if(!n4){toast("Marque pelo menos um turno.");return;}
     openSheet("Disponibilidade enviada","O líder recebe agora e monta a escala.",
