@@ -886,6 +886,7 @@ function admCfg(){
     '<button class="row" data-act="exportar"><span class="main"><strong>Exportar</strong><small>Copiar tudo em JSON para levar a outro aparelho</small></span><span class="chev">'+svg("back",16)+'</span></button>'+
     '<button class="row" data-act="importar"><span class="main"><strong>Importar</strong><small>Colar um JSON exportado antes</small></span><span class="chev">'+svg("back",16)+'</span></button>'+
     '</div>';
+  h+='<button class="btn soft wide" data-act="restaurar-exemplo">'+svg("cal",17)+'Restaurar dados de exemplo</button>';
   h+='<button class="btn danger wide" data-act="apagar-tudo">'+svg("trash",17)+'Apagar todos os dados</button>';
   h+='<div class="alert info">'+svg("gear",18)+'<div><b>Ainda não implementado</b>Login, senha e histórico de alterações entram depois da validação do fluxo.</div></div>';
   return h;
@@ -2382,6 +2383,16 @@ document.addEventListener("click",function(ev){
   case "apagar-ok":
     DB=novoDB(); save(); closeSheet(); S.view=null; S.persona="adm"; S.tab.adm="minis";
     toast("Tudo apagado. A grade de cultos voltou."); render(); break;
+  case "restaurar-exemplo":
+    openSheet("Restaurar dados de exemplo","Os dados atuais serão substituídos pelo exemplo de teste.",
+      '<div style="padding:0 18px 12px"><div class="alert warn" style="margin:0">'+svg("swap",18)+
+      '<div><b>Os dados atuais serão perdidos</b>Se quiser guardar, cancele e use Exportar antes.</div></div></div>',
+      '<div style="display:flex;gap:9px"><button class="btn ghost" data-act="fechar">Cancelar</button>'+
+      '<button class="btn primary" data-act="restaurar-exemplo-ok">Restaurar</button></div>');
+    break;
+  case "restaurar-exemplo-ok":
+    DB=dadosExemplo(); save(); closeSheet(); S.view=null; S.persona="adm"; S.tab.adm="minis";
+    toast("Dados de exemplo restaurados."); render(); break;
   }
 });
 
