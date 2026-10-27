@@ -402,7 +402,16 @@ function dadosExemplo(){
     {id:"p7",nome:"Juliana Prado",tel:"",adm:false,minIds:["m3"],postoIds:["po3"],ativo:true},
     {id:"p8",nome:"Pedro Alves",tel:"",adm:false,minIds:["m3"],postoIds:["po3"],ativo:true},
     {id:"p9",nome:"Renata Lima",tel:"",adm:false,minIds:["m3"],postoIds:["po3"],ativo:true},
-    {id:"p10",nome:"Rafael Mota",tel:"",adm:false,minIds:["m1","m2"],postoIds:["po1","po2"],ativo:true}];
+    {id:"p10",nome:"Rafael Mota",tel:"",adm:false,minIds:["m1","m2"],postoIds:["po1","po2"],ativo:true},
+    {id:"p11",nome:"Fernanda Luz",tel:"",adm:false,minIds:["m2"],postoIds:["po2"],ativo:true},
+    {id:"p12",nome:"Thiago Nunes",tel:"",adm:false,minIds:["m2"],postoIds:["po2"],ativo:true},
+    {id:"p13",nome:"Camila Rocha",tel:"",adm:false,minIds:["m2"],postoIds:["po2"],ativo:true}];
+  d.funcoes=[
+    {id:"f1",minId:"m2",nome:"Voz"},
+    {id:"f2",minId:"m2",nome:"Guitarra"},
+    {id:"f3",minId:"m2",nome:"Bateria"},
+    {id:"f4",minId:"m2",nome:"Baixo"},
+    {id:"f5",minId:"m2",nome:"Teclado"}];
   d.escalas=[
     {id:"e1",minId:"m1",mes:"2026-11",prazo:"2026-11-01",status:"publicada"},
     {id:"e2",minId:"m2",mes:"2026-11",prazo:"2026-11-01",status:"publicada",bandaId:"b1"},
@@ -431,6 +440,18 @@ function dadosExemplo(){
     {id:"b3",minId:"m2",nome:"Banda Chama"},
     {id:"b4",minId:"m2",nome:"Banda Aliança"},
     {id:"b5",minId:"m2",nome:"Banda Esperança"}];
+  /* membros fixos de cada banda (Ana é fixa na Esperança, mas toca na Alpha no dia 08/11) */
+  var fixos={b1:["p4","p5","p2"],b2:["p6","p10"],b3:["p11","p13"],b4:["p12"],b5:["p1"]};
+  /* o que cada pessoa já faz */
+  var sabe={p1:["f1"],p2:["f2"],p4:["f1"],p5:["f2","f4"],p6:["f1"],p10:["f3"],p11:["f4"],p12:["f3"],p13:["f1","f5"]};
+  d.pessoas.forEach(function(p){
+    p.bandaIds=Object.keys(fixos).filter(function(b){return fixos[b].indexOf(p.id)>=0;});
+    p.funcaoIds=sabe[p.id]||[];
+  });
+  /* funções de quem está confirmado no turno de 08/11 da Banda Alpha */
+  d.func={t2:{p1:["f1"],p2:["f2"]}};
+  /* quem marcou disponibilidade no turno da Alpha (Lucas é fixo da Alpha; Ana não é) */
+  d.disp={t2:["p1","p2","p5","p6"]};
   d.eu={minLider:"p1",voluntario:"p10"};
   return d;
 }
@@ -453,7 +474,7 @@ function migra(d){
   if(!Array.isArray(d.bandas))d.bandas=[];
   if(!Array.isArray(d.funcoes))d.funcoes=[];
   if(!d.func||typeof d.func!=="object")d.func={};
-  d.pessoas.forEach(function(p){if(!Array.isArray(p.funcaoIds))p.funcaoIds=[];});
+  d.pessoas.forEach(function(p){if(!Array.isArray(p.funcaoIds))p.funcaoIds=[];if(!Array.isArray(p.bandaIds))p.bandaIds=[];});
   if(!d.eu)d.eu={minLider:null,voluntario:null};
   if(d.eu.minLider===undefined){
     var alvo=null;
@@ -1001,8 +1022,15 @@ function candidatos(t,excluir){
     return p.ativo&&p.id!==excluir&&c.indexOf(p.id)<0&&
       (!p.postoIds.length||p.postoIds.indexOf(t.postoId)>=0);
   }).map(function(p){
-    return {p:p,marcou:disp(t.id).indexOf(p.id)>=0,carga:turnosFirmes(p.id).length};
-  }).sort(function(a,b){return (b.marcou-a.marcou)||(a.carga-b.carga);});
+    return {p:p,marcou:disp(t.id).indexOf(p.id)>=0,carga:turnosFirmes(p.id).length,fora:foraDaBanda(p.id,t)};
+  }).sort(function(a,b){return (a.fora-b.fora)||(b.marcou-a.marcou)||(a.carga-b.carga);});
+}
+/* banda é fixa: quem não é membro dela só entra no turno pedindo ao líder */
+function foraDaBanda(pid,turno){
+  var e=by(DB.escalas,turno.escalaId);
+  if(!e||!e.bandaId)return false;
+  var p=pessoa(pid);
+  return !!p&&(p.bandaIds||[]).indexOf(e.bandaId)<0;
 }
 function liderEscalas(){
   var m=meuMin(); if(!m)return semLiderBox();
@@ -1153,6 +1181,15 @@ function liderEquipe(){
   if(S.view==="vol")return liderVolDetalhe(S.arg);
   var eq=equipeDe(m.id);
   var h=trocaLider(m)+'<div class="greet"><h2>Equipe</h2><p>'+esc(m.nome)+(eq.length?" · "+eq.filter(function(p){return p.ativo;}).length+" ativo(s) de "+eq.length:"")+'</p></div>';
+  var bds=bandasDo(m.id);
+  if(bds.length&&eq.length){
+    h+='<div class="eyebrow"><span>Bandas · membros fixos</span></div><div class="card list">'+bds.map(function(b){
+      var mem=eq.filter(function(p){return (p.bandaIds||[]).indexOf(b.id)>=0;});
+      return '<button class="row" data-act="banda-membros" data-id="'+b.id+'"><span class="main"><strong>'+esc(b.nome)+'</strong>'+
+        '<small>'+(mem.length?esc(mem.map(function(p){return primeiro(p.id);}).join(", ")):"sem membros fixos")+'</small></span>'+
+        '<span class="chev">'+svg("back",16)+'</span></button>';
+    }).join("")+'</div>';
+  }
   if(!eq.length){
     h+=vazioBox("users","Nenhum voluntário ainda",
       "Cadastre quem serve no seu ministério. Eles entram no app para marcar disponibilidade.",
@@ -2092,7 +2129,8 @@ document.addEventListener("click",function(ev){
         var carga=turnosFirmes(pid).length;
         var cf=conflitosDe(pid,x);
         body+='<div class="row" style="flex-wrap:wrap"><span class="ini'+(cf.length?" mut":"")+'">'+ini(nomeDe(pid))+'</span>'+
-          '<span class="main"><strong>'+esc(nomeDe(pid))+'</strong><small>'+carga+' turno(s) no total</small></span>'+
+          '<span class="main"><strong>'+esc(nomeDe(pid))+'</strong><small>'+carga+' turno(s) no total'+
+            (foraDaBanda(pid,x)?' · <b style="color:var(--warn)">fora da banda fixa</b>':'')+'</small></span>'+
           (cf.length?'<span class="pill crit"><i></i>Choca</span>'
             :(carga>DB.cfg.limite?'<span class="pill warn"><i></i>Carga</span>':""))+
           (cf.length?"":'<button class="btn sm soft" data-act="confirmar" data-id="'+x.id+'" data-p="'+pid+'">Confirmar</button>')+
@@ -2249,6 +2287,23 @@ document.addEventListener("click",function(ev){
           '<span class="chev">'+svg("back",16)+'</span></button>';}).join("")+'</div>');
     break;
   case "set-eu-lider": DB.eu.minLider=t.dataset.p; save(); closeSheet(); S.view=null; S.mesCal=null; render(); break;
+  case "banda-membros":
+    m=meuMin(); x=by(DB.bandas,id);
+    openSheet("Membros de "+x.nome,"Quem está marcado é da banda fixa. Quem não está pode entrar nela só num turno.",
+      '<div style="padding:0 18px 8px"><div class="chips" style="flex-wrap:wrap">'+
+      equipeDe(m.id).map(function(p){
+        return '<button class="chip" data-act="chip-banda" data-p="'+p.id+'" aria-pressed="'+((p.bandaIds||[]).indexOf(id)>=0)+'">'+esc(p.nome)+'</button>';
+      }).join("")+'</div></div>',
+      '<button class="btn primary wide" data-act="salvar-banda" data-id="'+id+'">Salvar</button>');
+    break;
+  case "chip-banda": t.setAttribute("aria-pressed",String(t.getAttribute("aria-pressed")!=="true")); break;
+  case "salvar-banda":
+    document.querySelectorAll('#sheet [data-act="chip-banda"]').forEach(function(c){
+      var pp=pessoa(c.dataset.p); if(!pp)return;
+      pp.bandaIds=(pp.bandaIds||[]).filter(function(b){return b!==id;});
+      if(c.getAttribute("aria-pressed")==="true")pp.bandaIds.push(id);
+    });
+    save(); closeSheet(); toast("Membros da banda atualizados."); render(true); break;
   case "trocar-eu-vol":
     var vs=DB.pessoas.filter(function(o){return o.minIds.length;});
     openSheet("Simular qual voluntário?","O protótipo mostra o app pelos olhos dessa pessoa.",
