@@ -370,7 +370,7 @@ var KEY="escala.proto.v2";
 var DB=vazio();
 function vazio(){
   return {ministerios:[],postos:[],escalas:[],turnos:[],pessoas:[],disp:{},conf:{},
-          cultos:[],funcoes:[],func:{},trocas:[],avisos:[],
+          cultos:[],funcoes:[],func:{},trocas:[],avisos:[],bandas:[],
           eu:{minLider:null,voluntario:null},cfg:{limite:3,prazoDias:5,orientacoes:""}};
 }
 function save(){try{localStorage.setItem(KEY,JSON.stringify(DB));}catch(e){}}
@@ -405,10 +405,13 @@ function dadosExemplo(){
     {id:"p10",nome:"Rafael Mota",tel:"",adm:false,minIds:["m1","m2"],postoIds:["po1","po2"],ativo:true}];
   d.escalas=[
     {id:"e1",minId:"m1",mes:"2026-11",prazo:"2026-11-01",status:"publicada"},
-    {id:"e2",minId:"m2",mes:"2026-11",prazo:"2026-11-01",status:"publicada"},
+    {id:"e2",minId:"m2",mes:"2026-11",prazo:"2026-11-01",status:"publicada",bandaId:"b1"},
     {id:"e3",minId:"m3",mes:"2026-11",prazo:"2026-11-01",status:"aberta"},
     {id:"e4",minId:"m1",mes:"2026-12",prazo:"2026-11-25",status:"aberta"},
-    {id:"e5",minId:"m2",mes:"2026-12",prazo:"2026-11-25",status:"aberta"}];
+    {id:"e5",minId:"m2",mes:"2026-12",prazo:"2026-11-25",status:"aberta",bandaId:"b2"},
+    {id:"e6",minId:"m2",mes:"2026-11",prazo:"2026-11-01",status:"aberta",bandaId:"b3"},
+    {id:"e7",minId:"m2",mes:"2026-11",prazo:"2026-11-01",status:"aberta",bandaId:"b4"},
+    {id:"e8",minId:"m2",mes:"2026-11",prazo:"2026-11-01",status:"aberta",bandaId:"b5"}];
   d.turnos=[
     {id:"t1",escalaId:"e1",postoId:"po1",data:"2026-11-08",ini:"08h00",fim:"11h30",vagas:2,cultoId:null,cultoNome:""},
     {id:"t2",escalaId:"e2",postoId:"po2",data:"2026-11-08",ini:"10h00",fim:"12h00",vagas:2,cultoId:null,cultoNome:""},
@@ -416,9 +419,18 @@ function dadosExemplo(){
     {id:"t4",escalaId:"e1",postoId:"po1",data:"2026-11-15",ini:"08h00",fim:"11h30",vagas:2,cultoId:null,cultoNome:""},
     /* dezembro, aberta: o Rafael pode se inscrever nos dois e ver o choque na hora */
     {id:"t5",escalaId:"e4",postoId:"po1",data:"2026-12-06",ini:"08h00",fim:"11h30",vagas:2,cultoId:null,cultoNome:""},
-    {id:"t6",escalaId:"e5",postoId:"po2",data:"2026-12-06",ini:"10h00",fim:"12h00",vagas:2,cultoId:null,cultoNome:""}];
+    {id:"t6",escalaId:"e5",postoId:"po2",data:"2026-12-06",ini:"10h00",fim:"12h00",vagas:2,cultoId:null,cultoNome:""},
+    {id:"t7",escalaId:"e6",postoId:"po2",data:"2026-11-22",ini:"19h00",fim:"21h00",vagas:2,cultoId:null,cultoNome:""},
+    {id:"t8",escalaId:"e7",postoId:"po2",data:"2026-11-22",ini:"19h00",fim:"21h00",vagas:2,cultoId:null,cultoNome:""},
+    {id:"t9",escalaId:"e8",postoId:"po2",data:"2026-11-22",ini:"19h00",fim:"21h00",vagas:2,cultoId:null,cultoNome:""}];
   /* confirmados: Ana e Bruno têm turnos que se sobrepõem no dia 08/11 (choque) */
   d.conf={t1:["p1","p3"],t2:["p1","p2"],t3:["p9"],t4:["p2"]};
+  d.bandas=[
+    {id:"b1",minId:"m2",nome:"Banda Alpha"},
+    {id:"b2",minId:"m2",nome:"Banda Bravo"},
+    {id:"b3",minId:"m2",nome:"Banda Chama"},
+    {id:"b4",minId:"m2",nome:"Banda Aliança"},
+    {id:"b5",minId:"m2",nome:"Banda Esperança"}];
   d.eu={minLider:"p1",voluntario:"p10"};
   return d;
 }
@@ -438,6 +450,7 @@ function migra(d){
     delete p.papel;
   });
   if(!Array.isArray(d.cultos))d.cultos=[];
+  if(!Array.isArray(d.bandas))d.bandas=[];
   if(!Array.isArray(d.funcoes))d.funcoes=[];
   if(!d.func||typeof d.func!=="object")d.func={};
   d.pessoas.forEach(function(p){if(!Array.isArray(p.funcaoIds))p.funcaoIds=[];});
@@ -471,6 +484,10 @@ function pessoa(id){return by(DB.pessoas,id);}
 function nomeDe(id){var p=pessoa(id);return p?p.nome:"—";}
 function primeiro(id){return nomeDe(id).split(" ")[0];}
 function postosDo(minId){return DB.postos.filter(function(p){return p.minId===minId;});}
+/* bandas são grupos dentro de um ministério (ex.: Louvor), cada uma com escala própria */
+function bandasDo(minId){return DB.bandas.filter(function(b){return b.minId===minId;});}
+function nomeBanda(id){var b=by(DB.bandas,id);return b?b.nome:"";}
+function rotuloEscala(e){return (e.bandaId?nomeBanda(e.bandaId)+" · ":"")+fmtMes(e.mes);}
 function turnosDa(escId){return DB.turnos.filter(function(t){return t.escalaId===escId;}).sort(function(a,b){return dia(a.data).ord-dia(b.data).ord;});}
 function escalasDo(minId){return DB.escalas.filter(function(e){return e.minId===minId;}).sort(function(a,b){return a.mes<b.mes?1:-1;});}
 function equipeDe(minId){return DB.pessoas.filter(function(p){return p.minIds.indexOf(minId)>=0;});}
@@ -1015,7 +1032,7 @@ function liderEscalas(){
             :e.status==="aberta"?'<span class="pill brand"><i></i>Recolhendo</span>'
             :'<span class="pill ok"><i></i>Publicada</span>';
     h+='<article class="card callout"><div class="top">'+
-      '<div class="when">'+esc(fmtMes(e.mes))+'</div>'+
+      '<div class="when">'+esc(rotuloEscala(e))+'</div>'+
       '<h3>'+(e.status==="rascunho"?ts.length+" turno(s) no rascunho"
              :e.status==="aberta"?Object.keys(marcaram).length+" de "+eq+" já responderam"
              :c+" de "+vagas+" vagas preenchidas")+'</h3>'+
@@ -1037,7 +1054,7 @@ function liderMontar(escId){
   var e=by(DB.escalas,escId);
   if(!e){S.view=null;return liderEscalas();}
   var m=by(DB.ministerios,e.minId),po=postosDo(e.minId),ts=turnosDa(e.id);
-  var h=backBtn("Escalas")+trocaLider(m)+'<div class="greet"><h2>'+esc(fmtMes(e.mes))+'</h2><p>'+
+  var h=backBtn("Escalas")+trocaLider(m)+'<div class="greet"><h2>'+esc(rotuloEscala(e))+'</h2><p>'+
     (e.status==="rascunho"?"Rascunho · ninguém vê ainda"
      :e.status==="aberta"?"Recolhendo disponibilidade · prazo "+(e.prazo?fmtData(e.prazo):"sem prazo")
      :"Publicada")+'</p></div>';
@@ -1424,7 +1441,7 @@ function volAberta(){
   abertas.forEach(function(e){
     var m=by(DB.ministerios,e.minId);
     var ts=turnosDa(e.id);
-    h+='<div class="eyebrow"><span>'+esc(m?m.nome:"")+' · '+esc(fmtMes(e.mes))+'</span>'+
+    h+='<div class="eyebrow"><span>'+esc(m?m.nome:"")+' · '+esc(rotuloEscala(e))+'</span>'+
       (e.prazo?'<span style="font-family:var(--ui);text-transform:none;letter-spacing:0;font-size:12px">até '+esc(fmtData(e.prazo))+'</span>':'')+'</div>';
     if(!ts.length){
       h+='<div class="card"><div class="empty"><b>Sem turnos</b><p>O líder liberou a escala mas ainda não adicionou turnos.</p></div></div>';
@@ -1449,8 +1466,8 @@ function volAberta(){
   if(DB.cfg.orientacoes)
     h+='<details class="card"><summary>Orientações do ministério</summary><div class="orient">'+esc(DB.cfg.orientacoes)+'</div></details>';
   if(abertas.length>1)
-    h+='<div class="alert info">'+svg("swap",18)+'<div><b>Você serve em '+abertas.length+' ministérios</b>'+
-      'Os turnos dos dois aparecem aqui. Quando um choca com o outro, o app marca em vermelho.</div></div>';
+    h+='<div class="alert info">'+svg("swap",18)+'<div><b>Você tem '+abertas.length+' escalas abertas</b>'+
+      'Os turnos de todas aparecem aqui. Quando um choca com o outro, o app marca em vermelho.</div></div>';
   h+='<div class="sticky"><div class="lbl"><span id="cont">'+
     (total?total+" turno(s) marcado(s)":"Nenhum turno marcado ainda")+'</span>'+
     (comConflito?'<span style="color:var(--crit);font-weight:600">'+comConflito+' com choque</span>':'')+'</div>'+
@@ -1956,18 +1973,23 @@ document.addEventListener("click",function(ev){
   /* ---- escalas e turnos ---- */
   case "nova-escala":
     m=meuMin();
-    var jaTem=escalasDo(m.id).map(function(o){return o.mes;});
-    var opts=opcoesMes().filter(function(o){return jaTem.indexOf(o.v)<0;});
-    if(!opts.length){toast("Todos os próximos meses já têm escala.");return;}
+    var bdsN=bandasDo(m.id);
+    var opts=opcoesMes();
     var pr=new Date(); pr.setDate(pr.getDate()+7);
     openSheet("Abrir escala do mês","Você monta os turnos primeiro; a equipe só vê quando você liberar.",
-      '<div class="form">'+select("f-es-mes","Mês da escala",opts,opts[0].v)+
+      '<div class="form">'+(bdsN.length?select("f-es-banda","Banda",bdsN.map(function(b){return {v:b.id,l:b.nome};}),bdsN[0].id):"")+
+      select("f-es-mes","Mês da escala",opts,opts[0].v)+
       campo("f-es-prazo","Prazo para responder","",iso(pr),"date")+'</div>',
       '<button class="btn primary wide" data-act="salvar-escala">Criar escala</button>');
     break;
   case "salvar-escala":
     m=meuMin();
-    e={id:uid(),minId:m.id,mes:v("f-es-mes"),prazo:v("f-es-prazo"),status:"rascunho"};
+    var bandaEs=bandasDo(m.id).length?v("f-es-banda"):"";
+    var mesEs=v("f-es-mes");
+    if(escalasDo(m.id).some(function(x){return x.mes===mesEs&&(x.bandaId||"")===bandaEs;})){
+      toast(bandaEs?"Essa banda já tem escala neste mês.":"Esse mês já tem escala."); return;
+    }
+    e={id:uid(),minId:m.id,mes:mesEs,prazo:v("f-es-prazo"),status:"rascunho",bandaId:bandaEs||null};
     DB.escalas.push(e); save(); closeSheet(); S.view="montar"; S.arg=e.id;
     toast("Escala criada. Agora adicione os turnos."); render(); break;
   case "montar": S.view="montar"; S.arg=id; render(); break;
