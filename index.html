@@ -388,6 +388,10 @@ function dadosExemplo(){
     {id:"m1",nome:"Mídia",liderId:"p1"},
     {id:"m2",nome:"Louvor",liderId:"p4"},
     {id:"m3",nome:"Recepção",liderId:"p7"}];
+  d.bandas=[
+    {id:"b1",minId:"m2",nome:"Banda 1"},
+    {id:"b2",minId:"m2",nome:"Banda 2"},
+    {id:"b3",minId:"m2",nome:"Banda 3"}];
   d.postos=[
     {id:"po1",minId:"m1",nome:"Câmera",desc:"",vagas:2},
     {id:"po2",minId:"m2",nome:"Som",desc:"",vagas:2},
@@ -414,44 +418,38 @@ function dadosExemplo(){
     {id:"f5",minId:"m2",nome:"Teclado"}];
   d.escalas=[
     {id:"e1",minId:"m1",mes:"2026-11",prazo:"2026-11-01",status:"publicada"},
-    {id:"e2",minId:"m2",mes:"2026-11",prazo:"2026-11-01",status:"publicada",bandaId:"b1"},
+    {id:"e2",minId:"m2",mes:"2026-11",prazo:"2026-11-01",status:"publicada"},
     {id:"e3",minId:"m3",mes:"2026-11",prazo:"2026-11-01",status:"aberta"},
     {id:"e4",minId:"m1",mes:"2026-12",prazo:"2026-11-25",status:"aberta"},
-    {id:"e5",minId:"m2",mes:"2026-12",prazo:"2026-11-25",status:"aberta",bandaId:"b2"},
-    {id:"e6",minId:"m2",mes:"2026-11",prazo:"2026-11-01",status:"aberta",bandaId:"b3"},
-    {id:"e7",minId:"m2",mes:"2026-11",prazo:"2026-11-01",status:"aberta",bandaId:"b4"},
-    {id:"e8",minId:"m2",mes:"2026-11",prazo:"2026-11-01",status:"aberta",bandaId:"b5"}];
+    {id:"e5",minId:"m2",mes:"2026-12",prazo:"2026-11-25",status:"aberta"}];
   d.turnos=[
     {id:"t1",escalaId:"e1",postoId:"po1",data:"2026-11-08",ini:"08h00",fim:"11h30",vagas:2,cultoId:null,cultoNome:""},
-    {id:"t2",escalaId:"e2",postoId:"po2",data:"2026-11-08",ini:"10h00",fim:"12h00",vagas:2,cultoId:null,cultoNome:""},
     {id:"t3",escalaId:"e3",postoId:"po3",data:"2026-11-08",ini:"08h00",fim:"11h30",vagas:2,cultoId:null,cultoNome:""},
     {id:"t4",escalaId:"e1",postoId:"po1",data:"2026-11-15",ini:"08h00",fim:"11h30",vagas:2,cultoId:null,cultoNome:""},
-    /* dezembro, aberta: o Rafael pode se inscrever nos dois e ver o choque na hora */
-    {id:"t5",escalaId:"e4",postoId:"po1",data:"2026-12-06",ini:"08h00",fim:"11h30",vagas:2,cultoId:null,cultoNome:""},
-    {id:"t6",escalaId:"e5",postoId:"po2",data:"2026-12-06",ini:"10h00",fim:"12h00",vagas:2,cultoId:null,cultoNome:""},
-    {id:"t7",escalaId:"e6",postoId:"po2",data:"2026-11-22",ini:"19h00",fim:"21h00",vagas:2,cultoId:null,cultoNome:""},
-    {id:"t8",escalaId:"e7",postoId:"po2",data:"2026-11-22",ini:"19h00",fim:"21h00",vagas:2,cultoId:null,cultoNome:""},
-    {id:"t9",escalaId:"e8",postoId:"po2",data:"2026-11-22",ini:"19h00",fim:"21h00",vagas:2,cultoId:null,cultoNome:""}];
-  /* confirmados: Ana e Bruno têm turnos que se sobrepõem no dia 08/11 (choque) */
-  d.conf={t1:["p1","p3"],t2:["p1","p2"],t3:["p9"],t4:["p2"]};
-  d.bandas=[
-    {id:"b1",minId:"m2",nome:"Banda Alpha"},
-    {id:"b2",minId:"m2",nome:"Banda Bravo"},
-    {id:"b3",minId:"m2",nome:"Banda Chama"},
-    {id:"b4",minId:"m2",nome:"Banda Aliança"},
-    {id:"b5",minId:"m2",nome:"Banda Esperança"}];
-  /* membros fixos de cada banda (Ana é fixa na Esperança, mas toca na Alpha no dia 08/11) */
-  var fixos={b1:["p4","p5","p2"],b2:["p6","p10"],b3:["p11","p13"],b4:["p12"],b5:["p1"]};
+    {id:"t5",escalaId:"e4",postoId:"po1",data:"2026-12-06",ini:"08h00",fim:"11h30",vagas:2,cultoId:null,cultoNome:""}];
+  /* Louvor de novembro: domingo Manhã e Noite, uma banda por turno (mesma sequência da planilha da líder) */
+  var nov=[["2026-11-01","08h00","11h30","b1"],["2026-11-01","19h00","21h00","b2"],
+           ["2026-11-08","08h00","11h30","b3"],["2026-11-08","19h00","21h00","b1"],
+           ["2026-11-15","08h00","11h30","b2"],["2026-11-15","19h00","21h00","b3"],
+           ["2026-11-22","08h00","11h30","b1"],["2026-11-22","19h00","21h00","b2"],
+           ["2026-11-29","08h00","11h30","b3"],["2026-11-29","19h00","21h00","b1"]];
+  nov.forEach(function(s,k){
+    d.turnos.push({id:"n"+(k+1),escalaId:"e2",postoId:"po2",data:s[0],ini:s[1],fim:s[2],vagas:2,bandaId:s[3],cultoId:null,cultoNome:""});
+  });
+  /* dezembro, aberta: a Banda 2 toca de manhã no dia 06/12 e o Rafael (Banda 2) pode ver o choque com a Mídia */
+  d.turnos.push({id:"d1",escalaId:"e5",postoId:"po2",data:"2026-12-06",ini:"08h00",fim:"11h30",vagas:2,bandaId:"b2",cultoId:null,cultoNome:""});
+  d.turnos.push({id:"d2",escalaId:"e5",postoId:"po2",data:"2026-12-06",ini:"19h00",fim:"21h00",vagas:2,bandaId:"b3",cultoId:null,cultoNome:""});
+  /* membros fixos de cada banda (Ana toca na Banda 1 no dia 08/11 à noite: é o caso de "ir para outra banda") */
+  var fixos={b1:["p4","p5","p2"],b2:["p6","p10"],b3:["p1","p11","p12","p13"]};
   /* o que cada pessoa já faz */
   var sabe={p1:["f1"],p2:["f2"],p4:["f1"],p5:["f2","f4"],p6:["f1"],p10:["f3"],p11:["f4"],p12:["f3"],p13:["f1","f5"]};
   d.pessoas.forEach(function(p){
     p.bandaIds=Object.keys(fixos).filter(function(b){return fixos[b].indexOf(p.id)>=0;});
     p.funcaoIds=sabe[p.id]||[];
   });
-  /* funções de quem está confirmado no turno de 08/11 da Banda Alpha */
-  d.func={t2:{p1:["f1"],p2:["f2"]}};
-  /* quem marcou disponibilidade no turno da Alpha (Lucas é fixo da Alpha; Ana não é) */
-  d.disp={t2:["p1","p2","p5","p6"]};
+  d.conf={t1:["p1","p3"],t4:["p2"],t3:["p9"],n4:["p1","p2"]};
+  d.func={n4:{p1:["f1"],p2:["f2"]}};
+  d.disp={n4:["p1","p2","p6"]};
   d.eu={minLider:"p1",voluntario:"p10"};
   return d;
 }
@@ -508,7 +506,22 @@ function postosDo(minId){return DB.postos.filter(function(p){return p.minId===mi
 /* bandas são grupos dentro de um ministério (ex.: Louvor), cada uma com escala própria */
 function bandasDo(minId){return DB.bandas.filter(function(b){return b.minId===minId;});}
 function nomeBanda(id){var b=by(DB.bandas,id);return b?b.nome:"";}
-function rotuloEscala(e){return (e.bandaId?nomeBanda(e.bandaId)+" · ":"")+fmtMes(e.mes);}
+function rotuloEscala(e){return fmtMes(e.mes);}
+/* rodízio: cada turno recebe a próxima banda, em sequência contínua entre meses */
+function rodizioBandas(minId,plano){
+  var bs=bandasDo(minId);
+  if(!bs.length||!plano.length)return;
+  plano.sort(function(a,b){return (a.data+a.ini)<(b.data+b.ini)?-1:1;});
+  var ini0=plano[0].data+plano[0].ini,ultimo=null;
+  DB.turnos.forEach(function(t){
+    var em=by(DB.escalas,t.escalaId);
+    if(!t.bandaId||!em||em.minId!==minId)return;
+    if(t.data+t.ini<ini0&&(!ultimo||t.data+t.ini>ultimo.data+ultimo.ini))ultimo=t;
+  });
+  var ids=bs.map(function(b){return b.id;});
+  var i0=ultimo?(ids.indexOf(ultimo.bandaId)+1)%ids.length:0;
+  plano.forEach(function(t,k){t.bandaId=ids[(i0+k)%ids.length];});
+}
 function turnosDa(escId){return DB.turnos.filter(function(t){return t.escalaId===escId;}).sort(function(a,b){return dia(a.data).ord-dia(b.data).ord;});}
 function escalasDo(minId){return DB.escalas.filter(function(e){return e.minId===minId;}).sort(function(a,b){return a.mes<b.mes?1:-1;});}
 function equipeDe(minId){return DB.pessoas.filter(function(p){return p.minIds.indexOf(minId)>=0;});}
@@ -1027,10 +1040,9 @@ function candidatos(t,excluir){
 }
 /* banda é fixa: quem não é membro dela só entra no turno pedindo ao líder */
 function foraDaBanda(pid,turno){
-  var e=by(DB.escalas,turno.escalaId);
-  if(!e||!e.bandaId)return false;
+  if(!turno.bandaId)return false;
   var p=pessoa(pid);
-  return !!p&&(p.bandaIds||[]).indexOf(e.bandaId)<0;
+  return !!p&&(p.bandaIds||[]).indexOf(turno.bandaId)<0;
 }
 function liderEscalas(){
   var m=meuMin(); if(!m)return semLiderBox();
@@ -1107,7 +1119,7 @@ function liderMontar(escId){
       var txt=e.status==="rascunho"?t.vagas+" vaga(s)":(est==="crit"?"Vazio":(faltam>0?"faltam "+faltam:"OK"));
       h+='<button class="turno" data-act="turno" data-id="'+t.id+'">'+
         '<span class="t"><strong>'+d.n+"/"+esc(t.data.split("-")[1])+" · "+d.sem+" · "+esc(t.ini)+'</strong>'+
-        '<small>'+(nomeCulto(t)?esc(nomeCulto(t))+" · ":"")+
+        '<small>'+(t.bandaId?esc(nomeBanda(t.bandaId))+" · ":"")+(nomeCulto(t)?esc(nomeCulto(t))+" · ":"")+
           (e.status==="rascunho"?esc(t.ini)+" às "+esc(t.fim)
                   :(dp.length?dp.length+" marcaram · "+c.length+" de "+t.vagas+" confirmados":"ninguém marcou"))+
           (trocaDo(t.id)?' · <b style="color:var(--crit)">troca pedida</b>':'')+'</small></span>'+
@@ -1528,7 +1540,7 @@ function linhaTurno(t,estado){
     '<span class="rail" style="background:'+(estado==="conf"?"var(--ok)":"var(--warn)")+'"></span>'+
     '<div class="date"><span>'+d.sem+'</span><b>'+d.n+'</b></div>'+
     '<div class="main"><strong>'+(nomeCulto(t)?esc(nomeCulto(t)):(po?esc(po.nome):"turno"))+'</strong>'+
-    '<small>'+esc(t.ini)+' às '+esc(t.fim)+(nomeCulto(t)&&po?' · '+esc(po.nome):'')+'</small>'+
+    '<small>'+esc(t.ini)+' às '+esc(t.fim)+(nomeCulto(t)&&po?' · '+esc(po.nome):'')+(t.bandaId?' · '+esc(nomeBanda(t.bandaId)):'')+'</small>'+
     (rf?'<div style="margin-top:7px"><span class="pill brand"><i></i>'+esc(rf)+'</span></div>'
        :(estado==="conf"?'<div style="margin-top:7px"><span class="pill mut">função a definir</span></div>':''))+
     (estado==="conf"
@@ -2010,23 +2022,18 @@ document.addEventListener("click",function(ev){
   /* ---- escalas e turnos ---- */
   case "nova-escala":
     m=meuMin();
-    var bdsN=bandasDo(m.id);
     var opts=opcoesMes();
     var pr=new Date(); pr.setDate(pr.getDate()+7);
     openSheet("Abrir escala do mês","Você monta os turnos primeiro; a equipe só vê quando você liberar.",
-      '<div class="form">'+(bdsN.length?select("f-es-banda","Banda",bdsN.map(function(b){return {v:b.id,l:b.nome};}),bdsN[0].id):"")+
-      select("f-es-mes","Mês da escala",opts,opts[0].v)+
+      '<div class="form">'+select("f-es-mes","Mês da escala",opts,opts[0].v)+
       campo("f-es-prazo","Prazo para responder","",iso(pr),"date")+'</div>',
       '<button class="btn primary wide" data-act="salvar-escala">Criar escala</button>');
     break;
   case "salvar-escala":
     m=meuMin();
-    var bandaEs=bandasDo(m.id).length?v("f-es-banda"):"";
     var mesEs=v("f-es-mes");
-    if(escalasDo(m.id).some(function(x){return x.mes===mesEs&&(x.bandaId||"")===bandaEs;})){
-      toast(bandaEs?"Essa banda já tem escala neste mês.":"Esse mês já tem escala."); return;
-    }
-    e={id:uid(),minId:m.id,mes:mesEs,prazo:v("f-es-prazo"),status:"rascunho",bandaId:bandaEs||null};
+    if(escalasDo(m.id).some(function(x){return x.mes===mesEs;})){toast("Esse mês já tem escala."); return;}
+    e={id:uid(),minId:m.id,mes:mesEs,prazo:v("f-es-prazo"),status:"rascunho"};
     DB.escalas.push(e); save(); closeSheet(); S.view="montar"; S.arg=e.id;
     toast("Escala criada. Agora adicione os turnos."); render(); break;
   case "montar": S.view="montar"; S.arg=id; render(); break;
@@ -2057,6 +2064,7 @@ document.addEventListener("click",function(ev){
   case "gerar-ok":
     var plano=planoGeracao();
     if(!plano.length){toast("Escolha pelo menos um culto e um posto.");return;}
+    e=by(DB.escalas,id); rodizioBandas(e.minId,plano);
     plano.forEach(function(o){DB.turnos.push(o);});
     save(); closeSheet(); toast(plano.length+" turno(s) gerado(s)."); render(true); break;
 
@@ -2068,6 +2076,7 @@ document.addEventListener("click",function(ev){
     openSheet("Adicionar turno","Um dia de serviço: posto, data, horário e vagas.",
       '<div class="form">'+
       select("f-tu-posto","Posto",pos.map(function(o){return {v:o.id,l:o.nome};}),pos[0].id)+
+      (bandasDo(e.minId).length?select("f-tu-banda","Banda",[{v:"",l:"— sem banda —"}].concat(bandasDo(e.minId).map(function(b){return {v:b.id,l:b.nome};})),""):"")+
       (DB.cultos.length?select("f-tu-culto","Culto (opcional)",
         [{v:"",l:"— fora da grade —"}].concat(DB.cultos.map(function(o){return {v:o.id,l:o.nome+" · "+o.ini};})),""):"")+
       campo("f-tu-data","Data","",d1,"date")+
@@ -2081,7 +2090,7 @@ document.addEventListener("click",function(ev){
     e=by(DB.escalas,id);
     var dt=v("f-tu-data"); if(!dt){toast("Escolha a data do turno.");return;}
     var cSel=by(DB.cultos,v("f-tu-culto"));
-    DB.turnos.push({id:uid(),escalaId:e.id,postoId:v("f-tu-posto"),data:dt,
+    DB.turnos.push({id:uid(),escalaId:e.id,postoId:v("f-tu-posto"),data:dt,bandaId:v("f-tu-banda")||null,
       ini:v("f-tu-ini")||"00h00",fim:v("f-tu-fim")||"00h00",vagas:Math.max(1,+v("f-tu-vagas")||1),
       cultoId:cSel?cSel.id:null,cultoNome:cSel?cSel.nome:""});
     save();
