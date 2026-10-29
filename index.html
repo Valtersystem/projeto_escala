@@ -396,20 +396,21 @@ function dadosExemplo(){
     {id:"po1",minId:"m1",nome:"Câmera",desc:"",vagas:2},
     {id:"po2",minId:"m2",nome:"Som",desc:"",vagas:2},
     {id:"po3",minId:"m3",nome:"Porta",desc:"",vagas:2}];
-  d.pessoas=[
-    {id:"p1",nome:"Ana Lima",tel:"",adm:true,minIds:["m1","m2"],postoIds:["po1","po2"],ativo:true},
-    {id:"p2",nome:"Bruno Souza",tel:"",adm:false,minIds:["m1","m2"],postoIds:["po1","po2"],ativo:true},
-    {id:"p3",nome:"Carla Dias",tel:"",adm:false,minIds:["m1"],postoIds:["po1"],ativo:true},
-    {id:"p4",nome:"Marcos Reis",tel:"",adm:false,minIds:["m2"],postoIds:["po2"],ativo:true},
-    {id:"p5",nome:"Lucas Tavares",tel:"",adm:false,minIds:["m2"],postoIds:["po2"],ativo:true},
-    {id:"p6",nome:"Helena Costa",tel:"",adm:false,minIds:["m2"],postoIds:["po2"],ativo:true},
-    {id:"p7",nome:"Juliana Prado",tel:"",adm:false,minIds:["m3"],postoIds:["po3"],ativo:true},
-    {id:"p8",nome:"Pedro Alves",tel:"",adm:false,minIds:["m3"],postoIds:["po3"],ativo:true},
-    {id:"p9",nome:"Renata Lima",tel:"",adm:false,minIds:["m3"],postoIds:["po3"],ativo:true},
-    {id:"p10",nome:"Rafael Mota",tel:"",adm:false,minIds:["m1","m2"],postoIds:["po1","po2"],ativo:true},
-    {id:"p11",nome:"Fernanda Luz",tel:"",adm:false,minIds:["m2"],postoIds:["po2"],ativo:true},
-    {id:"p12",nome:"Thiago Nunes",tel:"",adm:false,minIds:["m2"],postoIds:["po2"],ativo:true},
-    {id:"p13",nome:"Camila Rocha",tel:"",adm:false,minIds:["m2"],postoIds:["po2"],ativo:true}];
+  /* Louvor: 16 pessoas, cada uma fixa em uma banda */
+  var louvor=[
+    ["p4","Marcos Reis"],["p5","Lucas Tavares"],["p2","Bruno Souza"],["p14","Diego Almeida"],["p15","Ester Moura"],
+    ["p6","Helena Costa"],["p10","Rafael Mota"],["p16","Igor Barros"],["p17","Sofia Ribeiro"],["p18","Felipe Carvalho"],
+    ["p1","Ana Lima"],["p11","Fernanda Luz"],["p12","Thiago Nunes"],["p13","Camila Rocha"],["p19","Gabriel Freitas"],["p20","Bianca Lopes"]];
+  var outros=[
+    {id:"p3",nome:"Carla Dias",minIds:["m1"],postoIds:["po1"]},
+    {id:"p7",nome:"Juliana Prado",minIds:["m3"],postoIds:["po3"]},
+    {id:"p8",nome:"Pedro Alves",minIds:["m3"],postoIds:["po3"]},
+    {id:"p9",nome:"Renata Lima",minIds:["m3"],postoIds:["po3"]}];
+  d.pessoas=louvor.map(function(x){
+    var mids=["m2"],pids=["po2"];
+    if(x[0]==="p1"||x[0]==="p2"||x[0]==="p10"){mids=["m1","m2"];pids=["po1","po2"];}
+    return {id:x[0],nome:x[1],tel:"",adm:x[0]==="p1",minIds:mids,postoIds:pids,ativo:true};
+  }).concat(outros.map(function(o){return {id:o.id,nome:o.nome,tel:"",adm:false,minIds:o.minIds,postoIds:o.postoIds,ativo:true};}));
   d.funcoes=[
     {id:"f1",minId:"m2",nome:"Voz"},
     {id:"f2",minId:"m2",nome:"Guitarra"},
@@ -421,35 +422,54 @@ function dadosExemplo(){
     {id:"e2",minId:"m2",mes:"2026-11",prazo:"2026-11-01",status:"publicada"},
     {id:"e3",minId:"m3",mes:"2026-11",prazo:"2026-11-01",status:"aberta"},
     {id:"e4",minId:"m1",mes:"2026-12",prazo:"2026-11-25",status:"aberta"},
-    {id:"e5",minId:"m2",mes:"2026-12",prazo:"2026-11-25",status:"aberta"}];
+    {id:"e5",minId:"m2",mes:"2026-12",prazo:"2026-11-25",status:"aberta"},
+    {id:"e6",minId:"m2",mes:"2027-01",prazo:"2026-12-20",status:"rascunho"}];
   d.turnos=[
     {id:"t1",escalaId:"e1",postoId:"po1",data:"2026-11-08",ini:"08h00",fim:"11h30",vagas:2,cultoId:null,cultoNome:""},
     {id:"t3",escalaId:"e3",postoId:"po3",data:"2026-11-08",ini:"08h00",fim:"11h30",vagas:2,cultoId:null,cultoNome:""},
     {id:"t4",escalaId:"e1",postoId:"po1",data:"2026-11-15",ini:"08h00",fim:"11h30",vagas:2,cultoId:null,cultoNome:""},
     {id:"t5",escalaId:"e4",postoId:"po1",data:"2026-12-06",ini:"08h00",fim:"11h30",vagas:2,cultoId:null,cultoNome:""}];
-  /* Louvor de novembro: domingo Manhã e Noite, uma banda por turno (mesma sequência da planilha da líder) */
-  var nov=[["2026-11-01","08h00","11h30","b1"],["2026-11-01","19h00","21h00","b2"],
-           ["2026-11-08","08h00","11h30","b3"],["2026-11-08","19h00","21h00","b1"],
-           ["2026-11-15","08h00","11h30","b2"],["2026-11-15","19h00","21h00","b3"],
-           ["2026-11-22","08h00","11h30","b1"],["2026-11-22","19h00","21h00","b2"],
-           ["2026-11-29","08h00","11h30","b3"],["2026-11-29","19h00","21h00","b1"]];
-  nov.forEach(function(s,k){
-    d.turnos.push({id:"n"+(k+1),escalaId:"e2",postoId:"po2",data:s[0],ini:s[1],fim:s[2],vagas:2,bandaId:s[3],cultoId:null,cultoNome:""});
+  /* Louvor: Manhã e Noite de cada domingo, banda pelo rodízio contínuo (1, 2, 3, 1, ...) */
+  var domingos={e2:["2026-11-01","2026-11-08","2026-11-15","2026-11-22","2026-11-29"],
+                e5:["2026-12-06","2026-12-13","2026-12-20","2026-12-27"],
+                e6:["2027-01-03","2027-01-10","2027-01-17","2027-01-24","2027-01-31"]};
+  var BANDAS=["b1","b2","b3"],k=0;
+  ["e2","e5","e6"].forEach(function(eid){
+    domingos[eid].forEach(function(dt){
+      [["08h00","11h30"],["19h00","21h00"]].forEach(function(h){
+        d.turnos.push({id:"lv"+k,escalaId:eid,postoId:"po2",data:dt,ini:h[0],fim:h[1],vagas:2,bandaId:BANDAS[k%3],cultoId:null,cultoNome:""});
+        k++;
+      });
+    });
   });
-  /* dezembro, aberta: a Banda 2 toca de manhã no dia 06/12 e o Rafael (Banda 2) pode ver o choque com a Mídia */
-  d.turnos.push({id:"d1",escalaId:"e5",postoId:"po2",data:"2026-12-06",ini:"08h00",fim:"11h30",vagas:2,bandaId:"b2",cultoId:null,cultoNome:""});
-  d.turnos.push({id:"d2",escalaId:"e5",postoId:"po2",data:"2026-12-06",ini:"19h00",fim:"21h00",vagas:2,bandaId:"b3",cultoId:null,cultoNome:""});
-  /* membros fixos de cada banda (Ana toca na Banda 1 no dia 08/11 à noite: é o caso de "ir para outra banda") */
-  var fixos={b1:["p4","p5","p2"],b2:["p6","p10"],b3:["p1","p11","p12","p13"]};
+  /* membros fixos de cada banda */
+  var fixos={b1:["p4","p5","p2","p14","p15"],b2:["p6","p10","p16","p17","p18"],b3:["p1","p11","p12","p13","p19","p20"]};
   /* o que cada pessoa já faz */
-  var sabe={p1:["f1"],p2:["f2"],p4:["f1"],p5:["f2","f4"],p6:["f1"],p10:["f3"],p11:["f4"],p12:["f3"],p13:["f1","f5"]};
+  var sabe={p4:["f1"],p5:["f2","f4"],p2:["f2"],p14:["f3"],p15:["f5","f1"],p6:["f1"],p10:["f3"],p16:["f4"],p17:["f1"],p18:["f2"],p1:["f1"],p11:["f4"],p12:["f3"],p13:["f5","f1"],p19:["f2"],p20:["f1"]};
   d.pessoas.forEach(function(p){
     p.bandaIds=Object.keys(fixos).filter(function(b){return fixos[b].indexOf(p.id)>=0;});
     p.funcaoIds=sabe[p.id]||[];
   });
-  d.conf={t1:["p1","p3"],t4:["p2"],t3:["p9"],n4:["p1","p2"]};
-  d.func={n4:{p1:["f1"],p2:["f2"]}};
-  d.disp={n4:["p1","p2","p6"]};
+  /* novembro (publicada): os dois primeiros membros de cada banda estão confirmados */
+  d.conf={t1:["p1","p3"],t4:["p2"],t3:["p9"]};
+  d.func={};
+  for(var n=0;n<10;n++){
+    var tn=d.turnos.filter(function(t){return t.id==="lv"+n;})[0];
+    var mem=fixos[tn.bandaId].slice(0,2);
+    d.conf["lv"+n]=mem;
+    d.func["lv"+n]={};
+    mem.forEach(function(pid){d.func["lv"+n][pid]=[sabe[pid][0]];});
+  }
+  /* exemplo: a Ana (Banda 3) toca na Banda 1 no domingo 08/11 à noite, junto com o Bruno */
+  d.conf.lv3=["p1","p2"];
+  d.func.lv3={p1:["f1"],p2:["f2"]};
+  /* dezembro (aberta): cada banda marca os próprios turnos; a Ana marca um turno da Banda 2 */
+  d.disp={};
+  for(var m=10;m<18;m++){
+    var tm=d.turnos.filter(function(t){return t.id==="lv"+m;})[0];
+    d.disp["lv"+m]=fixos[tm.bandaId].slice();
+  }
+  d.disp.lv10.push("p1");
   d.eu={minLider:"p1",voluntario:"p10"};
   return d;
 }
