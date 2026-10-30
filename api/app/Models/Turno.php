@@ -19,7 +19,7 @@ class Turno extends Model
     protected function casts(): array
     {
         return [
-            'data' => 'date',
+            'data' => 'date:Y-m-d',
             'vagas' => 'integer',
             'versao' => 'integer',
         ];

@@ -1,5 +1,6 @@
 <?php
 
+use App\Exceptions\ConflitoDeVersao;
 use App\Exceptions\RegraDeNegocio;
 use App\Http\Middleware\DefinirIgrejaAtual;
 use Illuminate\Routing\Middleware\SubstituteBindings;
@@ -30,4 +31,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Violação de regra de negócio vira 422 com a mensagem para a tela.
         $exceptions->render(fn (RegraDeNegocio $e) => response()->json(['message' => $e->getMessage()], 422));
+
+        // Edição simultânea (D-14): outra pessoa já alterou o registro.
+        $exceptions->render(fn (ConflitoDeVersao $e) => response()->json(['message' => $e->getMessage()], 409));
     })->create();

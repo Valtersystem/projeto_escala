@@ -291,6 +291,49 @@ O protótipo troca de perfil por um botão, sem login (`Adm`, `Líder`, `Volunt�
 
 ---
 
+## 11d. Bandas, funções, cultos, escalas e turnos pela API (v1)
+
+**RN-81** Banda tem nome e `ordem` (a posição no rodízio). Sem ordem informada, entra no fim da fila. Só o líder do ministério cria, edita e exclui. Os membros fixos precisam estar na equipe do ministério. Excluir a banda mantém os turnos, que ficam sem banda.
+**RN-82** Função é criada pelo líder. O que a pessoa "já faz" aceita só funções do ministério e só de quem está na equipe; as funções de outros ministérios não mudam.
+**RN-83** Todos veem a grade de cultos; só o Adm altera. O horário aceita `8h30`, `19:00` etc. e é guardado como `HH:MM`. Culto mensal usa ordem 1 a 5 ou -1 (última).
+**RN-84** Só o líder cria a escala. As ações de estado valem cada uma para um estado: liberar só em rascunho, publicar só em aberta, reabrir só em publicada. Rascunho é invisível para quem não é o líder.
+**RN-85** Turno avulso pode ser criado em escala em rascunho ou aberta (não em publicada). Posto e banda precisam ser do mesmo ministério. As vagas padrão vêm do posto (mínimo 1). Edição: em rascunho muda tudo; em aberta só as vagas, e só para mais; em publicada nada (reabra antes). Só se exclui turno em rascunho.
+**RN-86** "Gerar dos cultos" cria um turno por culto, data do mês e posto escolhidos, sem duplicar os que já existem. Recusa quando o ministério não tem posto ("Crie um posto antes."), quando nenhum culto cai no mês e quando todos os turnos já existem. Se o ministério tem bandas, o rodízio é aplicado (RN-29 a RN-31).
+**RN-87** Editar o prazo da escala ou um turno exige mandar a `versao` que a tela viu. Se o registro já mudou, a API responde 409 e nada é gravado (D-14).
+**RN-88** O voluntário não recebe a quantidade de vagas nem a versão dos turnos (RN-64). Em escala publicada, só recebe os turnos em que está confirmado (RN-23).
+
+- **T-96** Dado líder, quando cria bandas, então a ordem do rodízio segue a criação.
+- **T-97** Dado Adm, voluntária ou líder de outro ministério, então não mexem nas bandas; quem serve no ministério vê.
+- **T-98** Dados membros fixos, então só a equipe do ministério entra, e lista vazia esvazia a banda.
+- **T-99** Dada banda com turno, quando excluída, então o turno continua sem banda.
+- **T-100** Dado líder, quando cria funções e define o que a pessoa faz, então só as do ministério mudam.
+- **T-101** Dado líder e Adm, então só o Adm altera a grade de cultos e o horário é padronizado (`9h` vira `09:00`).
+- **T-102** Dados cultos semanal e mensal, então a API devolve as datas do mês.
+- **T-103** Dado turno com culto, quando o culto é excluído, então o turno guarda o nome do culto.
+- **T-104** Dada nova escala, então nasce em rascunho, versão 1, com o prazo sugerido (início do mês menos 5 dias); mês inválido é recusado.
+- **T-105** Dado mês que já tem escala, então a segunda é recusada; outro ministério pode ter a sua.
+- **T-106** Dados Adm, voluntária e líder de outro ministério, então não criam escala; escala de outra igreja responde 404.
+- **T-107** Dada escala em rascunho, então o voluntário não a vê na lista nem pelo id.
+- **T-108** Dada escala sem turnos, então não libera; com turno libera e a versão sobe; liberar de novo é recusado.
+- **T-109** Dada escala aberta com turnos incompletos, então publica; publicar rascunho é recusado.
+- **T-110** Dada escala publicada, então reabre; reabrir escala não publicada é recusado.
+- **T-111** Dado voluntário, então não vê vagas nem versão, e em escala publicada só vê o turno em que está confirmado.
+- **T-112** Dado culto de domingo e posto de 2 vagas, quando gera novembro, então nascem 5 turnos com 2 vagas e rodízio.
+- **T-113** Dado turnos já gerados, quando gera de novo, então não duplica; um culto novo entra sem repetir os existentes.
+- **T-114** Dado ministério sem posto, ou posto de outro ministério, então a geração é recusada.
+- **T-115** Dados Manhã e Noite, então a sequência de novembro confere com a planilha da líder.
+- **T-116** Dado novembro terminando na Banda 1, quando gera dezembro, então começa na Banda 2.
+- **T-117** Dado ministério sem bandas, então os turnos nascem sem banda.
+- **T-118** Dados dois postos no mesmo horário, então recebem a mesma banda.
+- **T-119** Dado culto que não cai no mês, então a geração é recusada.
+- **T-120** Dado turno avulso, então usa as vagas do posto, padroniza o horário e guarda o nome do culto; vagas 0 viram 1.
+- **T-121** Dado turno, então a edição depende do estado: rascunho muda tudo, aberta só aumenta vagas, publicada recusa.
+- **T-122** Dado turno em rascunho, quando excluído, então leva disponibilidades e confirmações; em escala aberta é recusado.
+- **T-123** Dado turno alterado por outra pessoa, quando se edita com a versão antiga, então a API responde 409 e nada é gravado.
+- **T-124** Dado prazo da escala, então a edição também exige versão; o líder pode estender o prazo, e quem não é líder não pode.
+
+---
+
 ## 12. Decisões tomadas (v1)
 
 Decididas em 30/10/2026. A única ainda aberta é a D-18.

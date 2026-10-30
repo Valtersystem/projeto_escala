@@ -33,6 +33,7 @@ php artisan test
 | `tests/Feature/BancoDeDadosTest.php` | Restrições e cascatas do banco (`T-07`, `T-08`, `T-10`, `T-13`, `T-22`) |
 | `tests/Feature/Auth/`, `IsolamentoPorIgrejaTest.php`, `CriarIgrejaCommandTest.php` | Login, isolamento por igreja e comando da primeira igreja (`T-64` a `T-73`) |
 | `tests/Feature/CadastrosTest.php`, `ConviteTest.php` | Cadastros por papel e convite (`T-74` a `T-95`) |
+| `tests/Feature/BandasFuncoesCultosTest.php`, `EscalasTurnosTest.php` | Bandas, funções, cultos, escalas, turnos e rodízio (`T-96` a `T-124`) |
 | `app/Models/` | Modelos Eloquent; os que têm `igreja_id` usam o escopo por igreja |
 
 ## Decisões de modelagem
@@ -55,6 +56,12 @@ Todas ficam em `/api`. As protegidas exigem `Authorization: Bearer <token>`.
 | `GET/POST /ministerios`, `PATCH/DELETE /ministerios/{id}`, `PUT /ministerios/{id}/lider` | Adm (listar: todos, filtrado) | Ministérios e líder |
 | `POST /ministerios/{id}/equipe`, `DELETE /ministerios/{id}/equipe/{pessoa}` | Adm ou líder | Equipe do ministério |
 | `GET/POST /ministerios/{id}/postos`, `PATCH/DELETE /postos/{id}` | líder (ver: equipe) | Postos |
+| `GET/POST /ministerios/{id}/bandas`, `PATCH/DELETE /bandas/{id}`, `PUT /bandas/{id}/membros` | líder (ver: equipe) | Bandas e membros fixos |
+| `GET/POST /ministerios/{id}/funcoes`, `PATCH/DELETE /funcoes/{id}`, `PUT /ministerios/{id}/equipe/{pessoa}/funcoes` | líder (ver: equipe) | Funções e o que cada pessoa faz |
+| `GET /cultos`, `GET /cultos/{id}/ocorrencias?mes=AAAA-MM`, `POST/PATCH/DELETE /cultos` | todos veem; Adm altera | Grade de cultos |
+| `GET/POST /ministerios/{id}/escalas`, `GET/PATCH /escalas/{id}` | líder (voluntário vê aberta e publicada) | Escalas do mês e prazo |
+| `POST /escalas/{id}/liberar`, `/publicar`, `/reabrir` | líder | Estados da escala |
+| `POST /escalas/{id}/turnos`, `POST /escalas/{id}/turnos/gerar`, `PATCH/DELETE /turnos/{id}` | líder | Turnos (avulso, gerar com rodízio, editar, excluir) |
 | `GET/POST /pessoas`, `PATCH/DELETE /pessoas/{id}` | Adm ou líder | Pessoas (excluir: só Adm) |
 | `POST /pessoas/{id}/convite` | Adm ou líder da pessoa | Gera o link de convite |
 
@@ -67,4 +74,4 @@ Todas ficam em `/api`. As protegidas exigem `Authorization: Bearer <token>`.
 
 ## O que ainda falta
 
-Cadastros de bandas, funções e cultos; escalas e turnos (gerar, editar, liberar, publicar); marcar disponibilidade, confirmar e tirar; pedido de troca; avisos; relatórios; login com Google; auditoria (D-12); pedido de entrada do voluntário (D-15). A recuperação de senha por e-mail fica por último e não entra na v1.
+Disponibilidade do voluntário (com bloqueio depois do prazo), confirmação do líder (turno lotado bloqueia, choque avisa), pedido de troca, avisos, relatórios, login com Google, auditoria (D-12) e pedido de entrada do voluntário (D-15). A recuperação de senha por e-mail fica por último e não entra na v1.

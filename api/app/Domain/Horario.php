@@ -25,4 +25,12 @@ final class Horario
 
         return $horas * 60 + $minutos;
     }
+
+    /** Horário padronizado como HH:MM (ex.: "8h30" vira "08:30"), ou null se ilegível. */
+    public static function formatar(?string $texto): ?string
+    {
+        $minutos = self::minutos($texto);
+
+        return $minutos === null ? null : sprintf('%02d:%02d', intdiv($minutos, 60), $minutos % 60);
+    }
 }

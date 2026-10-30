@@ -26,6 +26,15 @@ class HorarioTest extends TestCase
         $this->assertSame(1140, Horario::minutos('19:00:00'));
     }
 
+    public function test_formatar_padroniza_como_hh_mm(): void
+    {
+        $this->assertSame('08:30', Horario::formatar('8h30'));
+        $this->assertSame('19:00', Horario::formatar('19'));
+        $this->assertSame('09:00', Horario::formatar('9:00:00'));
+        $this->assertNull(Horario::formatar('cedo'));
+        $this->assertNull(Horario::formatar(null));
+    }
+
     public function test_texto_invalido_retorna_nulo(): void
     {
         $this->assertNull(Horario::minutos(''));

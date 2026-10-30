@@ -20,7 +20,7 @@ class Escala extends Model
     {
         return [
             'status' => EstadoEscala::class,
-            'prazo' => 'date',
+            'prazo' => 'date:Y-m-d',
             'versao' => 'integer',
         ];
     }
