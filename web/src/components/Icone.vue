@@ -13,6 +13,7 @@ const CAMINHOS = {
   alerta: '<path d="M12 4 2.5 20h19z"/><path d="M12 10v5M12 17.5v.5"/>',
   grafico: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
   mais: '<path d="M12 5v14M5 12h14"/>',
+  equipe: '<circle cx="9" cy="8" r="3.4"/><path d="M2.5 20c0-3.4 3-5.2 6.5-5.2s6.5 1.8 6.5 5.2"/><path d="M17 5.5a3.4 3.4 0 0 1 0 6.6M18.5 14.6c2 .7 3.2 2.2 3.2 4.4"/>',
 };
 </script>
 

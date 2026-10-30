@@ -5,8 +5,8 @@ Sistema para a igreja montar as escalas dos ministérios: o voluntário marca em
 | Pasta | O que é |
 |---|---|
 | [`docs/regras-de-negocio.md`](docs/regras-de-negocio.md) | As regras (RN-xx), os casos de teste (T-xx) e as decisões da v1 |
-| [`api/`](api/README.md) | API em Laravel 13 (Sanctum), com 185 testes |
-| [`web/`](web/README.md) | App em Vue 3 + PWA (voluntário e líder), com 127 testes |
+| [`api/`](api/README.md) | API em Laravel 13 (Sanctum), com 193 testes |
+| [`web/`](web/README.md) | App em Vue 3 + PWA (voluntário e líder), com 154 testes |
 | `index.html` | Protótipo original (uma página só, dados no navegador). Serve de referência visual e já está no ar pelo GitHub Pages |
 
 ## Subindo tudo para testar
@@ -29,5 +29,5 @@ O comando de exemplo mostra os logins (Adm, líderes e voluntários). Todos usam
 ## Situação
 
 - **API:** cobre as regras do protótipo, exceto o relatório geral do Adm, o login com Google, a auditoria e o pedido de entrada do voluntário.
-- **App:** telas do voluntário e do líder prontas. Faltam as do Adm e os cadastros do líder (postos, bandas, funções, equipe).
+- **App:** telas do voluntário e do líder prontas, inclusive a equipe (pessoas, convite, bandas, postos e funções). Faltam as do Adm.
 - **Em aberto com o cliente:** quais cultos o Louvor serve (D-18 no documento de regras).

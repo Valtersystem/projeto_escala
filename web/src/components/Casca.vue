@@ -19,6 +19,7 @@ const ABAS = {
   ],
   lider: [
     { nome: 'lider-escalas', texto: 'Escalas', icone: 'calendario' },
+    { nome: 'lider-equipe', texto: 'Equipe', icone: 'equipe' },
     { nome: 'lider-trocas', texto: 'Trocas', icone: 'troca', selo: true },
     { nome: 'lider-relatorio', texto: 'Relatório', icone: 'grafico' },
     { nome: 'perfil', texto: 'Perfil', icone: 'pessoa' },

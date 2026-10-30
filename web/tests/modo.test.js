@@ -125,7 +125,7 @@ describe('casca com o modo', () => {
     const { tela, roteador } = await montarTela(App, { entrada: '/lider', pessoa: LIDER, modo: 'lider' });
 
     expect(tela.find('[role=tablist]').exists()).toBe(true);
-    expect(tela.findAll('nav a').map((a) => a.text().replace(/\d+$/, ''))).toEqual(['Escalas', 'Trocas', 'Relatório', 'Perfil']);
+    expect(tela.findAll('nav a').map((a) => a.text().replace(/\d+$/, ''))).toEqual(['Escalas', 'Equipe', 'Trocas', 'Relatório', 'Perfil']);
     expect(tela.find('.selo').text()).toBe('2');
 
     await botao(tela, 'Voluntário').trigger('click');

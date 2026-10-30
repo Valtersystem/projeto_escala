@@ -118,3 +118,20 @@ h1, h2, h3, p { margin: 0; }
 .vazio { color: var(--ink-3); font-size: 13px; text-align: center; }
 .vazio b { display: block; color: var(--ink); margin-bottom: 4px; font-size: 14px; }
 .repetir { color: inherit; font-weight: 700; text-decoration: underline; }
+
+/* ---- equipe do líder ---- */
+.segmentos { display: flex; gap: 4px; background: var(--surface-2); border-radius: 11px; padding: 3px; }
+.segmentos button { flex: 1; min-height: 34px; border-radius: 9px; font-size: 12.5px; font-weight: 600; color: var(--ink-2); text-align: center; }
+.segmentos button[aria-selected='true'] { background: var(--surface); color: var(--brand); box-shadow: var(--shadow-1); }
+.linha-pessoa { display: flex; align-items: center; gap: 12px; padding: 12px 14px; width: 100%; }
+.linha-pessoa .texto { flex: 1; min-width: 0; }
+.linha-pessoa strong { display: block; font-size: 14.5px; font-weight: 600; }
+.linha-pessoa small { display: block; color: var(--ink-3); font-size: 12.5px; margin-top: 1px; }
+.interruptor {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; padding: 12px 14px; font-size: 14px;
+}
+.trilho-interruptor { width: 46px; height: 28px; border-radius: 999px; background: var(--line-2); position: relative; flex: none; transition: background 0.18s; }
+.trilho-interruptor::after { content: ''; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; box-shadow: var(--shadow-1); transition: transform 0.18s; }
+[aria-pressed='true'] > .trilho-interruptor { background: var(--brand); }
+[aria-pressed='true'] > .trilho-interruptor::after { transform: translateX(18px); }
+.dica { font-size: 12.5px; color: var(--ink-3); }

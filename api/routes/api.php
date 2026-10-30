@@ -36,6 +36,8 @@ Route::middleware(['auth:sanctum', DefinirIgrejaAtual::class])->group(function (
 
     Route::post('/ministerios/{ministerio}/equipe', [EquipeController::class, 'store']);
     Route::delete('/ministerios/{ministerio}/equipe/{pessoa}', [EquipeController::class, 'destroy']);
+    Route::get('/ministerios/{ministerio}/pessoas-de-fora', [EquipeController::class, 'deFora']);
+    Route::put('/ministerios/{ministerio}/equipe/{pessoa}/postos', [EquipeController::class, 'definirPostos']);
 
     Route::get('/ministerios/{ministerio}/postos', [PostoController::class, 'index']);
     Route::post('/ministerios/{ministerio}/postos', [PostoController::class, 'store']);

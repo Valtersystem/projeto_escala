@@ -434,7 +434,21 @@ O protótipo troca de perfil por um botão, sem login (`Adm`, `Líder`, `Volunt�
 - **T-171** Dada a escala aberta, então o líder vê marcaram, confirmados e quem está sem função; o voluntário não recebe esses dados.
 - **T-172** Dada a prévia de publicação, então conta turnos incompletos, pessoas sem função e choques (um só por par), e só o líder do ministério a vê.
 
-(Os 127 testes do app cobrem o modo líder, as rotas protegidas, a lista e a criação de escalas, as ações por estado, a geração de turnos, o formulário de turno, a folha de confirmação, as trocas e o relatório; ficam em `web/tests/`.)
+## 11i. Equipe do líder no app (v1)
+
+**RN-115** Ao listar pessoas de um ministério, a API devolve também os postos, funções e bandas **daquele ministério** que cada uma tem (os de outros ministérios não aparecem).
+
+**RN-116** O líder define os postos que a pessoa atende no ministério; só valem postos do ministério e de quem está na equipe. Os postos de outros ministérios não mudam.
+
+**RN-117** O líder vê quem está ativo na igreja e ainda fora da equipe, só com nome e onde já serve, e pode incluir.
+
+**RN-118** O link de acesso só pode ser gerado se a pessoa tem e-mail (a tela trava o botão até preencher). Quem já tem login recebe link novo para trocar a senha; o e-mail dela fica travado.
+
+- **T-173** Dada a lista com ministério, então vêm só os postos, funções e bandas dele; sem ministério, a lista não muda.
+- **T-174** Dado o líder definindo postos, então só os do ministério mudam; posto de outro ministério ou pessoa fora da equipe dá 422; sem permissão, 403.
+- **T-175** Dada a lista de quem está de fora, então só ativos que não estão na equipe, de outra igreja nunca, com os nomes dos ministérios onde já servem.
+
+(Os 154 testes do app cobrem o modo líder, as rotas protegidas, a lista e a criação de escalas, as ações por estado, a geração de turnos, o formulário de turno, a folha de confirmação, as trocas e o relatório; ficam em `web/tests/`.)
 
 ---
 

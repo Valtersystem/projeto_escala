@@ -19,6 +19,7 @@ export const rotas = [
       // Área do líder: só abre para quem lidera algum ministério.
       { path: 'lider', name: 'lider-escalas', component: () => import('./views/LiderEscalas.vue'), meta: { modo: 'lider' } },
       { path: 'lider/escalas/:escalaId', name: 'lider-escala', component: () => import('./views/LiderEscala.vue'), props: true, meta: { modo: 'lider' } },
+      { path: 'lider/equipe', name: 'lider-equipe', component: () => import('./views/LiderEquipe.vue'), meta: { modo: 'lider' } },
       { path: 'lider/trocas', name: 'lider-trocas', component: () => import('./views/LiderTrocas.vue'), meta: { modo: 'lider' } },
       { path: 'lider/relatorio', name: 'lider-relatorio', component: () => import('./views/LiderRelatorio.vue'), meta: { modo: 'lider' } },
     ],

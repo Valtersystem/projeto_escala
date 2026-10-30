@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Banda;
+use App\Models\Funcao;
 use App\Models\Ministerio;
 use App\Models\Pessoa;
+use App\Models\Posto;
 use App\Models\User;
 use App\Support\IgrejaAtual;
 use Illuminate\Http\JsonResponse;
@@ -33,9 +36,27 @@ class PessoaController extends Controller
             $consulta->whereHas('ministerios', fn ($m) => $m->whereKey($ministerio));
         }
 
-        $pessoas = $consulta->with('ministerios:id,nome')->orderBy('nome')->get();
+        $pessoas = $consulta->with('ministerios:id,nome')->orderBy('nome');
 
-        return response()->json(['pessoas' => $pessoas->map(fn (Pessoa $p) => $this->resumo($p))->values()]);
+        // Com o ministério na consulta, vêm também os postos, as funções e as bandas dele que cada pessoa tem.
+        $doMinisterio = null;
+
+        if ($ministerio) {
+            $doMinisterio = [
+                'postos' => Posto::where('ministerio_id', $ministerio)->pluck('id')->all(),
+                'funcoes' => Funcao::where('ministerio_id', $ministerio)->pluck('id')->all(),
+                'bandas' => Banda::where('ministerio_id', $ministerio)->pluck('id')->all(),
+            ];
+            $pessoas->with(['postos:id', 'funcoes:id', 'bandas:id']);
+        }
+
+        return response()->json([
+            'pessoas' => $pessoas->get()->map(fn (Pessoa $p) => $this->resumo($p) + ($doMinisterio ? [
+                'posto_ids' => $p->postos->pluck('id')->intersect($doMinisterio['postos'])->values(),
+                'funcao_ids' => $p->funcoes->pluck('id')->intersect($doMinisterio['funcoes'])->values(),
+                'banda_ids' => $p->bandas->pluck('id')->intersect($doMinisterio['bandas'])->values(),
+            ] : []))->values(),
+        ]);
     }
 
     /** RN-09. O líder só cadastra dentro dos ministérios que lidera. */
