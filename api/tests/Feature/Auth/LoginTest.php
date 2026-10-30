@@ -103,6 +103,13 @@ class LoginTest extends TestCase
         $this->postJson('/api/logout')->assertUnauthorized();
     }
 
+    public function test_rota_protegida_responde_json_sem_cabecalho_accept(): void
+    {
+        $this->get('/api/eu')
+            ->assertUnauthorized()
+            ->assertJsonPath('message', 'Unauthenticated.');
+    }
+
     public function test_t70_depois_de_cinco_tentativas_o_login_e_limitado(): void
     {
         $this->pessoaComLogin($this->igreja(), 'ana@teste.com');

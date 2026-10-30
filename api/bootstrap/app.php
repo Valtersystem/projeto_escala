@@ -3,11 +3,11 @@
 use App\Exceptions\ConflitoDeVersao;
 use App\Exceptions\RegraDeNegocio;
 use App\Http\Middleware\DefinirIgrejaAtual;
-use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Middleware\SubstituteBindings;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -17,6 +17,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->redirectGuestsTo(null);
+
         // A igreja precisa estar definida antes do route model binding, senão o
         // escopo por igreja faria todo registro parecer inexistente.
         $middleware->prependToPriorityList(
