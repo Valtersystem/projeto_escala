@@ -1,13 +1,17 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\AvisoController;
 use App\Http\Controllers\BandaController;
+use App\Http\Controllers\ConfirmacaoController;
 use App\Http\Controllers\ConviteController;
 use App\Http\Controllers\CultoController;
+use App\Http\Controllers\DisponibilidadeController;
 use App\Http\Controllers\EquipeController;
 use App\Http\Controllers\EscalaController;
 use App\Http\Controllers\EuController;
 use App\Http\Controllers\FuncaoController;
+use App\Http\Controllers\MinhaEscalaController;
 use App\Http\Controllers\MinisterioController;
 use App\Http\Controllers\PessoaController;
 use App\Http\Controllers\PostoController;
@@ -66,6 +70,19 @@ Route::middleware(['auth:sanctum', DefinirIgrejaAtual::class])->group(function (
     Route::post('/escalas/{escala}/turnos/gerar', [TurnoController::class, 'gerar']);
     Route::patch('/turnos/{turno}', [TurnoController::class, 'update']);
     Route::delete('/turnos/{turno}', [TurnoController::class, 'destroy']);
+
+    Route::get('/escalas/{escala}/disponibilidade', [DisponibilidadeController::class, 'index']);
+    Route::post('/escalas/{escala}/disponibilidade/enviar', [DisponibilidadeController::class, 'enviar']);
+    Route::put('/turnos/{turno}/disponibilidade', [DisponibilidadeController::class, 'marcar']);
+
+    Route::get('/turnos/{turno}/pessoas', [ConfirmacaoController::class, 'pessoas']);
+    Route::post('/turnos/{turno}/confirmacoes', [ConfirmacaoController::class, 'confirmar']);
+    Route::put('/turnos/{turno}/confirmacoes/{pessoa}/funcoes', [ConfirmacaoController::class, 'definirFuncoes']);
+    Route::delete('/turnos/{turno}/confirmacoes/{pessoa}', [ConfirmacaoController::class, 'remover']);
+
+    Route::get('/minha-escala', MinhaEscalaController::class);
+    Route::get('/avisos', [AvisoController::class, 'index']);
+    Route::post('/avisos/lidos', [AvisoController::class, 'marcarLidos']);
 
     Route::get('/pessoas', [PessoaController::class, 'index']);
     Route::post('/pessoas', [PessoaController::class, 'store']);

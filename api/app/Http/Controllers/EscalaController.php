@@ -8,6 +8,7 @@ use App\Exceptions\RegraDeNegocio;
 use App\Models\Escala;
 use App\Models\Igreja;
 use App\Models\Ministerio;
+use App\Support\Avisos;
 use App\Support\Concorrencia;
 use App\Support\IgrejaAtual;
 use Illuminate\Http\JsonResponse;
@@ -101,9 +102,18 @@ class EscalaController extends Controller
         return $this->transicionar($escala, EstadoEscala::Rascunho, EstadoEscala::Aberta);
     }
 
+    /** RN-59: ao publicar, cada pessoa confirmada recebe um aviso com data, horário e função. */
     public function publicar(Escala $escala): JsonResponse
     {
-        return $this->transicionar($escala, EstadoEscala::Aberta, EstadoEscala::Publicada);
+        $resposta = $this->transicionar($escala, EstadoEscala::Aberta, EstadoEscala::Publicada);
+
+        $escala->turnos()->with(['confirmacoes.funcoes:id,nome'])->get()->each(
+            fn ($turno) => $turno->confirmacoes->each(
+                fn ($confirmacao) => Avisos::para($confirmacao->pessoa_id, Avisos::publicacao($turno, $confirmacao)),
+            ),
+        );
+
+        return $resposta;
     }
 
     /** RN-22: reabre uma escala publicada. */

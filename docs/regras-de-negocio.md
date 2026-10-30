@@ -334,6 +334,42 @@ O protótipo troca de perfil por um botão, sem login (`Adm`, `Líder`, `Volunt�
 
 ---
 
+## 11e. Disponibilidade, confirmação, avisos e "minha escala" pela API (v1)
+
+**RN-89** O voluntário marca e desmarca disponibilidade só em turno de escala **aberta** do ministério em que está na equipe, e só até o fim do prazo (o último dia conta, no fuso da igreja). Depois do prazo, nem marcar nem desmarcar; o líder pode estender (D-02). As duas ações são idempotentes. A resposta traz os choques, contando os turnos confirmados e os que a pessoa já marcou.
+**RN-90** Enviar a disponibilidade exige ao menos um turno marcado naquela escala. A resposta diz quantos turnos foram marcados e quantos têm choque.
+**RN-91** A tela de disponibilidade devolve os turnos da escala sem a quantidade de vagas, com: se a pessoa marcou, se o turno é do perfil dela (`do_meu_perfil`, sempre verdadeiro se ela não tem posto marcado), os choques e os turnos do mesmo dia.
+**RN-92** Só o líder confirma. A escala precisa estar aberta ou publicada (rascunho não). A pessoa precisa estar ativa, na equipe, e não pode estar confirmada duas vezes. **Turno lotado bloqueia** (D-01). Choque **não** bloqueia: a confirmação sai e a pessoa recebe um aviso. As funções, se informadas, precisam ser do ministério. O líder pode trocar as funções depois e tirar a pessoa do turno (as funções saem junto).
+**RN-93** A folha do turno (só o líder) mostra: se está lotado; os confirmados, com funções e se são de fora da banda; e quem marcou disponibilidade e ainda não foi confirmado, só pessoas ativas, com turnos confirmados no mês do turno, alerta de carga (acima do limite da igreja, só alerta), choques e "fora da banda fixa".
+**RN-94** Avisos: ao publicar, cada confirmado recebe data, horário e função ("função a combinar com o líder" se não houver). Quem é confirmado depois de a escala estar publicada também recebe. Confirmar com choque avisa a pessoa. Cada pessoa vê só os próprios avisos, com o número de não lidos, e pode marcar todos como lidos.
+**RN-95** "Minha escala" lista só os turnos confirmados em escala **publicada**, com ministério, banda, funções e o choque com outros turnos confirmados (inclusive entre bandas do mesmo ministério), sem vagas, com filtro opcional por mês.
+
+- **T-125** Dado turno de escala aberta, quando o voluntário marca e desmarca, então as duas ações são idempotentes e ficam salvas.
+- **T-126** Dada escala em rascunho ou publicada, então não recebe disponibilidade.
+- **T-127** Dada pessoa fora da equipe, então marcar responde 403.
+- **T-128** Dado prazo vencido, então nem marcar nem desmarcar; no último dia ainda vale; depois que o líder estende, volta a valer.
+- **T-129** Dado nenhum turno marcado, então enviar é recusado; com um turno, devolve o total.
+- **T-130** Dados dois turnos que se sobrepõem em ministérios diferentes, quando o voluntário marca os dois, então o aviso de choque aparece na hora e na tela.
+- **T-131** Dado turno confirmado em escala publicada, então conta como choque; em escala em rascunho, não.
+- **T-132** Dado turno confirmado no mesmo dia sem sobreposição, então aparece em "mesmo dia" e não como choque.
+- **T-133** Dada a tela de disponibilidade, então não traz vagas e marca o que é do perfil da pessoa.
+- **T-134** Dado turno lotado, então confirmar é recusado; depois que o líder aumenta as vagas, é aceito.
+- **T-135** Dadas pessoa já confirmada, inativa, fora da equipe, de outra igreja ou escala em rascunho, então a confirmação é recusada.
+- **T-136** Dada pessoa com choque, então a confirmação sai e a pessoa recebe o aviso dos dois turnos.
+- **T-137** Dadas funções, então valem na confirmação e depois, e só as do ministério.
+- **T-138** Dado turno com funções, quando a pessoa é tirada, então as funções saem junto e dá para confirmar de novo.
+- **T-139** Dada a folha do turno, então mostra confirmados, disponíveis ativos, carga, choque e fora da banda.
+- **T-140** Dados turnos confirmados em meses diferentes, então a carga conta só o mês do turno.
+- **T-141** Dada a publicação, então cada confirmado recebe data, horário e função, ou "função a combinar".
+- **T-142** Dada confirmação depois da publicação, então a pessoa também é avisada.
+- **T-143** Dados avisos, então cada pessoa vê só os seus e pode marcar todos como lidos.
+- **T-144** Dada "minha escala", então só entram turnos confirmados em escala publicada, com funções e sem vagas.
+- **T-145** Dados dois turnos confirmados que se sobrepõem em bandas diferentes, então "minha escala" marca o choque nos dois.
+
+(Também há testes sem código T no documento: só o líder do ministério confirma e vê a folha do turno.)
+
+---
+
 ## 12. Decisões tomadas (v1)
 
 Decididas em 30/10/2026. A única ainda aberta é a D-18.
