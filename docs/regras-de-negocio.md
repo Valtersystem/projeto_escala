@@ -232,6 +232,29 @@ O protótipo troca de perfil por um botão, sem login (`Adm`, `Líder`, `Volunt�
 
 ---
 
+## 11b. Acesso, login e isolamento por igreja (v1)
+
+**RN-66** O login é por e-mail e senha. A mensagem de erro é a mesma para e-mail inexistente, senha errada e conta que só entra com Google, para não revelar quais e-mails existem.
+**RN-67** Pessoa inativa ou sem vínculo com um login não entra. Se for desativada depois de logada, o token deixa de funcionar (403).
+**RN-68** No máximo 5 tentativas de login por minuto para cada e-mail e IP; depois responde 429.
+**RN-69** O token de acesso expira em 30 dias. O logout invalida o token.
+**RN-70** Toda consulta é filtrada pela igreja da pessoa logada. Sem igreja definida, a consulta volta vazia (nunca mostra dados de outra igreja). Ao criar um registro, a igreja atual é preenchida sozinha.
+**RN-71** Violação de regra de negócio responde 422 com a mensagem para a tela.
+**RN-72** A primeira igreja e o primeiro Adm são criados por comando (`php artisan escala:criar-igreja`). O Adm cadastra o resto.
+
+- **T-64** Dado login válido, quando entra, então recebe o token e os dados da pessoa, e o token abre `/api/eu`.
+- **T-65** Dado e-mail inexistente ou senha errada, então a mensagem de erro é a mesma.
+- **T-66** Dado pessoa inativa, quando tenta entrar, então é recusada.
+- **T-67** Dado token emitido antes da desativação, quando a pessoa é desativada, então o token passa a responder 403.
+- **T-68** Dado logout, então o mesmo token responde 401 na requisição seguinte.
+- **T-69** Dado requisição sem token, então as rotas protegidas respondem 401.
+- **T-70** Dadas 5 tentativas de login seguidas, então a sexta responde 429, mesmo com a senha certa.
+- **T-71** Dadas duas igrejas, então cada uma vê só os próprios ministérios.
+- **T-72** Dada consulta sem igreja definida, então o resultado é vazio.
+- **T-73** Dado o comando de criar igreja com dados válidos, então nascem a igreja e o Adm, que consegue entrar; com senha curta ou e-mail repetido, nada é criado.
+
+---
+
 ## 12. Decisões tomadas (v1)
 
 Decididas em 30/10/2026. A única ainda aberta é a D-18.
