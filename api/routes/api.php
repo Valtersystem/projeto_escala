@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AuditoriaController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AvisoController;
 use App\Http\Controllers\BandaController;
@@ -16,17 +17,30 @@ use App\Http\Controllers\MinisterioController;
 use App\Http\Controllers\PessoaController;
 use App\Http\Controllers\PostoController;
 use App\Http\Controllers\RelatorioController;
+use App\Http\Controllers\RelatorioGeralController;
 use App\Http\Controllers\TrocaController;
+use App\Http\Controllers\PedidoEntradaController;
+use App\Http\Controllers\GoogleController;
+use App\Http\Controllers\SenhaController;
 use App\Http\Controllers\TurnoController;
 use App\Http\Middleware\DefinirIgrejaAtual;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login');
 Route::post('/convites/aceitar', [ConviteController::class, 'aceitar'])->middleware('throttle:convite');
+Route::post('/login/google', [GoogleController::class, 'entrar'])->middleware('throttle:login-google');
+Route::post('/esqueci-senha', [SenhaController::class, 'esqueci'])->middleware('throttle:senha');
+Route::post('/redefinir-senha', [SenhaController::class, 'redefinir'])->middleware('throttle:senha');
+Route::get('/entrada/{codigo}', [PedidoEntradaController::class, 'igreja'])->middleware('throttle:convite');
+Route::post('/entrada/{codigo}', [PedidoEntradaController::class, 'store'])->middleware('throttle:convite');
 
 Route::middleware(['auth:sanctum', DefinirIgrejaAtual::class])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/eu', EuController::class);
+
+    Route::get('/ministerios/{ministerio}/pedidos-de-entrada', [PedidoEntradaController::class, 'index']);
+    Route::post('/pedidos-de-entrada/{pedido}/aprovar', [PedidoEntradaController::class, 'aprovar']);
+    Route::post('/pedidos-de-entrada/{pedido}/recusar', [PedidoEntradaController::class, 'recusar']);
 
     Route::get('/ministerios', [MinisterioController::class, 'index']);
     Route::post('/ministerios', [MinisterioController::class, 'store']);
@@ -96,6 +110,8 @@ Route::middleware(['auth:sanctum', DefinirIgrejaAtual::class])->group(function (
     Route::post('/trocas/{troca}/vaga-aberta', [TrocaController::class, 'vagaAberta']);
 
     Route::get('/ministerios/{ministerio}/relatorio', RelatorioController::class);
+    Route::get('/relatorio-geral', RelatorioGeralController::class);
+    Route::get('/auditoria', [AuditoriaController::class, 'index']);
 
     Route::get('/minha-escala', MinhaEscalaController::class);
     Route::get('/avisos', [AvisoController::class, 'index']);

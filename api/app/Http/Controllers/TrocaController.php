@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\Registro;
 use App\Domain\EstadoEscala;
 use App\Exceptions\RegraDeNegocio;
 use App\Models\Ministerio;
@@ -121,6 +122,7 @@ class TrocaController extends Controller
 
         $troca->update(['estado' => 'resolvido', 'resolucao' => 'mantido']);
         Avisos::para($troca->pessoa_id, Avisos::trocaMantida($turno));
+        Registro::feito('troca.mantida', "Pediu que {$troca->pessoa->nome} continue em ".Registro::turno($turno), $turno->escala->ministerio_id, $troca->id);
 
         return $this->resposta($troca);
     }
@@ -153,6 +155,7 @@ class TrocaController extends Controller
         });
 
         $nomeQueSaiu = $troca->pessoa->nome;
+        Registro::feito('troca.substituida', "{$substituto->nome} entrou no lugar de {$nomeQueSaiu} em ".Registro::turno($turno), $turno->escala->ministerio_id, $troca->id, ['pessoa_id' => $troca->pessoa_id], ['pessoa_id' => $substituto->id]);
         Avisos::para($troca->pessoa_id, Avisos::trocaSubstituida($substituto->nome, $turno));
         Avisos::para($substituto->id, Avisos::entrouNoLugar($nomeQueSaiu, $turno, $funcoes));
 
@@ -170,6 +173,7 @@ class TrocaController extends Controller
         });
 
         Avisos::para($troca->pessoa_id, Avisos::vagaAberta($turno));
+        Registro::feito('troca.vaga_aberta', "Liberou {$troca->pessoa->nome} e abriu a vaga em ".Registro::turno($turno), $turno->escala->ministerio_id, $troca->id);
 
         return $this->resposta($troca);
     }

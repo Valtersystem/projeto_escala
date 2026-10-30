@@ -25,6 +25,7 @@ function rotasBase(extra = {}) {
     ] } },
     'GET /ministerios/1/postos': { corpo: { postos: POSTOS } },
     'GET /ministerios/1/funcoes': { corpo: { funcoes: FUNCOES } },
+    'GET /ministerios/1/pedidos-de-entrada': { corpo: { total: 0, pedidos: [] } },
     ...extra,
   };
 }
@@ -342,7 +343,7 @@ describe('equipe do líder: postos e funções', () => {
 describe('equipe do líder: navegação', () => {
   it('mostra as quatro abas no Louvor', async () => {
     const { tela } = await abrir();
-    expect(tela.find('[role="tablist"]').findAll('[role="tab"]').map((t) => t.text())).toEqual(['Pessoas', 'Bandas', 'Postos', 'Funções']);
+    expect(tela.find('[role="tablist"]').findAll('[role="tab"]').map((t) => t.text())).toEqual(['Pessoas', 'Bandas', 'Pedidos', 'Postos', 'Funções']);
   });
 
   it('fora do Louvor e sem bandas, a aba Bandas não aparece', async () => {
@@ -352,15 +353,70 @@ describe('equipe do líder: navegação', () => {
       'GET /ministerios/2/bandas': { corpo: { bandas: [] } },
       'GET /ministerios/2/postos': { corpo: { postos: [] } },
       'GET /ministerios/2/funcoes': { corpo: { funcoes: [] } },
+      'GET /ministerios/2/pedidos-de-entrada': { corpo: { total: 0, pedidos: [] } },
     });
     const { tela } = await montarTela(LiderEquipe, { entrada: '/lider/equipe', pessoa: midia, modo: 'lider' });
 
-    expect(tela.find('[role="tablist"]').findAll('[role="tab"]').map((t) => t.text())).toEqual(['Pessoas', 'Postos', 'Funções']);
+    expect(tela.find('[role="tablist"]').findAll('[role="tab"]').map((t) => t.text())).toEqual(['Pessoas', 'Pedidos', 'Postos', 'Funções']);
   });
 
   it('falha ao carregar mostra o erro com "Tentar de novo"', async () => {
     const { tela } = await abrir({ 'GET /ministerios/1/postos': { status: 500, corpo: { message: 'Falhou.' } } });
     expect(tela.text()).toContain('Falhou.');
     expect(botao(tela, 'Tentar de novo')).toBeTruthy();
+  });
+});
+
+describe('equipe do líder: pedidos de entrada', () => {
+  const PEDIDOS = [
+    { id: 5, nome: 'Carla Dias', email: 'carla@exemplo.test', telefone: '11 97777-6666', pedido_em: '2026-10-31T10:00:00Z' },
+    { id: 6, nome: 'Rita Souza', email: 'rita@exemplo.test', telefone: null, pedido_em: '2026-10-31T11:00:00Z' },
+  ];
+  const abrirPedidos = (rotas = {}) => abrir({ 'GET /ministerios/1/pedidos-de-entrada': { corpo: { total: 2, pedidos: PEDIDOS } }, ...rotas }, '/lider/equipe?aba=pedidos');
+
+  it('mostra a quantidade na aba e lista quem pediu', async () => {
+    const { tela } = await abrirPedidos();
+
+    expect(tela.find('[role="tablist"]').text()).toContain('Pedidos (2)');
+    const cartoes = tela.findAll('article.pedido');
+    expect(cartoes).toHaveLength(2);
+    expect(cartoes[0].text()).toContain('Carla Dias');
+    expect(cartoes[0].text()).toContain('carla@exemplo.test · 11 97777-6666');
+    expect(cartoes[1].text()).not.toContain('·');
+  });
+
+  it('aprovar manda o pedido certo e recarrega a lista', async () => {
+    const { tela, fetch } = await abrirPedidos({ 'POST /pedidos-de-entrada/5/aprovar': { status: 201, corpo: { pessoa: {} } } });
+
+    await tela.findAll('article.pedido')[0].findAll('button').find((b) => b.text() === 'Aprovar').trigger('click');
+    await esperar();
+
+    expect(enviados(fetch, 'POST', '/pedidos-de-entrada/5/aprovar')).toHaveLength(1);
+    expect(fetch.chamadas.filter((c) => c.caminho === '/ministerios/1/pedidos-de-entrada')).toHaveLength(2);
+  });
+
+  it('recusar usa a rota de recusa', async () => {
+    const { tela, fetch } = await abrirPedidos({ 'POST /pedidos-de-entrada/6/recusar': { corpo: { ok: true } } });
+
+    await tela.findAll('article.pedido')[1].findAll('button').find((b) => b.text() === 'Recusar').trigger('click');
+    await esperar();
+
+    expect(enviados(fetch, 'POST', '/pedidos-de-entrada/6/recusar')).toHaveLength(1);
+    expect(enviados(fetch, 'POST', '/pedidos-de-entrada/6/aprovar')).toHaveLength(0);
+  });
+
+  it('sem pedidos, avisa; e o link público usa o código da igreja', async () => {
+    const lider = { ...LIDER, igreja: { id: 1, nome: 'Igreja Exemplo', codigo: 'igreja-exemplo' } };
+    simularApi(rotasBase());
+    const { tela } = await montarTela(LiderEquipe, { entrada: '/lider/equipe?aba=pedidos', pessoa: lider, modo: 'lider' });
+
+    expect(tela.text()).toContain('Nenhum pedido');
+    expect(tela.find('.divulgar code').text()).toBe(`${window.location.origin}/entrar/igreja-exemplo`);
+    expect(decodeURIComponent(tela.find('.divulgar a').attributes('href'))).toContain('/entrar/igreja-exemplo');
+  });
+
+  it('sem código da igreja, não mostra o link', async () => {
+    const { tela } = await abrirPedidos();
+    expect(tela.find('.divulgar').exists()).toBe(false);
   });
 });

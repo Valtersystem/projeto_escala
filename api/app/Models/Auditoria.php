@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['pessoa_id', 'acao', 'entidade', 'entidade_id', 'antes', 'depois'])]
+#[Fillable(['pessoa_id', 'ministerio_id', 'acao', 'entidade', 'entidade_id', 'descricao', 'antes', 'depois'])]
 class Auditoria extends Model
 {
     use PertenceAIgreja;

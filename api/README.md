@@ -73,6 +73,13 @@ Todas ficam em `/api`. As protegidas exigem `Authorization: Bearer <token>`.
 | `GET /ministerios/{id}/relatorio?mes=AAAA-MM` | líder | Relatório do ministério |
 | `GET/POST /pessoas`, `PATCH/DELETE /pessoas/{id}` | Adm ou líder | Pessoas (excluir: só Adm) |
 | `POST /pessoas/{id}/convite` | Adm ou líder da pessoa | Gera o link de convite |
+| `GET /ministerios/{id}/pessoas-de-fora`, `PUT /ministerios/{id}/equipe/{pessoa}/postos` | Adm ou líder | Quem pode entrar na equipe; postos da pessoa |
+| `GET /entrada/{codigo}`, `POST /entrada/{codigo}` | público (com limite) | Pedido de entrada do voluntário pelo link da igreja |
+| `GET /ministerios/{id}/pedidos-de-entrada`, `POST /pedidos-de-entrada/{id}/aprovar`, `/recusar` | Adm ou líder | Resolver pedidos de entrada |
+| `GET /relatorio-geral?mes=AAAA-MM` | Adm | Relatório da igreja toda |
+| `GET /auditoria?ministerio_id=&pagina=` | Adm (igreja toda) ou líder (ministério dele) | Histórico de alterações |
+| `POST /esqueci-senha`, `POST /redefinir-senha` | público (com limite) | Recuperação de senha por e-mail |
+| `POST /login/google` | público (com limite) | Login com Google (só para quem já está cadastrado) |
 
 ## Segurança e isolamento
 
@@ -83,6 +90,13 @@ Todas ficam em `/api`. As protegidas exigem `Authorization: Bearer <token>`.
 - **Primeira igreja:** `php artisan escala:criar-igreja "Nome da igreja" "Nome do Adm" adm@email.com` (a senha é pedida). Depois o Adm cadastra e convida as pessoas.
 - **Link do convite:** usa `APP_FRONTEND_URL` (endereço do app Vue).
 
+## Configuração para produção
+
+- `APP_FRONTEND_URL`: endereço do app. Vai nos links de convite e de recuperação de senha.
+- **E-mail** (recuperação de senha): `MAIL_MAILER`, `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_FROM_ADDRESS`. Em desenvolvimento o padrão é `MAIL_MAILER=log`, que só escreve o e-mail no log.
+- **Google** (opcional): `GOOGLE_CLIENT_ID`, o ID do cliente OAuth criado no Google Cloud (tipo Aplicativo da Web, com o endereço do app em Origens JavaScript autorizadas). Sem ele a rota `/login/google` não existe. O app precisa do mesmo valor em `VITE_GOOGLE_CLIENT_ID` na hora do `npm run build`.
+- Rode `php artisan migrate --force` depois de atualizar: há tabelas e colunas novas (pedidos de entrada, código da igreja, histórico).
+
 ## O que ainda falta
 
-Relatório geral do Adm (consolidado de todos os ministérios), login com Google, auditoria (D-12) e pedido de entrada do voluntário (D-15). A recuperação de senha por e-mail fica por último e não entra na v1.
+Avisos por WhatsApp ou e-mail (hoje o aviso só aparece dentro do app) e a versão Flutter.

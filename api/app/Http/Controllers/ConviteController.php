@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\Registro;
 use App\Exceptions\RegraDeNegocio;
 use App\Models\Convite;
 use App\Models\Pessoa;
@@ -33,6 +34,8 @@ class ConviteController extends Controller
         if (! $pessoa->ativo) {
             throw new RegraDeNegocio('Esta pessoa está inativa. Reative antes de convidar.');
         }
+
+        Registro::feito('convite.gerado', "Gerou um link de acesso para {$pessoa->nome}", null, $pessoa->id);
 
         $token = Str::random(48);
 

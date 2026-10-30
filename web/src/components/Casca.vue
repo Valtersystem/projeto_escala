@@ -28,6 +28,7 @@ const ABAS = {
     { nome: 'adm-ministerios', texto: 'Ministérios', icone: 'equipe' },
     { nome: 'adm-cultos', texto: 'Cultos', icone: 'calendario' },
     { nome: 'adm-pessoas', texto: 'Pessoas', icone: 'pessoa' },
+    { nome: 'adm-relatorio', texto: 'Relatório', icone: 'grafico' },
     { nome: 'perfil', texto: 'Perfil', icone: 'pessoa' },
   ],
 };
@@ -35,7 +36,7 @@ const ABAS = {
 const abas = computed(() => ABAS[modo.modo]);
 
 // Telas de dentro de uma escala continuam marcando a aba da lista.
-const ATIVA = { 'disponibilidade-escala': 'disponibilidade', 'lider-escala': 'lider-escalas' };
+const ATIVA = { 'disponibilidade-escala': 'disponibilidade', 'lider-escala': 'lider-escalas', 'adm-historico': 'adm-relatorio' };
 const ativa = computed(() => ATIVA[rota.name] ?? rota.name);
 
 const INICIO = { lider: 'lider-escalas', adm: 'adm-ministerios', voluntario: 'inicio' };

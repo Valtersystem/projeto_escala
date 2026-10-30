@@ -43,6 +43,12 @@ final class Avisos
         return explode(' ', trim($nome))[0];
     }
 
+    /** D-15: um voluntário pediu para entrar no ministério. */
+    public static function pedidoDeEntrada(string $nome, string $ministerio): string
+    {
+        return self::primeiroNome($nome).' pediu para entrar no '.$ministerio.'. Veja em Equipe.';
+    }
+
     // ---- pedido de troca (RN-51 a RN-57) ----
 
     public static function pedidoDeTroca(string $nome, Turno $turno): string

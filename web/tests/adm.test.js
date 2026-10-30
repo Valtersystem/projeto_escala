@@ -4,6 +4,7 @@ import App from '../src/App.vue';
 import AdmCultos from '../src/views/AdmCultos.vue';
 import AdmMinisterios from '../src/views/AdmMinisterios.vue';
 import AdmPessoas from '../src/views/AdmPessoas.vue';
+import AdmRelatorio from '../src/views/AdmRelatorio.vue';
 import { criarRoteador } from '../src/router.js';
 import { useModo } from '../src/stores/modo.js';
 import { useSessao } from '../src/stores/sessao.js';
@@ -103,7 +104,7 @@ describe('modo Adm: acesso e navegação', () => {
     simularApi(rotasBase());
     const { tela } = await montarTela(App, { entrada: '/adm/ministerios', pessoa: ADM, modo: 'adm' });
 
-    expect(tela.findAll('nav a').map((a) => a.text())).toEqual(['Ministérios', 'Cultos', 'Pessoas', 'Perfil']);
+    expect(tela.findAll('nav a').map((a) => a.text())).toEqual(['Ministérios', 'Cultos', 'Pessoas', 'Relatório', 'Perfil']);
     expect(tela.find('[role=tablist]').exists()).toBe(false);
   });
 
@@ -372,5 +373,77 @@ describe('Adm: pessoas', () => {
 
     expect(enviados(fetch, 'POST', '/pessoas/7/convite')).toHaveLength(1);
     expect(tela.text()).toContain(link);
+  });
+});
+
+describe('Adm: relatório geral', () => {
+  const GERAL = {
+    mes: null,
+    totais: { turnos: 5, vagas: 10, vagas_preenchidas_pct: 60, turnos_sem_ninguem: 2, pessoas_ativas: 12, ministerios_sem_lider: 1, pedidos_de_entrada: 2, trocas_abertas: 0 },
+    ministerios: [
+      { id: 1, nome: 'Louvor', lider: { id: 4, nome: 'Marcos Reis' }, voluntarios_ativos: 8, turnos: 4, vagas: 8, vagas_preenchidas_pct: 75, turnos_sem_ninguem: 0 },
+      { id: 2, nome: 'Mídia', lider: null, voluntarios_ativos: 3, turnos: 1, vagas: 2, vagas_preenchidas_pct: 0, turnos_sem_ninguem: 1 },
+    ],
+    acima_do_limite: null,
+  };
+
+  const abrirRelatorio = async (rotas = {}) => {
+    const fetch = simularApi({ 'GET /relatorio-geral': { corpo: GERAL }, ...rotas });
+    const montada = await montarTela(AdmRelatorio, { entrada: '/adm/relatorio', pessoa: ADM, modo: 'adm' });
+    return { ...montada, fetch };
+  };
+
+  it('mostra os totais, o que pede atenção e cada ministério', async () => {
+    const { tela } = await abrirRelatorio();
+
+    expect(tela.find('.estatisticas').text()).toContain('60%');
+    expect(tela.find('.estatisticas').text()).toContain('12');
+    expect(tela.find('.atencao').text()).toContain('1 ministério(s) sem líder');
+    expect(tela.find('.atencao').text()).toContain('2 pedido(s) de entrada esperando');
+    expect(tela.find('.atencao').text()).not.toContain('troca');
+    expect(tela.findAll('.atencao .pilula')).toHaveLength(2);
+
+    const linhas = tela.findAll('.ministerio');
+    expect(linhas[0].text()).toContain('Louvor');
+    expect(linhas[0].text()).toContain('Líder: Marcos Reis');
+    expect(linhas[0].text()).toContain('75%');
+    expect(linhas[1].text()).toContain('Sem líder');
+    expect(linhas[1].text()).toContain('1 vazio(s)');
+  });
+
+  it('escolher o mês refaz a consulta e mostra quem passou do limite', async () => {
+    const { tela, fetch } = await abrirRelatorio({
+      'GET /relatorio-geral?mes=2026-11': { corpo: { ...GERAL, mes: '2026-11', acima_do_limite: [{ pessoa_id: 7, nome: 'Helena Costa', turnos: 4 }] } },
+    });
+
+    await tela.find('#mes').setValue('2026-11');
+    await esperar();
+
+    expect(fetch.chamadas.some((c) => c.caminho === '/relatorio-geral?mes=2026-11')).toBe(true);
+    expect(tela.text()).toContain('Helena Costa');
+    expect(tela.text()).toContain('4 turnos');
+  });
+
+  it('mês sem ninguém acima do limite diz isso; sem mês, não fala de limite', async () => {
+    const { tela } = await abrirRelatorio({ 'GET /relatorio-geral?mes=2026-11': { corpo: { ...GERAL, mes: '2026-11', acima_do_limite: [] } } });
+    expect(tela.text()).not.toContain('limite');
+
+    await tela.find('#mes').setValue('2026-11');
+    await esperar();
+    expect(tela.text()).toContain('Ninguém passou do limite');
+  });
+
+  it('sem turnos, mostra "Sem dados" e não os números', async () => {
+    const { tela } = await abrirRelatorio({ 'GET /relatorio-geral': { corpo: { ...GERAL, totais: { ...GERAL.totais, turnos: 0 }, ministerios: [] } } });
+
+    expect(tela.text()).toContain('Sem dados');
+    expect(tela.find('.estatisticas').exists()).toBe(false);
+  });
+
+  it('erro da API mostra o aviso com "Tentar de novo"', async () => {
+    const { tela } = await abrirRelatorio({ 'GET /relatorio-geral': { status: 500, corpo: { message: 'Falhou.' } } });
+
+    expect(tela.text()).toContain('Falhou.');
+    expect(botao(tela, 'Tentar de novo')).toBeTruthy();
   });
 });

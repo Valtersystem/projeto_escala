@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Login from '../src/views/Login.vue';
 import Convite from '../src/views/Convite.vue';
 import { PESSOA, esperar, montarTela, simularApi } from './ajudantes.js';
@@ -70,10 +70,11 @@ describe('tela de login', () => {
     expect(trocar).toHaveBeenCalledWith({ name: 'inicio' });
   });
 
-  it('explica que a senha esquecida se resolve com o líder', async () => {
+  it('oferece a recuperação da senha por e-mail', async () => {
     const { tela } = await montarTela(Login, { logada: false });
 
-    expect(tela.text()).toContain('Peça um novo convite ao seu líder');
+    expect(tela.text()).toContain('Esqueceu a senha?');
+    expect(tela.text()).not.toContain('Peça um novo convite');
   });
 });
 
@@ -118,5 +119,74 @@ describe('tela de convite', () => {
 
     expect(tela.find('[role=alert]').text()).toBe('Convite inválido ou expirado. Peça um novo ao líder.');
     expect(roteador.currentRoute.value.name).toBe('convite');
+  });
+});
+
+describe('login com Google', () => {
+  const comGoogle = () => {
+    vi.stubEnv('VITE_GOOGLE_CLIENT_ID', 'cliente-123');
+    const id = { initialize: vi.fn(), renderButton: vi.fn() };
+    window.google = { accounts: { id } };
+    return id;
+  };
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    delete window.google;
+  });
+
+  it('sem o ID do cliente, não mostra nada do Google', async () => {
+    const { tela } = await montarTela(Login, { logada: false });
+
+    expect(tela.find('.google').exists()).toBe(false);
+  });
+
+  it('com o ID, desenha o botão do Google', async () => {
+    const id = comGoogle();
+    const { tela } = await montarTela(Login, { logada: false });
+
+    expect(tela.find('.google').exists()).toBe(true);
+    expect(id.initialize.mock.calls[0][0].client_id).toBe('cliente-123');
+    expect(id.renderButton).toHaveBeenCalledTimes(1);
+  });
+
+  it('a credencial do Google vai para a API, guarda a sessão e leva ao app', async () => {
+    const id = comGoogle();
+    const fetch = simularApi({ 'POST /login/google': { corpo: { token: 'tok-google', pessoa: PESSOA } } });
+    const { roteador, sessao } = await montarTela(Login, { logada: false });
+
+    await id.initialize.mock.calls[0][0].callback({ credential: 'jwt-do-google' });
+    await esperar();
+
+    expect(fetch.chamadas[0].corpo).toEqual({ credencial: 'jwt-do-google' });
+    expect(sessao.token).toBe('tok-google');
+    expect(roteador.currentRoute.value.name).toBe('inicio');
+  });
+
+  it('e-mail que ninguém cadastrou: mostra o erro e continua no login', async () => {
+    const id = comGoogle();
+    simularApi({ 'POST /login/google': { status: 422, corpo: { message: 'x', errors: { credencial: ['Este e-mail do Google não está cadastrado na igreja.'] } } } });
+    const { tela, roteador, sessao } = await montarTela(Login, { logada: false });
+
+    await id.initialize.mock.calls[0][0].callback({ credential: 'jwt' });
+    await esperar();
+
+    expect(tela.find('[role=alert]').text()).toContain('não está cadastrado');
+    expect(sessao.autenticada).toBe(false);
+    expect(roteador.currentRoute.value.name).toBe('login');
+  });
+
+  it('se o Google não carregar, o login por e-mail continua disponível', async () => {
+    vi.stubEnv('VITE_GOOGLE_CLIENT_ID', 'cliente-123');
+    const erros = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const anexar = vi.spyOn(document.head, 'appendChild').mockImplementation((script) => { setTimeout(() => script.onerror?.(), 0); return script; });
+    const { tela } = await montarTela(Login, { logada: false });
+    await new Promise((r) => setTimeout(r, 10));
+
+    expect(tela.find('#email').exists()).toBe(true);
+    expect(tela.find('[role=alert]').exists()).toBe(false);
+    expect(erros).not.toHaveBeenCalled();
+    anexar.mockRestore();
+    erros.mockRestore();
   });
 });

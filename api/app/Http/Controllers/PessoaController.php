@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\Registro;
 use App\Models\Banda;
 use App\Models\Funcao;
 use App\Models\Ministerio;
@@ -96,6 +97,8 @@ class PessoaController extends Controller
             return $pessoa;
         });
 
+        Registro::feito('pessoa.criada', "Cadastrou {$pessoa->nome}", count($ministerios) === 1 ? $ministerios[0] : null, $pessoa->id);
+
         return response()->json(['pessoa' => $this->resumo($pessoa->load('ministerios:id,nome'))], 201);
     }
 
@@ -122,7 +125,14 @@ class PessoaController extends Controller
             throw ValidationException::withMessages(['email' => ['Esta pessoa já tem login; o e-mail não pode ser trocado.']]);
         }
 
+        $antes = $pessoa->only(array_keys($dados));
         $pessoa->update($dados);
+
+        foreach (['ativo' => ['Reativou', 'Desativou'], 'adm' => ['Tornou Adm', 'Tirou o acesso de Adm de']] as $campo => [$sim, $nao]) {
+            if (array_key_exists($campo, $dados) && $antes[$campo] !== $pessoa->{$campo}) {
+                Registro::feito("pessoa.{$campo}", ($pessoa->{$campo} ? $sim : $nao)." {$pessoa->nome}", null, $pessoa->id, [$campo => $antes[$campo]], [$campo => $pessoa->{$campo}]);
+            }
+        }
 
         return response()->json(['pessoa' => $this->resumo($pessoa->load('ministerios:id,nome'))]);
     }
@@ -135,6 +145,8 @@ class PessoaController extends Controller
         if ($request->attributes->get('pessoa')->is($pessoa)) {
             throw ValidationException::withMessages(['pessoa' => ['Você não pode excluir a si mesmo.']]);
         }
+
+        Registro::feito('pessoa.excluida', "Excluiu {$pessoa->nome}", null, $pessoa->id);
 
         DB::transaction(function () use ($pessoa) {
             $user = $pessoa->user_id ? User::find($pessoa->user_id) : null;

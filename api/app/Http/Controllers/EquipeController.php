@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\Registro;
 use App\Models\Ministerio;
 use App\Models\Pessoa;
 use App\Support\IgrejaAtual;
@@ -24,6 +25,8 @@ class EquipeController extends Controller
         ]);
 
         $ministerio->equipe()->syncWithoutDetaching([$dados['pessoa_id']]);
+
+        Registro::feito('equipe.incluida', 'Incluiu '.Pessoa::find($dados['pessoa_id'])?->nome." na equipe de {$ministerio->nome}", $ministerio->id, $dados['pessoa_id']);
 
         return response()->noContent(201);
     }
@@ -84,6 +87,8 @@ class EquipeController extends Controller
         $pessoa->postos()->detach($ministerio->postos()->pluck('id'));
         $pessoa->bandas()->detach($ministerio->bandas()->pluck('id'));
         $pessoa->funcoes()->detach($ministerio->funcoes()->pluck('id'));
+
+        Registro::feito('equipe.removida', "Tirou {$pessoa->nome} da equipe de {$ministerio->nome}", $ministerio->id, $pessoa->id);
 
         return response()->noContent();
     }

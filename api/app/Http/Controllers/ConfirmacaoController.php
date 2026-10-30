@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\Registro;
 use App\Domain\EstadoEscala;
 use App\Exceptions\RegraDeNegocio;
 use App\Models\Confirmacao;
@@ -132,6 +133,8 @@ class ConfirmacaoController extends Controller
             Avisos::para($alvo->id, Avisos::publicacao($turno, $confirmacao));
         }
 
+        Registro::feito('confirmacao.criada', "Confirmou {$alvo->nome} em ".Registro::turno($turno), $ministerio->id, $turno->id, null, ['pessoa_id' => $alvo->id, 'funcao_ids' => $funcoes]);
+
         return response()->json([
             'confirmacao' => $this->resumo($confirmacao),
             'choques' => $conflitos->map(fn ($c) => CargaDaPessoa::descricao($c))->values(),
@@ -156,7 +159,10 @@ class ConfirmacaoController extends Controller
             throw new RegraDeNegocio('Esta pessoa não está confirmada neste turno.');
         }
 
+        $antes = $confirmacao->funcoes()->pluck('funcoes.id')->all();
         $confirmacao->funcoes()->sync($dados['funcao_ids']);
+
+        Registro::feito('confirmacao.funcoes', "Mudou as funções de {$pessoa->nome} em ".Registro::turno($turno), $turno->escala->ministerio_id, $turno->id, ['funcao_ids' => $antes], ['funcao_ids' => $dados['funcao_ids']]);
 
         return response()->json(['confirmacao' => $this->resumo($confirmacao->load('funcoes:id,nome'))]);
     }
@@ -166,7 +172,11 @@ class ConfirmacaoController extends Controller
     {
         Gate::authorize('lidera', $turno->escala->ministerio);
 
-        $turno->confirmacoes()->where('pessoa_id', $pessoa->id)->delete();
+        $removidas = $turno->confirmacoes()->where('pessoa_id', $pessoa->id)->delete();
+
+        if ($removidas) {
+            Registro::feito('confirmacao.removida', "Tirou {$pessoa->nome} de ".Registro::turno($turno), $turno->escala->ministerio_id, $turno->id, ['pessoa_id' => $pessoa->id]);
+        }
 
         // Se a pessoa tinha pedido substituição, o líder já resolveu tirando-a: o pedido se encerra.
         Troca::where('turno_id', $turno->id)->where('pessoa_id', $pessoa->id)->where('estado', 'aberto')

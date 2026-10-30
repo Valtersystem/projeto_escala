@@ -51,6 +51,12 @@ export const useSessao = defineStore('sessao', () => {
     definir(dados.token, dados.pessoa);
   }
 
+  /** Login com Google: a API confere a credencial e só deixa entrar quem já está cadastrado. */
+  async function entrarComGoogle(credencial) {
+    const dados = await api.post('/login/google', { credencial });
+    definir(dados.token, dados.pessoa);
+  }
+
   /** Quem aceitou um convite já entra logado. */
   async function aceitarConvite(tokenDoConvite, senha) {
     const dados = await api.post('/convites/aceitar', { token: tokenDoConvite, senha });
@@ -80,5 +86,5 @@ export const useSessao = defineStore('sessao', () => {
 
   configurarCliente({ token: () => token.value, naoAutorizado: limpar });
 
-  return { token, pessoa, autenticada, nomeCurto, iniciais, ministerios, entrar, aceitarConvite, carregar, sair, limpar };
+  return { token, pessoa, autenticada, nomeCurto, iniciais, ministerios, entrar, entrarComGoogle, aceitarConvite, carregar, sair, limpar };
 });

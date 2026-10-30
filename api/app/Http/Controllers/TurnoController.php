@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\Registro;
 use App\Domain\EstadoEscala;
 use App\Domain\GradeDeCultos;
 use App\Domain\Horario;
@@ -56,6 +57,10 @@ class TurnoController extends Controller
             'vagas' => max(1, (int) ($dados['vagas'] ?? $posto->vagas)),
         ]);
 
+        if ($escala->status !== EstadoEscala::Rascunho) {
+            Registro::feito('turno.criado', 'Criou o turno '.Registro::turno($turno), $escala->ministerio_id, $turno->id);
+        }
+
         return response()->json(['turno' => self::resumo($turno->fresh(['posto:id,nome', 'banda:id,nome']), true)], 201);
     }
 
@@ -106,7 +111,13 @@ class TurnoController extends Controller
             $dados['vagas'] = max(1, $dados['vagas']);
         }
 
+        $antes = $turno->only(array_keys($dados));
+
         Concorrencia::atualizar($turno, $versao, $dados);
+
+        if ($escala->status !== EstadoEscala::Rascunho) {
+            Registro::feito('turno.alterado', 'Alterou o turno '.Registro::turno($turno), $ministerio->id, $turno->id, $antes, $dados);
+        }
 
         return response()->json(['turno' => self::resumo($turno->load(['posto:id,nome', 'banda:id,nome']), true)]);
     }

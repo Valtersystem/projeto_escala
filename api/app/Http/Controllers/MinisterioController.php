@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\Registro;
 use App\Models\Ministerio;
 use App\Models\Pessoa;
 use App\Support\IgrejaAtual;
@@ -72,7 +73,10 @@ class MinisterioController extends Controller
             'pessoa_id' => ['required', 'integer', Rule::exists('pessoas', 'id')->where('igreja_id', app(IgrejaAtual::class)->id())],
         ]);
 
+        $anterior = $ministerio->lider_id;
         $ministerio->update(['lider_id' => $dados['pessoa_id']]);
+
+        Registro::feito('ministerio.lider', 'Definiu '.Pessoa::find($dados['pessoa_id'])?->nome." como líder de {$ministerio->nome}", $ministerio->id, $ministerio->id, ['lider_id' => $anterior], ['lider_id' => $dados['pessoa_id']]);
 
         return response()->json(['ministerio' => $this->resumo($ministerio->load('lider:id,nome'))]);
     }

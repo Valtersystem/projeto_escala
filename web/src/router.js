@@ -6,6 +6,9 @@ import { useSessao } from './stores/sessao.js';
 export const rotas = [
   { path: '/login', name: 'login', component: () => import('./views/Login.vue'), meta: { publica: true } },
   { path: '/convite/:token', name: 'convite', component: () => import('./views/Convite.vue'), meta: { publica: true } },
+  { path: '/esqueci-senha', name: 'esqueci-senha', component: () => import('./views/EsqueciSenha.vue'), meta: { publica: true } },
+  { path: '/redefinir-senha/:token', name: 'redefinir-senha', component: () => import('./views/RedefinirSenha.vue'), meta: { publica: true } },
+  { path: '/entrar/:codigo', name: 'entrar', component: () => import('./views/Entrar.vue'), meta: { publica: true } },
   {
     path: '/',
     component: Casca,
@@ -24,6 +27,8 @@ export const rotas = [
       { path: 'adm/ministerios', name: 'adm-ministerios', component: () => import('./views/AdmMinisterios.vue'), meta: { modo: 'adm' } },
       { path: 'adm/cultos', name: 'adm-cultos', component: () => import('./views/AdmCultos.vue'), meta: { modo: 'adm' } },
       { path: 'adm/pessoas', name: 'adm-pessoas', component: () => import('./views/AdmPessoas.vue'), meta: { modo: 'adm' } },
+      { path: 'adm/relatorio', name: 'adm-relatorio', component: () => import('./views/AdmRelatorio.vue'), meta: { modo: 'adm' } },
+      { path: 'adm/historico', name: 'adm-historico', component: () => import('./views/AdmHistorico.vue'), meta: { modo: 'adm' } },
       { path: 'lider/trocas', name: 'lider-trocas', component: () => import('./views/LiderTrocas.vue'), meta: { modo: 'lider' } },
       { path: 'lider/relatorio', name: 'lider-relatorio', component: () => import('./views/LiderRelatorio.vue'), meta: { modo: 'lider' } },
     ],

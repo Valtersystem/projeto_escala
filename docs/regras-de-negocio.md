@@ -260,7 +260,7 @@ O protótipo troca de perfil por um botão, sem login (`Adm`, `Líder`, `Volunt�
 **RN-73** O líder (ou o Adm) gera um link de convite para a pessoa. Exige e-mail cadastrado e pessoa ativa.
 **RN-74** O convite vale 7 dias e só pode ser usado uma vez. Só o hash do token é guardado. Um convite novo invalida os anteriores ainda não usados.
 **RN-75** Ao aceitar o convite, a pessoa escolhe a senha (mínimo 8 caracteres). Se ainda não tem login, o login é criado com o e-mail cadastrado. Se já tem, a senha é trocada e as sessões anteriores são encerradas.
-**RN-76** Na v1 não há recuperação de senha por e-mail. Quem esquece a senha recebe um novo convite do líder. A recuperação por e-mail fica para o fim.
+**RN-76** (Substituída pelo RN-126.) Quem esquece a senha recupera por e-mail; o novo convite do líder continua valendo para o primeiro acesso.
 **RN-77** Convite inexistente, expirado ou já usado recebe a mesma mensagem.
 **RN-78** Quem pode o quê: o **Adm** cria, renomeia e exclui ministérios, vincula o líder, cadastra e exclui pessoas (qualquer uma) e define quem é Adm. O **líder** cadastra pessoas só nos ministérios que lidera, inclui e tira da equipe, edita e inativa pessoas da equipe, e gere os postos do ministério. O **voluntário** não cadastra nada. O Adm não gere postos de ministério alheio.
 **RN-79** O e-mail é único por igreja. Quem já tem login não pode trocar de e-mail. Ninguém exclui a si mesmo.
@@ -470,9 +470,86 @@ O protótipo troca de perfil por um botão, sem login (`Adm`, `Líder`, `Volunt�
 
 ---
 
+## 11k. Funcionalidades que fecham a v1
+
+**RN-124** O relatório geral é só do Adm: por ministério (turnos, % de vagas preenchidas, turnos sem ninguém, líder, voluntários ativos) e totais da igreja, com filtro por mês. Rascunho não entra na conta e confirmados acima das vagas contam só até o limite (RN-61). Mostra o que pede atenção (ministérios sem líder, pedidos de entrada e de troca abertos) e, num mês, quem passou do limite de turnos somando todos os ministérios (RN-44).
+
+**RN-125** Histórico de alterações (D-12): ficam registrados, com quem fez e o texto pronto para a tela, liberar, publicar e reabrir escala, mudança de prazo, turnos criados ou alterados **depois da escala liberada** (em rascunho não, ninguém viu ainda), confirmações, troca de funções e saídas de turno, resolução de pedido de troca, pessoa criada, desativada, tornada Adm ou excluída, entrada e saída de equipe, líder do ministério, aprovação ou recusa de pedido de entrada e link de acesso gerado. O Adm vê a igreja toda; o líder vê só o ministério dele; os demais não veem. Vem do mais novo ao mais antigo, 30 por página.
+
+**RN-126** Recuperação de senha por e-mail (substitui o RN-76): a pessoa informa o e-mail e recebe um link que vale 60 minutos e só serve uma vez. A resposta é a mesma exista o e-mail ou não, e pessoa desativada não recebe o link. Máximo de 5 pedidos por minuto por IP.
+
+**RN-127** Ao trocar a senha pelo link, as sessões anteriores caem (RN-75). O link de uma pessoa não serve para outra, e a senha tem no mínimo 8 caracteres. O link de convite do líder continua existindo para o primeiro acesso.
+
+**RN-128** Login com Google (opcional, D-16): a API confere a credencial no Google e só aceita se for para o nosso aplicativo e com e-mail verificado. O Google só prova de quem é o e-mail; **não cria cadastro**. Sem `GOOGLE_CLIENT_ID` na API (e `VITE_GOOGLE_CLIENT_ID` no app) o botão não existe.
+
+**RN-129** Quem entra com Google é achado pelo Google já vinculado, senão pelo login com o mesmo e-mail (que passa a ficar vinculado), senão pela pessoa cadastrada com esse e-mail e ainda sem login (o login nasce aí). E-mail cadastrado em mais de uma igreja sem login é ambíguo e é recusado. Login já vinculado a outra conta Google é recusado.
+
+**RN-130** Pessoa desativada não entra pelo Google e não recebe token. No máximo 10 tentativas por minuto por IP.
+
+**RN-131** Pedido de entrada (D-15): cada igreja tem um código curto e único (`igreja-exemplo`) e um link público `/entrar/<código>`. O voluntário informa nome, e-mail, WhatsApp (opcional), senha e o ministério onde quer servir. **Nenhum login é criado** até o líder aprovar; o líder do ministério recebe um aviso. E-mail que já tem cadastro ou pedido pendente é recusado. Só se pode escolher ministério da própria igreja.
+
+**RN-132** O líder do ministério (ou o Adm) vê os pedidos pendentes, aprova ou recusa. Aprovar cria o login com a senha escolhida, a pessoa e a vaga na equipe; se o e-mail foi cadastrado por outro caminho no meio tempo, a aprovação falha sem criar nada. Pedido resolvido não se resolve de novo. Pedido de outra igreja não aparece nem se resolve.
+
+**RN-133** Mensagens de validação da API em português, com o nome do campo legível ("Preencha o campo e-mail.").
+
+- **T-181** Dada uma validação que falha, então a mensagem vem em português com o nome do campo legível.
+- **T-182** Dada a criação de igrejas com o mesmo nome, então os códigos são únicos (`igreja-a`, `igreja-a-2`).
+- **T-183** Dado o link público, então mostra a igreja e só os ministérios dela; código inexistente dá 404.
+- **T-184** Dado um pedido de entrada, então não cria login nem pessoa, guarda só o hash da senha e avisa o líder.
+- **T-185** Dado pedido inválido, repetido ou com e-mail já cadastrado, então é recusado.
+- **T-186** Dado um ministério de outra igreja, então o pedido é recusado.
+- **T-187** Dado o líder, então vê só os pedidos do ministério dele; o Adm vê todos; voluntário não vê.
+- **T-188** Dada a aprovação, então cria login, pessoa e equipe, e a senha escolhida passa a valer.
+- **T-189** Dada a recusa, então nada é criado e o pedido não se resolve de novo.
+- **T-190** Dado quem não lidera o ministério, então não resolve o pedido; o Adm resolve.
+- **T-191** Dado outra igreja, então o pedido não aparece nem se resolve.
+- **T-192** Dado e-mail cadastrado por outro caminho antes da aprovação, então a aprovação falha sem criar nada.
+- **T-193** Dado quem não é Adm, então o relatório geral responde 403.
+- **T-194** Dados turnos de vários ministérios, então soma a igreja, separa por ministério e ignora rascunho; confirmados acima das vagas contam só até o limite.
+- **T-195** Dado o filtro por mês, então limita os números; mês inválido dá 422.
+- **T-196** Dado um mês, então lista quem passou do limite somando todos os ministérios.
+- **T-197** Dado o relatório, então traz ministérios sem líder, pedidos de entrada pendentes, trocas abertas e pessoas ativas.
+- **T-198** Dada outra igreja, então os dados não se misturam.
+- **T-199** Dado liberar, publicar ou reabrir, então fica registrado com quem fez, o antes e o depois.
+- **T-200** Dado o prazo mudado, então guarda o prazo antigo e o novo.
+- **T-201** Dado turno de escala em rascunho, então a alteração não entra na trilha; depois de liberada, entra com o antes e o depois.
+- **T-202** Dadas confirmação e saída de turno, então ficam registradas; tirar quem não estava confirmado não registra.
+- **T-203** Dada a resolução de um pedido de troca, então fica registrada.
+- **T-204** Dada pessoa desativada, tornada Adm ou excluída, então registra; campo que não mudou não registra.
+- **T-205** Dado o Adm, então vê tudo, do mais novo ao mais antigo, com quem fez.
+- **T-206** Dado o líder, então vê só o histórico do ministério dele.
+- **T-207** Dado quem não é Adm nem líder do ministério, então recebe 403.
+- **T-208** Dada outra igreja, então a trilha não vaza; a lista pagina de 30 em 30.
+- **T-209** Dado e-mail com login ativo, então recebe o link com o endereço do app.
+- **T-210** Dado e-mail que não existe, então a resposta é igual e nada é enviado.
+- **T-211** Dada pessoa desativada, então não recebe o link.
+- **T-212** Dado o e-mail de recuperação, então vem em português com o botão para a nova senha.
+- **T-213** Dado o token certo, então a senha muda e as sessões antigas caem.
+- **T-214** Dado token errado, já usado ou senha curta, então é recusado.
+- **T-215** Dado o token de uma pessoa, então não serve para outra.
+- **T-216** Dado o pedido de link, então há limite por IP (429).
+- **T-217** Dado e-mail de login existente, então o Google entra e vincula.
+- **T-218** Dado login já vinculado, então entra pelo Google mesmo que o e-mail do Google mude.
+- **T-219** Dada credencial de outro aplicativo ou e-mail não verificado, então é recusada.
+- **T-220** Dada credencial que o Google não reconhece, então é recusada.
+- **T-221** Dado e-mail que ninguém cadastrou, então não ganha acesso nem cria nada.
+- **T-222** Dada pessoa convidada só com e-mail, então o login nasce na primeira entrada pelo Google.
+- **T-223** Dado e-mail sem login em duas igrejas, então é ambíguo e recusado.
+- **T-224** Dada pessoa desativada, então não entra nem recebe token.
+- **T-225** Dado login ligado a outra conta Google, então é recusado.
+- **T-226** Dado sem `GOOGLE_CLIENT_ID`, então a rota não existe (404) e o Google nem é consultado.
+- **T-227** Dada credencial ausente, então 422.
+- **T-228** Dado o login com Google, então há limite por IP (429).
+
+### No app (v1)
+
+O app cobre todas as regras acima: link público `/entrar/<código>` com o formulário do voluntário; aba **Pedidos** na equipe do líder (com a quantidade e o link para divulgar, copiar ou mandar no WhatsApp); aba **Relatório** do Adm com o histórico de alterações; botão "Histórico de alterações" no relatório do líder; telas "Esqueceu a senha?" e "Nova senha"; e o botão "Continuar com o Google" na tela de login, que só aparece com `VITE_GOOGLE_CLIENT_ID`.
+
+---
+
 ## 12. Decisões tomadas (v1)
 
-Decididas em 30/10/2026. A única ainda aberta é a D-18.
+Decididas em 30/10/2026. Nenhuma está aberta: a D-18 foi respondida pelo cliente em 30/10/2026.
 
 | # | Ponto | Protótipo | Decisão | Status |
 |---|---|---|---|---|
@@ -493,7 +570,7 @@ Decididas em 30/10/2026. A única ainda aberta é a D-18.
 | D-15 | Aprovação de novo voluntário | Não existe | Pedido de entrada pendente que o líder aprova ou recusa; o Google só vincula pelo e-mail verificado | Decidido |
 | D-16 | Papéis e login | Não existem | Seção 2 + login por e-mail e senha, e Google | Decidido |
 | D-17 | Cultos de uma igreja | Valem para todos os ministérios | Manter, com `igreja_id` | Decidido |
-| D-18 | Quais cultos o Louvor serve | Planilha da líder tem Manhã e Noite; a grade tem 3 cultos no domingo | Confirmar com a líder | **Aberta** |
+| D-18 | Quais cultos o Louvor serve | Planilha da líder tem Manhã e Noite; a grade tem 3 cultos no domingo | O cliente confirmou: **todos os cultos têm Louvor**. O sistema não restringe cultos por ministério; o líder escolhe os cultos ao gerar os turnos | Decidido |
 
 - **T-63** Dado registro que outro líder já alterou depois que a tela foi aberta, quando o primeiro tenta salvar, então a API responde 409 e nenhuma alteração é gravada.
 

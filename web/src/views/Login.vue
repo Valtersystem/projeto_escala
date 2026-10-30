@@ -1,7 +1,8 @@
 <script setup>
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useSessao } from '../stores/sessao.js';
+import { carregarGoogle, clienteGoogle } from '../utils/google.js';
 
 const sessao = useSessao();
 const roteador = useRouter();
@@ -17,6 +18,33 @@ const destino = () => {
   const volta = rota.query.volta;
   return typeof volta === 'string' && volta.startsWith('/') && !volta.startsWith('//') ? volta : { name: 'inicio' };
 };
+
+const idDoGoogle = clienteGoogle();
+const botaoGoogle = ref(null);
+
+async function entrarComGoogle(resposta) {
+  erro.value = '';
+
+  try {
+    await sessao.entrarComGoogle(resposta.credential);
+    await roteador.replace(destino());
+  } catch (e) {
+    erro.value = e.message;
+  }
+}
+
+// Se o Google não carregar (sem internet, bloqueador), o login por e-mail segue funcionando.
+onMounted(async () => {
+  if (!idDoGoogle) return;
+
+  try {
+    const google = await carregarGoogle();
+    google.initialize({ client_id: idDoGoogle, callback: entrarComGoogle });
+    google.renderButton(botaoGoogle.value, { theme: 'filled_black', size: 'large', text: 'continue_with', locale: 'pt-BR', width: 300 });
+  } catch {
+    /* só e-mail e senha */
+  }
+});
 
 async function entrar() {
   erro.value = '';
@@ -56,7 +84,12 @@ async function entrar() {
           {{ enviando ? 'Entrando…' : 'Entrar' }}
         </button>
 
-        <p class="esqueceu">Esqueceu a senha? Peça um novo convite ao seu líder.</p>
+        <div v-if="idDoGoogle" class="google">
+          <span class="ou">ou</span>
+          <div ref="botaoGoogle" />
+        </div>
+
+        <p class="esqueceu"><RouterLink :to="{ name: 'esqueci-senha' }">Esqueceu a senha?</RouterLink></p>
       </form>
 
       <p class="assinatura">Um produto <b>SEVENFAITHTECH</b></p>
@@ -99,7 +132,11 @@ input:focus { outline: 2px solid var(--destaque); outline-offset: 1px; }
   box-shadow: 0 10px 24px -12px rgba(183, 168, 246, 0.7);
 }
 .entrar[disabled] { opacity: 0.5; box-shadow: none; }
+
+.google { margin-top: 16px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.ou { color: var(--mudo); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; }
 .esqueceu { margin: 14px 0 0; text-align: center; color: var(--mudo); font-size: 12px; }
+.esqueceu a { color: var(--destaque); font-weight: 600; text-decoration: none; }
 .assinatura { margin-top: 22px; color: var(--mudo); font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; }
 .assinatura b { color: var(--destaque); font-weight: 600; }
 </style>

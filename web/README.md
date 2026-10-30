@@ -34,7 +34,15 @@ App do voluntário e do líder em Vue 3, instalável como PWA. Conversa com a AP
 | Cultos | A grade da igreja: semanal ou mensal (1º ao último), dia, início e fim |
 | Pessoas | Todos da igreja: busca, cadastro, ministérios onde serve, link de acesso, ativar/desativar, tornar Adm e excluir |
 
-Ainda faltam, no app, o relatório geral do Adm e o pedido de entrada do voluntário.
+O relatório do Adm mostra a igreja toda, ministério por ministério, e leva ao histórico de alterações (quem mudou o quê).
+
+**Sem login**
+
+| Tela | O que faz |
+|---|---|
+| Entrar (`/entrar/<código>`) | Link público da igreja: o voluntário pede para entrar e espera o líder aprovar |
+| Esqueci a senha / Nova senha | Recuperação por e-mail |
+| Login com Google | Botão "Continuar com o Google" no login, só com `VITE_GOOGLE_CLIENT_ID` |
 
 ## Rodando
 
@@ -52,7 +60,7 @@ Para ter dados prontos, na pasta `api`: `php artisan migrate:fresh && php artisa
 ## Testes e build
 
 ```bash
-npm test                 # 182 testes (Vitest)
+npm test                 # 215 testes (Vitest)
 npm run build            # gera dist/ com o service worker do PWA
 npm run icones           # refaz os PNGs do app a partir de public/icone.svg
 ```

@@ -25,7 +25,7 @@ class EuController extends Controller
             'nome' => $pessoa->nome,
             'email' => $pessoa->email,
             'adm' => $pessoa->adm,
-            'igreja' => ['id' => $igreja?->id, 'nome' => $igreja?->nome],
+            'igreja' => ['id' => $igreja?->id, 'nome' => $igreja?->nome, 'codigo' => $igreja?->codigo],
             // Consultas por relação já passam pelo escopo da igreja; no login a
             // igreja ainda não foi definida, então filtramos pelo ministério da própria pessoa.
             'ministerios' => $pessoa->ministerios()->withoutGlobalScopes()->get()

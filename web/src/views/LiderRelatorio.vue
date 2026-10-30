@@ -1,6 +1,8 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue';
 import Alerta from '../components/Alerta.vue';
+import Folha from '../components/Folha.vue';
+import HistoricoLista from '../components/HistoricoLista.vue';
 import { api } from '../api/cliente.js';
 import { useModo } from '../stores/modo.js';
 import { diaDaSemana, diaDoMes, mesPorExtenso } from '../utils/datas.js';
@@ -12,6 +14,7 @@ const erro = ref('');
 const relatorio = ref(null);
 const meses = ref([]);
 const mes = ref('');
+const historicoAberto = ref(false);
 
 const maximo = computed(() => Math.max(1, ...(relatorio.value?.turnos_por_pessoa ?? []).map((p) => p.turnos)));
 const vazio = computed(() => !relatorio.value?.total_de_turnos);
@@ -48,6 +51,8 @@ onMounted(carregar);
       <h2>Relatório</h2>
       <p>{{ modo.ministerio?.nome }} · só o seu ministério</p>
     </div>
+
+    <button class="botao suave largo" @click="historicoAberto = true">Histórico de alterações</button>
 
     <div v-if="meses.length" class="formulario">
       <div class="campo">
@@ -99,10 +104,14 @@ onMounted(carregar);
         </div>
       </template>
     </template>
+    <Folha :aberta="historicoAberto" titulo="Histórico de alterações" :legenda="modo.ministerio?.nome" @fechar="historicoAberto = false">
+      <div class="miolo-historico"><HistoricoLista v-if="historicoAberto && modo.ministerio" :ministerio-id="modo.ministerio.id" /></div>
+    </Folha>
   </section>
 </template>
 
 <style scoped>
+.miolo-historico { padding: 2px 16px 8px; }
 .barras { display: flex; flex-direction: column; gap: 2px; }
 .barra { display: grid; grid-template-columns: 82px 1fr 34px; align-items: center; gap: 10px; padding: 6px 0; }
 .nome { font-size: 13px; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

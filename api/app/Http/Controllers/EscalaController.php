@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\Registro;
 use App\Domain\EstadoEscala;
 use App\Domain\Prazo;
 use App\Exceptions\RegraDeNegocio;
@@ -183,7 +184,11 @@ class EscalaController extends Controller
             'versao' => ['required', 'integer'],
         ]);
 
+        $antes = $escala->prazo?->format('Y-m-d');
+
         Concorrencia::atualizar($escala, $dados['versao'], ['prazo' => $dados['prazo']]);
+
+        Registro::feito('escala.prazo', "Mudou o prazo da escala de {$escala->mes}", $escala->ministerio_id, $escala->id, ['prazo' => $antes], ['prazo' => $dados['prazo']]);
 
         return response()->json(['escala' => $this->resumo($escala->loadCount('turnos'))]);
     }
@@ -228,6 +233,10 @@ class EscalaController extends Controller
             // `versao` não é preenchível em massa de propósito: só o código controla.
             $escala->forceFill(['status' => $novo, 'versao' => $escala->versao + 1])->save();
         });
+
+        $acao = $de === EstadoEscala::Publicada ? 'reaberta' : ($novo === EstadoEscala::Publicada ? 'publicada' : 'liberada');
+        $verbo = ['reaberta' => 'Reabriu', 'publicada' => 'Publicou', 'liberada' => 'Liberou'][$acao];
+        Registro::feito("escala.{$acao}", "{$verbo} a escala de {$escala->mes}", $escala->ministerio_id, $escala->id, ['status' => $de->value], ['status' => $novo->value]);
 
         return response()->json(['escala' => $this->resumo($escala->loadCount('turnos'))]);
     }

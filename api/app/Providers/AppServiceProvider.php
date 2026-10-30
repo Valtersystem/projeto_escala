@@ -35,6 +35,11 @@ class AppServiceProvider extends ServiceProvider
         // Convites: limite por IP, para ninguém ficar adivinhando tokens.
         RateLimiter::for('convite', fn (Request $request) => Limit::perMinute(10)->by($request->ip()));
 
+        RateLimiter::for('login-google', fn (Request $request) => Limit::perMinute(10)->by($request->ip()));
+
+        // Recuperação de senha: por IP, para ninguém usar o formulário para encher caixas de e-mail.
+        RateLimiter::for('senha', fn (Request $request) => Limit::perMinute(5)->by($request->ip()));
+
         $this->definirPermissoes();
     }
 
