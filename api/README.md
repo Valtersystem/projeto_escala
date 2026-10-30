@@ -32,6 +32,7 @@ php artisan test
 | `tests/Unit/Domain/` | Testes das regras puras (`T-03` a `T-06`, `T-14`, `T-18`, `T-24` a `T-26`, `T-36` a `T-40`, `T-56`, `T-62`) |
 | `tests/Feature/BancoDeDadosTest.php` | Restrições e cascatas do banco (`T-07`, `T-08`, `T-10`, `T-13`, `T-22`) |
 | `tests/Feature/Auth/`, `IsolamentoPorIgrejaTest.php`, `CriarIgrejaCommandTest.php` | Login, isolamento por igreja e comando da primeira igreja (`T-64` a `T-73`) |
+| `tests/Feature/CadastrosTest.php`, `ConviteTest.php` | Cadastros por papel e convite (`T-74` a `T-95`) |
 | `app/Models/` | Modelos Eloquent; os que têm `igreja_id` usam o escopo por igreja |
 
 ## Decisões de modelagem
@@ -42,13 +43,28 @@ php artisan test
 - **Concorrência:** `escalas.versao` e `turnos.versao` para detectar edição simultânea (D-14).
 - **Rodízio:** a ordem das bandas é `bandas.ordem`.
 
-## Acesso
+## Rotas da API
 
-- **Login:** `POST /api/login` com `email` e `senha` devolve o token (Sanctum, expira em 30 dias).
-- **Rotas protegidas:** `POST /api/logout` e `GET /api/eu` (a pessoa logada, a igreja e os ministérios). Enviar `Authorization: Bearer <token>`.
-- **Isolamento por igreja:** os modelos com `igreja_id` usam o trait `PertenceAIgreja`. O middleware `DefinirIgrejaAtual` define a igreja pela pessoa logada. Sem igreja definida, a consulta volta vazia. Código de sistema usa `withoutGlobalScopes()` de propósito.
-- **Primeira igreja:** `php artisan escala:criar-igreja "Nome da igreja" "Nome do Adm" adm@email.com` (a senha é pedida).
+Todas ficam em `/api`. As protegidas exigem `Authorization: Bearer <token>`.
+
+| Rota | Quem | O que faz |
+|---|---|---|
+| `POST /login` | todos | E-mail e senha; devolve o token (expira em 30 dias) |
+| `POST /convites/aceitar` | todos | Escolhe a senha pelo link de convite (primeiro acesso ou troca de senha) |
+| `POST /logout`, `GET /eu` | logado | Sair; quem sou eu (pessoa, igreja, ministérios) |
+| `GET/POST /ministerios`, `PATCH/DELETE /ministerios/{id}`, `PUT /ministerios/{id}/lider` | Adm (listar: todos, filtrado) | Ministérios e líder |
+| `POST /ministerios/{id}/equipe`, `DELETE /ministerios/{id}/equipe/{pessoa}` | Adm ou líder | Equipe do ministério |
+| `GET/POST /ministerios/{id}/postos`, `PATCH/DELETE /postos/{id}` | líder (ver: equipe) | Postos |
+| `GET/POST /pessoas`, `PATCH/DELETE /pessoas/{id}` | Adm ou líder | Pessoas (excluir: só Adm) |
+| `POST /pessoas/{id}/convite` | Adm ou líder da pessoa | Gera o link de convite |
+
+## Segurança e isolamento
+
+- **Isolamento por igreja:** os modelos com `igreja_id` usam o trait `PertenceAIgreja`. O middleware `DefinirIgrejaAtual` define a igreja pela pessoa logada e roda antes do route model binding (ver `bootstrap/app.php`). Sem igreja definida, a consulta volta vazia. Código de sistema usa `withoutGlobalScopes()` de propósito.
+- **Permissões:** definidas como Gates em `AppServiceProvider` (`adm`, `lidera`, `ver-ministerio`, `gerir-equipe`, `gerir-pessoa`).
+- **Primeira igreja:** `php artisan escala:criar-igreja "Nome da igreja" "Nome do Adm" adm@email.com` (a senha é pedida). Depois o Adm cadastra e convida as pessoas.
+- **Link do convite:** usa `APP_FRONTEND_URL` (endereço do app Vue).
 
 ## O que ainda falta
 
-Rotas e controladores de cadastro (ministérios, pessoas, postos, bandas, funções, cultos), serviços de aplicação (gerar turnos, marcar, confirmar, publicar, trocar), permissões por papel (Adm, líder, voluntário), convite e primeiro acesso da pessoa cadastrada, login com Google, avisos, auditoria (D-12) e pedido de entrada (D-15).
+Cadastros de bandas, funções e cultos; escalas e turnos (gerar, editar, liberar, publicar); marcar disponibilidade, confirmar e tirar; pedido de troca; avisos; relatórios; login com Google; auditoria (D-12); pedido de entrada do voluntário (D-15). A recuperação de senha por e-mail fica por último e não entra na v1.

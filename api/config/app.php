@@ -68,6 +68,12 @@ return [
     'timezone' => 'UTC',
 
     /*
+    | Endereço do app (Vue), usado para montar o link de convite.
+    */
+
+    'frontend_url' => env('APP_FRONTEND_URL', 'http://localhost:5173'),
+
+    /*
     |--------------------------------------------------------------------------
     | Application Locale Configuration
     |--------------------------------------------------------------------------

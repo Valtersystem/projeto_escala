@@ -1,6 +1,8 @@
 <?php
 
 use App\Exceptions\RegraDeNegocio;
+use App\Http\Middleware\DefinirIgrejaAtual;
+use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -14,7 +16,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // A igreja precisa estar definida antes do route model binding, senão o
+        // escopo por igreja faria todo registro parecer inexistente.
+        $middleware->prependToPriorityList(
+            before: SubstituteBindings::class,
+            prepend: DefinirIgrejaAtual::class,
+        );
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

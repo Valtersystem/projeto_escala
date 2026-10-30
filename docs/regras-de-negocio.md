@@ -255,6 +255,42 @@ O protótipo troca de perfil por um botão, sem login (`Adm`, `Líder`, `Volunt�
 
 ---
 
+## 11c. Cadastros por papel e convite (v1)
+
+**RN-73** O líder (ou o Adm) gera um link de convite para a pessoa. Exige e-mail cadastrado e pessoa ativa.
+**RN-74** O convite vale 7 dias e só pode ser usado uma vez. Só o hash do token é guardado. Um convite novo invalida os anteriores ainda não usados.
+**RN-75** Ao aceitar o convite, a pessoa escolhe a senha (mínimo 8 caracteres). Se ainda não tem login, o login é criado com o e-mail cadastrado. Se já tem, a senha é trocada e as sessões anteriores são encerradas.
+**RN-76** Na v1 não há recuperação de senha por e-mail. Quem esquece a senha recebe um novo convite do líder. A recuperação por e-mail fica para o fim.
+**RN-77** Convite inexistente, expirado ou já usado recebe a mesma mensagem.
+**RN-78** Quem pode o quê: o **Adm** cria, renomeia e exclui ministérios, vincula o líder, cadastra e exclui pessoas (qualquer uma) e define quem é Adm. O **líder** cadastra pessoas só nos ministérios que lidera, inclui e tira da equipe, edita e inativa pessoas da equipe, e gere os postos do ministério. O **voluntário** não cadastra nada. O Adm não gere postos de ministério alheio.
+**RN-79** O e-mail é único por igreja. Quem já tem login não pode trocar de e-mail. Ninguém exclui a si mesmo.
+**RN-80** Registro de outra igreja responde 404, como se não existisse.
+
+- **T-74** Dado Adm, líder e voluntária, então só o Adm cria ministério.
+- **T-75** Dado nome vazio ou repetido (ministério, pessoa ou posto), então a API recusa com erro de validação.
+- **T-76** Dado Adm, quando vincula um líder, então o ministério passa a ter esse líder; o líder não faz isso.
+- **T-77** Dado líder da Mídia, quando consulta ou cria postos do Louvor, então recebe 403; a voluntária também não cria posto.
+- **T-78** Dadas vagas 0, negativas ou vazias, então o posto fica com 1 vaga.
+- **T-79** Dado posto com turnos, quando o líder do ministério o exclui, então os turnos somem e as pessoas continuam.
+- **T-80** Dado ministério com postos, escalas e turnos, quando o Adm o exclui, então tudo isso some e as pessoas continuam.
+- **T-81** Dado ministério de outra igreja, então editar ou excluir responde 404 e nada muda.
+- **T-82** Dada pessoa em Louvor e Mídia, quando sai da equipe do Louvor, então perde postos, funções e bandas do Louvor e mantém as da Mídia.
+- **T-83** Dado líder, quando cadastra pessoa, então só vale para os ministérios que ele lidera, sem marcar Adm.
+- **T-84** Dado líder, quando mexe em pessoa de outro ministério ou tenta definir Adm, então recebe 403.
+- **T-85** Dada pessoa com login, quando se troca o e-mail, então a API recusa; repetir o mesmo e-mail é aceito.
+- **T-86** Dado Adm, quando exclui uma pessoa, então a pessoa e o login dela saem; excluir a si mesmo é recusado.
+- **T-87** Dados Adm, líder e voluntária, então cada um lista só o que o papel permite.
+- **T-88** Dado convite gerado pelo líder, quando a pessoa aceita com uma senha, então o login é criado e ela entra.
+- **T-89** Dada pessoa sem e-mail, então não dá para convidar.
+- **T-90** Dado convite expirado, usado ou inexistente, então é recusado.
+- **T-91** Dado um segundo convite, então o primeiro deixa de valer.
+- **T-92** Dada pessoa que já tem login, quando aceita um convite, então a senha é trocada, a antiga deixa de valer e as sessões antigas caem.
+- **T-93** Dado voluntária ou líder de outro ministério, então não gera convite; o Adm gera.
+- **T-94** Dada senha com menos de 8 caracteres, então a API recusa e o convite continua valendo.
+- **T-95** Dado convite gerado, então o banco guarda só o hash do token.
+
+---
+
 ## 12. Decisões tomadas (v1)
 
 Decididas em 30/10/2026. A única ainda aberta é a D-18.

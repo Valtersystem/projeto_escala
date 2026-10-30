@@ -29,6 +29,22 @@ class Pessoa extends Model
         return $this->belongsTo(User::class);
     }
 
+    /** RN-07: esta pessoa é a líder do ministério. */
+    public function lidera(Ministerio|int $ministerio): bool
+    {
+        $id = $ministerio instanceof Ministerio ? $ministerio->id : $ministerio;
+
+        return $this->ministeriosQueLidera()->whereKey($id)->exists();
+    }
+
+    /** Serve na equipe do ministério. */
+    public function serveEm(Ministerio|int $ministerio): bool
+    {
+        $id = $ministerio instanceof Ministerio ? $ministerio->id : $ministerio;
+
+        return $this->ministerios()->whereKey($id)->exists();
+    }
+
     /** Ministérios em que a pessoa serve (equipe). */
     public function ministerios(): BelongsToMany
     {
