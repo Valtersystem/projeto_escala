@@ -421,6 +421,23 @@ O protótipo troca de perfil por um botão, sem login (`Adm`, `Líder`, `Volunt�
 
 ---
 
+## 11h. Área do líder no app (v1)
+
+**RN-108** Na escala, o líder vê em cada turno quantas pessoas marcaram disponibilidade, quantas estão confirmadas e quem são, com a indicação de quem está sem função (quando o ministério tem funções). O voluntário não recebe nenhum desses dados.
+**RN-109** Antes de publicar, o líder vê uma prévia: quantos turnos ainda não têm todas as vagas preenchidas, quantas pessoas estão sem função e os choques com qualquer outro turno confirmado (D-06). A prévia só avisa; o líder decide publicar assim mesmo (RN-21).
+**RN-110** No app, o seletor "Voluntário | Líder" só aparece para quem lidera algum ministério. Quem lidera mais de um escolhe qual está usando. A área do líder não abre para quem não lidera, nem digitando o endereço, e o modo escolhido acompanha a tela aberta.
+**RN-111** "Gerar dos cultos" oferece só os cultos que caem no mês da escala, mostrando quantas datas cada um tem. Com um posto só, ele já vem escolhido. Sem escolher ao menos um culto e um posto, não gera.
+**RN-112** Turno lotado não deixa confirmar mais ninguém. Em escala aberta o líder pode aumentar uma vaga na própria folha do turno; em escala publicada precisa reabrir antes.
+**RN-113** Ao confirmar uma pessoa, se o ministério tem funções, o app já pergunta qual função ela vai fazer. A aba "Trocas" mostra o número de pedidos esperando o líder.
+**RN-114** Escalas em rascunho permitem editar e excluir turnos; em escala publicada o líder só pode reabrir.
+
+- **T-171** Dada a escala aberta, então o líder vê marcaram, confirmados e quem está sem função; o voluntário não recebe esses dados.
+- **T-172** Dada a prévia de publicação, então conta turnos incompletos, pessoas sem função e choques (um só por par), e só o líder do ministério a vê.
+
+(Os 127 testes do app cobrem o modo líder, as rotas protegidas, a lista e a criação de escalas, as ações por estado, a geração de turnos, o formulário de turno, a folha de confirmação, as trocas e o relatório; ficam em `web/tests/`.)
+
+---
+
 ## 12. Decisões tomadas (v1)
 
 Decididas em 30/10/2026. A única ainda aberta é a D-18.

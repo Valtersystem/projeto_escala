@@ -66,6 +66,7 @@ Route::middleware(['auth:sanctum', DefinirIgrejaAtual::class])->group(function (
     Route::get('/escalas/abertas', [EscalaController::class, 'abertas']);
     Route::get('/escalas/{escala}', [EscalaController::class, 'show']);
     Route::patch('/escalas/{escala}', [EscalaController::class, 'update']);
+    Route::get('/escalas/{escala}/publicacao', [EscalaController::class, 'previaDePublicacao']);
     Route::post('/escalas/{escala}/liberar', [EscalaController::class, 'liberar']);
     Route::post('/escalas/{escala}/publicar', [EscalaController::class, 'publicar']);
     Route::post('/escalas/{escala}/reabrir', [EscalaController::class, 'reabrir']);

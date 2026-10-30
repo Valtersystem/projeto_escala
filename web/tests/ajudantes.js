@@ -45,21 +45,24 @@ import { mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import { createMemoryHistory } from 'vue-router';
 import { criarRoteador } from '../src/router.js';
+import { useModo } from '../src/stores/modo.js';
 import { useSessao } from '../src/stores/sessao.js';
 
 /**
  * Monta uma tela com Pinia e roteador de verdade. `entrada` é o caminho aberto antes de montar
  * (útil para o `?volta=` do login); `logada` deixa a sessão pronta, como depois do login.
  */
-export async function montarTela(componente, { props = {}, entrada = '/login', logada = true } = {}) {
+export async function montarTela(componente, { props = {}, entrada = '/login', logada = true, pessoa = PESSOA, modo = null } = {}) {
   const pinia = createPinia();
   setActivePinia(pinia);
 
   if (logada) {
     localStorage.setItem('escala.token', 'tok-teste');
     const sessao = useSessao();
-    sessao.pessoa = PESSOA;
+    sessao.pessoa = pessoa;
   }
+
+  if (modo) useModo().usar(modo);
 
   const roteador = criarRoteador(createMemoryHistory());
   await roteador.push(entrada);
@@ -73,3 +76,16 @@ export async function montarTela(componente, { props = {}, entrada = '/login', l
 
 /** O botão de uma tela que tem este texto. */
 export const botao = (tela, texto) => tela.findAll('button').find((b) => b.text().includes(texto));
+
+/** Marcos: líder do Louvor, e também voluntário na Mídia. */
+export const LIDER = {
+  id: 4, nome: 'Marcos Reis', email: 'marcos@exemplo.test', adm: false,
+  igreja: { id: 1, nome: 'Igreja Exemplo' },
+  ministerios: [{ id: 1, nome: 'Louvor', lider: true }, { id: 2, nome: 'Mídia', lider: false }],
+};
+
+/** Ana: líder de dois ministérios. */
+export const LIDER_DE_DOIS = { ...LIDER, ministerios: [{ id: 1, nome: 'Louvor', lider: true }, { id: 2, nome: 'Mídia', lider: true }] };
+
+/** O botão cujo texto é exatamente este (quando outro botão da tela contém o mesmo texto). */
+export const botaoExato = (tela, texto) => tela.findAll('button').find((b) => b.text() === texto);

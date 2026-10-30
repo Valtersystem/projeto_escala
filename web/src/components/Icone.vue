@@ -11,6 +11,8 @@ const CAMINHOS = {
   troca: '<path d="M4 8h13l-3.5-3.5M20 16H7l3.5 3.5"/>',
   sino: '<path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 21h4"/>',
   alerta: '<path d="M12 4 2.5 20h19z"/><path d="M12 10v5M12 17.5v.5"/>',
+  grafico: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+  mais: '<path d="M12 5v14M5 12h14"/>',
 };
 </script>
 

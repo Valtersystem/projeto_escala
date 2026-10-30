@@ -8,6 +8,7 @@ use App\Exceptions\RegraDeNegocio;
 use App\Models\Escala;
 use App\Models\Igreja;
 use App\Models\Ministerio;
+use App\Services\CargaDaPessoa;
 use App\Support\Avisos;
 use App\Support\Concorrencia;
 use App\Support\IgrejaAtual;
@@ -106,9 +107,69 @@ class EscalaController extends Controller
             $turnos->whereHas('confirmacoes', fn ($c) => $c->where('pessoa_id', $pessoa->id));
         }
 
+        // O líder também vê, em cada turno, quantos marcaram e quem já está confirmado (RN-39).
+        $temFuncoes = $lider && $ministerio->funcoes()->exists();
+
+        if ($lider) {
+            $turnos->withCount(['confirmacoes', 'disponibilidades'])->with(['confirmacoes.pessoa:id,nome', 'confirmacoes.funcoes:id']);
+        }
+
         return response()->json([
             'escala' => $this->resumo($escala->loadCount('turnos')),
-            'turnos' => $turnos->get()->map(fn ($t) => TurnoController::resumo($t, $lider))->values(),
+            'turnos' => $turnos->get()->map(fn ($t) => TurnoController::resumo($t, $lider) + ($lider ? [
+                'confirmados_total' => $t->confirmacoes_count,
+                'marcaram_total' => $t->disponibilidades_count,
+                'confirmados' => $t->confirmacoes->map(fn ($c) => [
+                    'pessoa_id' => $c->pessoa_id,
+                    'nome' => $c->pessoa->nome,
+                    'sem_funcao' => $temFuncoes && $c->funcoes->isEmpty(),
+                ])->values(),
+            ] : []))->values(),
+        ]);
+    }
+
+    /**
+     * Antes de publicar, o líder vê o que ainda está torto (RN-21): turnos incompletos, pessoas sem
+     * função e choques com outro turno confirmado (D-06). Não impede a publicação; só avisa.
+     */
+    public function previaDePublicacao(Escala $escala): JsonResponse
+    {
+        $ministerio = $escala->ministerio;
+        Gate::authorize('lidera', $ministerio);
+
+        $turnos = $escala->turnos()->with(['posto:id,nome', 'confirmacoes.pessoa:id,nome', 'confirmacoes.funcoes:id'])->get();
+        $temFuncoes = $ministerio->funcoes()->exists();
+
+        $cargas = [];
+        $choques = [];
+        $semFuncao = 0;
+
+        foreach ($turnos as $turno) {
+            foreach ($turno->confirmacoes as $confirmacao) {
+                if ($temFuncoes && $confirmacao->funcoes->isEmpty()) {
+                    $semFuncao++;
+                }
+
+                $cargas[$confirmacao->pessoa_id] ??= CargaDaPessoa::de($confirmacao->pessoa_id);
+
+                foreach ($cargas[$confirmacao->pessoa_id]->conflitosCom($turno) as $outro) {
+                    // O mesmo par aparece pelos dois lados; conta uma vez só.
+                    $chave = $confirmacao->pessoa_id.'|'.min($turno->id, $outro->id).'|'.max($turno->id, $outro->id);
+
+                    $choques[$chave] = [
+                        'pessoa' => ['id' => $confirmacao->pessoa_id, 'nome' => $confirmacao->pessoa->nome],
+                        'turno' => CargaDaPessoa::descricao($turno),
+                        'com' => CargaDaPessoa::descricao($outro),
+                    ];
+                }
+            }
+        }
+
+        return response()->json([
+            'total_de_turnos' => $turnos->count(),
+            'incompletos' => $turnos->filter(fn ($t) => $t->confirmacoes->count() < $t->vagas)->count(),
+            'sem_funcao' => $semFuncao,
+            'choques' => array_values($choques),
         ]);
     }
 

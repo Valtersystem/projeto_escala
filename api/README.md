@@ -63,7 +63,7 @@ Todas ficam em `/api`. As protegidas exigem `Authorization: Bearer <token>`.
 | `GET /cultos`, `GET /cultos/{id}/ocorrencias?mes=AAAA-MM`, `POST/PATCH/DELETE /cultos` | todos veem; Adm altera | Grade de cultos |
 | `GET /escalas/abertas` | logado | Escalas abertas dos meus ministérios, com o que já marquei |
 | `GET/POST /ministerios/{id}/escalas`, `GET/PATCH /escalas/{id}` | líder (voluntário vê aberta e publicada) | Escalas do mês e prazo |
-| `POST /escalas/{id}/liberar`, `/publicar`, `/reabrir` | líder | Estados da escala |
+| `POST /escalas/{id}/liberar`, `/publicar`, `/reabrir`, `GET /escalas/{id}/publicacao` | líder | Estados da escala e a prévia antes de publicar |
 | `POST /escalas/{id}/turnos`, `POST /escalas/{id}/turnos/gerar`, `PATCH/DELETE /turnos/{id}` | líder | Turnos (avulso, gerar com rodízio, editar, excluir) |
 | `GET /escalas/{id}/disponibilidade`, `PUT /turnos/{id}/disponibilidade`, `POST /escalas/{id}/disponibilidade/enviar` | voluntário da equipe | Marcar disponibilidade, ver choques, enviar |
 | `GET /turnos/{id}/pessoas`, `POST /turnos/{id}/confirmacoes`, `PUT`/`DELETE /turnos/{id}/confirmacoes/{pessoa}` | líder | Folha do turno, confirmar, funções, tirar |

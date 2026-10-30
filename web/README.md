@@ -1,8 +1,10 @@
 # App de escalas (Vue + PWA)
 
-App do voluntário em Vue 3, instalável como PWA. Conversa com a API em [`../api`](../api/README.md). As regras estão em [`../docs/regras-de-negocio.md`](../docs/regras-de-negocio.md).
+App do voluntário e do líder em Vue 3, instalável como PWA. Conversa com a API em [`../api`](../api/README.md). As regras estão em [`../docs/regras-de-negocio.md`](../docs/regras-de-negocio.md).
 
-## Telas desta etapa (voluntário)
+## Telas
+
+**Voluntário**
 
 | Tela | O que faz |
 |---|---|
@@ -13,7 +15,17 @@ App do voluntário em Vue 3, instalável como PWA. Conversa com a API em [`../ap
 | Minha escala | Turnos confirmados, funções, choque e "Não vou poder" (pedido de substituição) |
 | Perfil | Dados, ministérios e sair |
 
-As telas do **líder** e do **Adm** ainda não existem (a API já tem tudo).
+**Líder** (aparece o seletor "Voluntário | Líder" só para quem lidera um ministério)
+
+| Tela | O que faz |
+|---|---|
+| Escalas | Lista os meses, abre a escala de um mês novo e mostra os pedidos de troca esperando |
+| Escala | Gera turnos dos cultos (com o rodízio de bandas), cria turno avulso, edita, libera, publica (com prévia do que está torto), reabre e muda o prazo |
+| Folha do turno | Quem marcou, quem está confirmado, funções de cada um, choques, carga e aumentar vaga |
+| Trocas | Resolve pedidos: manter, escolher um substituto ou deixar a vaga em aberto |
+| Relatório | % de vagas, turnos sem ninguém, turnos por pessoa e onde aperta |
+
+Faltam as telas do **Adm** (ministérios, pessoas, cultos) e, para o líder, os cadastros de postos, bandas, funções e equipe. A API já tem tudo isso.
 
 ## Rodando
 
@@ -31,7 +43,7 @@ Para ter dados prontos, na pasta `api`: `php artisan migrate:fresh && php artisa
 ## Testes e build
 
 ```bash
-npm test                 # 64 testes (Vitest)
+npm test                 # 127 testes (Vitest)
 npm run build            # gera dist/ com o service worker do PWA
 npm run icones           # refaz os PNGs do app a partir de public/icone.svg
 ```
