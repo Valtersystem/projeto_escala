@@ -1,6 +1,6 @@
 # Regras de negócio e casos de teste — App de escalas (v1)
 
-Extraído do protótipo `index.html` (commit `be9c347`). Cada regra tem um código `RN-xx` e, quando verificável, um caso de teste `T-xx` no formato Dado / Quando / Então. Os testes servem de base para a API Laravel.
+Extraído do protótipo `index.html` (commit `be9c347`) e atualizado em 30/10/2026 com as decisões da seção 12. Onde uma decisão difere do protótipo, vale a decisão. Cada regra tem um código `RN-xx` e, quando verificável, um caso de teste `T-xx` no formato Dado / Quando / Então. Os testes servem de base para a API Laravel.
 
 Decisões já tomadas para a v1: Laravel (API) + Vue PWA; líder ou Adm cadastra as pessoas; login com e-mail e senha, com opção de Google; cada filial é uma igreja individual (tenant `igreja_id` em todas as tabelas).
 
@@ -76,14 +76,14 @@ O protótipo troca de perfil por um botão, sem login (`Adm`, `Líder`, `Volunt�
 **RN-08** Excluir ministério apaga seus postos, escalas e turnos, e tira o vínculo das pessoas. As pessoas continuam cadastradas.
 **RN-09** Pessoa tem nome (obrigatório), telefone (opcional), indicador de Adm, ministérios, postos, funções que já faz, bandas fixas e indicador de ativo.
 **RN-10** Pessoa inativa não recebe mais chamadas: não aparece como candidata a substituição.
-**RN-11** Tirar a pessoa da equipe de um ministério remove também os postos dela daquele ministério.
+**RN-11** Tirar a pessoa da equipe de um ministério remove também os postos, as funções e as bandas dela daquele ministério (D-08).
 **RN-12** Excluir pessoa remove a liderança dela, suas disponibilidades e confirmações.
 **RN-13** Posto tem nome (obrigatório), descrição opcional e vagas padrão (mínimo 1). Excluir posto apaga seus turnos e tira o posto das pessoas.
 **RN-14** Função tem nome e pertence a um ministério. Excluir função a remove das pessoas e dos turnos.
 **RN-15** Banda pertence a um ministério. Cada pessoa pode ser membro fixo de zero, uma ou várias bandas. O líder edita os membros da banda.
 
 - **T-08** Dado ministério com 2 postos e 3 escalas, quando é excluído, então postos, escalas e turnos somem e as pessoas continuam existindo sem o vínculo.
-- **T-09** Dado voluntário em Mídia e Louvor, quando sai da equipe do Louvor, então perde os postos do Louvor e mantém os da Mídia.
+- **T-09** Dado voluntário em Mídia e Louvor, quando sai da equipe do Louvor, então perde os postos, as funções e as bandas do Louvor e mantém os da Mídia.
 - **T-10** Dado posto com turnos e pessoas vinculadas, quando excluído, então os turnos somem e as pessoas ficam sem esse posto.
 - **T-11** Dado nome vazio ao criar ministério, posto ou pessoa, então a API rejeita com erro de validação.
 - **T-12** Dado posto com vagas 0 ou negativas, então o valor é ajustado para 1.
@@ -93,7 +93,7 @@ O protótipo troca de perfil por um botão, sem login (`Adm`, `Líder`, `Volunt�
 ## 5. Escalas e estados
 
 **RN-16** Cada ministério tem no máximo uma escala por mês. Criar outra para o mesmo mês é recusado.
-**RN-17** A escala nasce em `rascunho`, com prazo de resposta (data). Padrão sugerido: hoje + 7 dias.
+**RN-17** A escala nasce em `rascunho`, com prazo de resposta (data) definido pelo líder. O valor sugerido é o início do mês menos o "prazo padrão em dias" da igreja (padrão 5); o líder pode mudar ao criar (D-02, D-03).
 **RN-18** Em `rascunho` ninguém além do líder vê a escala. O líder cria, edita e exclui turnos.
 **RN-19** Só dá para liberar a escala (`rascunho` → `aberta`) se ela tiver ao menos um turno.
 **RN-20** Em `aberta`, os voluntários do ministério marcam disponibilidade e o líder confirma quem fica em cada vaga.
@@ -102,6 +102,7 @@ O protótipo troca de perfil por um botão, sem login (`Adm`, `Líder`, `Volunt�
 **RN-23** O voluntário só vê seus turnos em "Minha escala" quando a escala está `publicada` e ele está confirmado.
 
 - **T-13** Dado escala de novembro já criada para o ministério, quando se cria outra de novembro, então é recusada.
+- **T-56** Dado "prazo padrão" de 5 dias e escala de novembro/2026, quando o líder abre o formulário de criação, então o prazo sugerido é 27/10/2026 e ele pode alterá-lo.
 - **T-14** Dado escala em rascunho sem turnos, quando o líder tenta liberar, então é recusado com "adicione pelo menos um turno".
 - **T-15** Dado escala em rascunho, quando um voluntário consulta as escalas abertas, então ela não aparece.
 - **T-16** Dado escala publicada com turnos incompletos, quando o líder publica, então a publicação funciona e os turnos incompletos aparecem como "precisa de gente".
@@ -113,7 +114,7 @@ O protótipo troca de perfil por um botão, sem login (`Adm`, `Líder`, `Volunt�
 ## 6. Turnos
 
 **RN-24** Turno tem posto, data, início, fim, vagas (mínimo 1), banda opcional, culto opcional.
-**RN-25** Só se edita data, horário e vagas, ou se exclui o turno, enquanto a escala está em `rascunho`. Excluir turno remove disponibilidades e confirmações dele.
+**RN-25** Data e horário só se editam, e o turno só se exclui, enquanto a escala está em `rascunho`. Excluir turno remove disponibilidades e confirmações dele. As vagas podem ser aumentadas até a escala ser publicada (D-01).
 **RN-26** Gerar turnos a partir da grade: o líder escolhe cultos e postos; para cada culto × data do mês × posto escolhido nasce um turno com as vagas padrão do posto. Só entram cultos que têm data no mês. Exige ao menos um posto cadastrado.
 **RN-27** A geração não duplica: se já existe turno do mesmo posto, data e horário de início, ele é ignorado.
 **RN-28** Turno avulso (fora da grade) pode ser criado à mão, com ou sem culto e com ou sem banda.
@@ -130,13 +131,14 @@ O protótipo troca de perfil por um botão, sem login (`Adm`, `Líder`, `Volunt�
 
 **RN-29** Se o ministério tem bandas, ao gerar turnos cada turno recebe uma banda, em sequência: banda 1, 2, 3, 1, 2, 3…
 **RN-30** A sequência é contínua entre meses. O primeiro turno do mês novo recebe a banda seguinte à do último turno anterior do mesmo ministério. Se não houver turno anterior com banda, começa pela primeira banda da lista.
-**RN-31** Os turnos são ordenados por data e horário de início antes de receber banda.
+**RN-31** Os turnos são ordenados por data e horário de início antes de receber banda. Turnos do mesmo horário (de postos diferentes) recebem a mesma banda: o rodízio avança por horário, não por turno (D-05).
 **RN-32** O líder pode escolher a banda à mão ao criar um turno avulso. Banda vazia é permitida.
 **RN-33** "Fora da banda fixa": se a pessoa não é membro fixo da banda do turno, o líder vê o aviso, mas pode confirmar.
 
 - **T-24** Dado 3 bandas e novembro/2026 com Manhã e Noite aos domingos, quando se gera, então a sequência é B1,B2,B3,B1,B2,B3,B1,B2,B3,B1 (confere com a planilha da líder).
 - **T-25** Dado novembro terminando na Banda 1, quando se gera dezembro, então o primeiro turno de dezembro é da Banda 2.
 - **T-26** Dado ministério sem bandas, quando se gera, então os turnos ficam sem banda.
+- **T-62** Dado dois postos com turnos no mesmo dia e horário, quando se gera o rodízio, então os dois turnos recebem a mesma banda.
 - **T-27** Dado pessoa da Banda 3, quando o líder a confirma num turno da Banda 1, então a confirmação funciona e o app marca "fora da banda fixa".
 
 ---
@@ -147,22 +149,29 @@ O protótipo troca de perfil por um botão, sem login (`Adm`, `Líder`, `Volunt�
 **RN-35** Marcar é alternar: tocar de novo desmarca.
 **RN-36** O voluntário vê primeiro os turnos dos postos dele. Os demais postos do ministério aparecem como "fora do seu perfil" e também podem ser marcados. Se ele não tem nenhum posto marcado, vê todos.
 **RN-37** Enviar disponibilidade exige ao menos um turno marcado.
-**RN-38** Disponibilidade não bloqueia nada: pode ser marcada e enviada mesmo com choque, e mesmo depois do prazo (o prazo só informa).
+**RN-38** Choque não impede marcar nem enviar disponibilidade. Depois do prazo definido pelo líder, a marcação é bloqueada, e o líder pode estender o prazo (D-02).
 **RN-39** O líder vê, por turno, "Confirmados (n/vagas)" e "Marcaram disponibilidade" (marcaram e ainda não foram confirmados).
-**RN-40** Confirmar alguém é permitido mesmo com o turno lotado e mesmo com choque; o app não bloqueia (ver seção 12).
+**RN-40** Confirmar é bloqueado quando o turno já está lotado; o líder pode aumentar as vagas. Choque não bloqueia a confirmação (D-01).
 **RN-41** Confirmar alguém com choque gera aviso para a pessoa.
 **RN-42** Tirar alguém do turno remove a confirmação e as funções dela nesse turno.
 **RN-43** Se o ministério tem funções, ao confirmar o líder escolhe uma ou mais funções (ou "sem função"). Funções que a pessoa já faz aparecem primeiro.
-**RN-44** "Carga" é um alerta quando a pessoa tem mais turnos confirmados que o limite configurado (padrão 3).
+**RN-44** "Carga" é um alerta quando a pessoa tem, no mês do turno, mais turnos confirmados que o limite configurado (padrão 3). Só alerta, não bloqueia (D-04).
+**RN-64** O voluntário não vê a quantidade de vagas dos turnos nem quantos faltam; essa informação é só do líder (D-01).
+**RN-65** O líder e o Adm não veem pessoas inativas na lista "Marcaram disponibilidade" (D-09).
 
 - **T-28** Dado escala publicada, quando o voluntário tenta marcar disponibilidade, então é recusado.
 - **T-29** Dado voluntário que não é da equipe do ministério, quando tenta marcar turno dele, então é recusado.
 - **T-30** Dado nenhum turno marcado, quando envia disponibilidade, então é recusado com "marque pelo menos um turno".
 - **T-31** Dado turno marcado, quando toca de novo, então a marcação é removida.
-- **T-32** Dado turno com 2 vagas e 2 confirmados, quando o líder confirma o terceiro, então a confirmação é aceita (decisão da seção 12).
+- **T-57** Dado escala com prazo ontem, quando o voluntário tenta marcar disponibilidade, então é recusado.
+- **T-58** Dado escala com prazo vencido, quando o líder estende o prazo, então o voluntário volta a poder marcar.
+- **T-32** Dado turno com 2 vagas e 2 confirmados, quando o líder confirma o terceiro, então é recusado com "turno lotado"; depois que o líder aumenta as vagas para 3, a confirmação é aceita.
+- **T-59** Dado voluntário, quando consulta turnos da escala aberta, então a resposta da API não traz a quantidade de vagas nem quantos faltam.
 - **T-33** Dado confirmação com choque, então a pessoa recebe aviso "você ficou escalado em dois lugares".
 - **T-34** Dado confirmação, quando o líder tira a pessoa, então ela e suas funções saem do turno.
-- **T-35** Dado pessoa com 4 turnos confirmados e limite 3, quando o líder abre o turno, então aparece o alerta de carga.
+- **T-35** Dado pessoa com 4 turnos confirmados no mês e limite 3, quando o líder abre o turno desse mês, então aparece o alerta de carga.
+- **T-60** Dado pessoa com 4 turnos confirmados em meses diferentes (2 por mês) e limite 3, então não aparece alerta de carga.
+- **T-61** Dado pessoa inativa que marcou disponibilidade, quando o líder abre o turno, então ela não aparece em "Marcaram disponibilidade".
 
 ---
 
@@ -223,30 +232,32 @@ O protótipo troca de perfil por um botão, sem login (`Adm`, `Líder`, `Volunt�
 
 ---
 
-## 12. Decisões pendentes e inconsistências do protótipo
+## 12. Decisões tomadas (v1)
 
-Pontos que a v1 precisa resolver. Cada um está marcado como `D-xx`.
+Decididas em 30/10/2026. A única ainda aberta é a D-18.
 
-| # | Ponto | O protótipo faz | Proposta |
-|---|---|---|---|
-| D-01 | Turno cheio | Aceita confirmar acima das vagas | Bloquear, com opção de o líder aumentar as vagas |
-| D-02 | Prazo da escala | Só informa; marcação continua aberta depois dele | Bloquear marcação depois do prazo, líder pode estender |
-| D-03 | Prazo padrão em dias | Configurável, mas sem efeito | Usar para calcular o prazo ao criar a escala, ou remover |
-| D-04 | Limite de turnos | Texto diz "no mesmo mês", mas conta todos os confirmados | Contar por mês e só alertar |
-| D-05 | Rodízio de bandas por posto | Se houver 2 postos no mesmo horário, cada posto recebe uma banda diferente | O rodízio deve ser por horário (slot), não por turno |
-| D-06 | Aviso de choque ao publicar | O alerta diz "já estão escaladas em outro ministério", mas a condição (`escalaId` comparado com id do turno) é sempre verdadeira, então inclui também choques dentro do próprio ministério | Alertar choques com qualquer outro turno e dizer isso no texto |
-| D-07 | Exclusões em cascata | Ao excluir ministério ou posto, ficam órfãos: confirmações, disponibilidades, funções, trocas e bandas | Usar chaves estrangeiras com cascata explícita |
-| D-08 | Tirar da equipe | Remove os postos, mas não funções nem bandas do ministério | Remover também |
-| D-09 | Bandas e membro inativo | Pessoa inativa ainda aparece em "Marcaram disponibilidade" | Esconder inativos |
-| D-10 | Horário | Texto livre (`08h00`) | Tipo `time` no banco; aceitar `08h00` só na entrada |
-| D-11 | Datas e fuso | Datas sem fuso | Definir fuso por igreja e guardar data e hora locais |
-| D-12 | Edição depois de publicada | Só reabre, sem trilha de quem alterou | Registrar quem mudou o quê (auditoria) |
-| D-13 | Pedido de troca | Só aparece em "Minha escala", ou seja, para turno confirmado em escala `publicada`; nada valida isso no servidor | Manter a regra e validar na API |
-| D-14 | Concorrência | Dois líderes editando ao mesmo tempo | Controle por versão ou última alteração vence, com aviso |
-| D-15 | Aprovação de novo voluntário | Não existe | Pedido de entrada pendente que o líder aprova ou recusa; Google só vincula pelo e-mail verificado |
-| D-16 | Papéis e login | Não existem | Seção 2 + autenticação por e-mail e senha, e Google |
-| D-17 | Cultos de uma igreja | Valem para todos os ministérios | Manter, com `igreja_id` |
-| D-18 | Quantidade de cultos do Louvor | Planilha da líder tem Manhã e Noite; a grade tem 3 cultos no domingo | Confirmar com a líder quais cultos o Louvor serve |
+| # | Ponto | Protótipo | Decisão | Status |
+|---|---|---|---|---|
+| D-01 | Turno cheio | Aceita confirmar acima das vagas | Bloquear a confirmação acima das vagas. O líder pode aumentar as vagas até publicar. O voluntário não vê a quantidade de vagas (RN-64) | Decidido (leitura a confirmar) |
+| D-02 | Prazo da escala | Só informa; a marcação continua aberta depois dele | O líder define o prazo de cada escala. Depois dele a marcação é bloqueada; o líder pode estender | Decidido |
+| D-03 | Prazo padrão em dias | Configurável, mas sem efeito | O prazo sugerido ao criar a escala é o início do mês menos esse número de dias (padrão 5). O líder pode mudar | Decidido |
+| D-04 | Limite de turnos | Texto diz "no mesmo mês", mas conta todos os confirmados | Contar por mês; só alerta | Decidido |
+| D-05 | Rodízio de bandas com mais de um posto | Cada posto recebe uma banda diferente no mesmo horário | O rodízio avança por horário, não por turno (RN-31) | Decidido |
+| D-06 | Aviso de choque ao publicar | O texto diz "outro ministério", mas a condição também inclui o próprio ministério | Alertar choques com qualquer outro turno confirmado e dizer isso no texto | Decidido |
+| D-07 | Exclusões em cascata | Ficam órfãos: confirmações, disponibilidades, funções, trocas e bandas | Chaves estrangeiras com cascata explícita | Decidido |
+| D-08 | Tirar da equipe | Remove os postos, mas não funções nem bandas do ministério | Remover também funções e bandas (RN-11) | Decidido |
+| D-09 | Pessoa inativa em "Marcaram disponibilidade" | Aparece | Esconder inativos (RN-65) | Decidido |
+| D-10 | Horário | Texto livre (`08h00`) | Tipo `time` no banco; aceitar `08h00` só na entrada | Decidido |
+| D-11 | Datas e fuso | Datas sem fuso | Fuso por igreja; guardar data e hora locais | Decidido |
+| D-12 | Edição depois de publicada | Só reabre, sem trilha | Registrar quem mudou o quê (auditoria) | Decidido |
+| D-13 | Pedido de troca | Só aparece em "Minha escala" (turno confirmado em escala `publicada`); nada valida isso no servidor | Manter a regra e validar na API | Decidido |
+| D-14 | Concorrência | Dois líderes editando ao mesmo tempo, sem controle | Controle por versão: se o registro mudou, a API responde 409 e a tela avisa | Decidido |
+| D-15 | Aprovação de novo voluntário | Não existe | Pedido de entrada pendente que o líder aprova ou recusa; o Google só vincula pelo e-mail verificado | Decidido |
+| D-16 | Papéis e login | Não existem | Seção 2 + login por e-mail e senha, e Google | Decidido |
+| D-17 | Cultos de uma igreja | Valem para todos os ministérios | Manter, com `igreja_id` | Decidido |
+| D-18 | Quais cultos o Louvor serve | Planilha da líder tem Manhã e Noite; a grade tem 3 cultos no domingo | Confirmar com a líder | **Aberta** |
+
+- **T-63** Dado registro que outro líder já alterou depois que a tela foi aberta, quando o primeiro tenta salvar, então a API responde 409 e nenhuma alteração é gravada.
 
 ---
 
