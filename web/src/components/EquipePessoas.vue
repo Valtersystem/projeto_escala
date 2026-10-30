@@ -5,6 +5,7 @@ import ConviteDaPessoa from './ConviteDaPessoa.vue';
 import Folha from './Folha.vue';
 import { api } from '../api/cliente.js';
 import { useMensagens } from '../stores/mensagens.js';
+import { resumirNomes } from '../utils/listas.js';
 import { iniciaisDe } from '../utils/status.js';
 
 const props = defineProps({
@@ -17,6 +18,14 @@ const emit = defineEmits(['mudou']);
 
 const mensagens = useMensagens();
 const ocupado = ref(false);
+
+// Equipe grande ganha busca; com poucas pessoas ela só atrapalharia.
+const LIMITE_SEM_BUSCA = 8;
+const busca = ref('');
+const filtradas = computed(() => {
+  const termo = busca.value.trim().toLowerCase();
+  return termo ? props.pessoas.filter((p) => p.nome.toLowerCase().includes(termo)) : props.pessoas;
+});
 
 // --- uma pessoa ---
 const selecionadaId = ref(null);
@@ -47,7 +56,7 @@ async function executar(acao, sucesso) {
   }
 }
 
-const lista = (ids, todos) => todos.filter((t) => ids.includes(t.id)).map((t) => t.nome).join(' · ');
+const lista = (ids, todos) => resumirNomes(todos.filter((t) => ids.includes(t.id)).map((t) => t.nome));
 
 function alternarPosto(posto) {
   const atuais = selecionada.value.posto_ids;
@@ -126,8 +135,11 @@ async function incluir(pessoa) {
 <template>
   <div class="bloco">
     <div v-if="!pessoas.length" class="cartao pad vazio"><b>Equipe vazia</b><p>Cadastre a primeira pessoa e mande o convite para ela entrar.</p></div>
-    <div v-else class="cartao lista">
-      <button v-for="p in pessoas" :key="p.id" class="linha-pessoa" @click="abrir(p)">
+    <div v-if="pessoas.length > LIMITE_SEM_BUSCA" class="cartao"><div class="campo"><label for="busca-equipe">Buscar</label><input id="busca-equipe" v-model="busca" placeholder="Nome" /></div></div>
+    <p v-if="pessoas.length > LIMITE_SEM_BUSCA" class="contagem">{{ busca.trim() ? `${filtradas.length} de ${pessoas.length}` : pessoas.length }} pessoa(s)</p>
+    <div v-if="pessoas.length && !filtradas.length" class="cartao pad vazio"><b>Ninguém com esse nome</b></div>
+    <div v-else-if="pessoas.length" class="cartao lista">
+      <button v-for="p in filtradas" :key="p.id" class="linha-pessoa" @click="abrir(p)">
         <span class="inicial" :class="{ mudo: !p.ativo }">{{ iniciaisDe(p.nome) }}</span>
         <span class="texto">
           <strong>{{ p.nome }}</strong>

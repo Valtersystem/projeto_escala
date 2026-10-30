@@ -1,11 +1,12 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import Alerta from '../components/Alerta.vue';
 import ConviteDaPessoa from '../components/ConviteDaPessoa.vue';
 import Folha from '../components/Folha.vue';
 import { api } from '../api/cliente.js';
 import { useMensagens } from '../stores/mensagens.js';
 import { useSessao } from '../stores/sessao.js';
+import { resumirNomes, usePagina } from '../utils/listas.js';
 import { iniciaisDe } from '../utils/status.js';
 
 const mensagens = useMensagens();
@@ -20,8 +21,13 @@ const ocupado = ref(false);
 
 const filtradas = computed(() => {
   const termo = busca.value.trim().toLowerCase();
-  return termo ? pessoas.value.filter((p) => p.nome.toLowerCase().includes(termo)) : pessoas.value;
+  if (!termo) return pessoas.value;
+
+  return pessoas.value.filter((p) => p.nome.toLowerCase().includes(termo) || p.ministerios.some((m) => m.nome.toLowerCase().includes(termo)));
 });
+
+const { visiveis, restantes, mais, reiniciar } = usePagina(filtradas);
+watch(busca, reiniciar);
 
 async function carregar() {
   try {
@@ -136,21 +142,23 @@ onMounted(carregar);
     </Alerta>
     <p v-else-if="carregando" class="vazio">Carregando…</p>
     <template v-else>
-      <div class="cartao"><div class="campo"><label for="busca">Buscar</label><input id="busca" v-model="busca" placeholder="Nome" /></div></div>
+      <div class="cartao"><div class="campo"><label for="busca">Buscar</label><input id="busca" v-model="busca" placeholder="Nome ou ministério" /></div></div>
+      <p class="contagem">{{ busca.trim() ? `${filtradas.length} de ${pessoas.length}` : pessoas.length }} pessoa(s)</p>
 
       <div v-if="!filtradas.length" class="cartao pad vazio"><b>{{ busca ? 'Ninguém com esse nome' : 'Ninguém cadastrado' }}</b></div>
       <div v-else class="cartao lista">
-        <button v-for="p in filtradas" :key="p.id" class="linha-pessoa" @click="abrir(p)">
+        <button v-for="p in visiveis" :key="p.id" class="linha-pessoa" @click="abrir(p)">
           <span class="inicial" :class="{ mudo: !p.ativo }">{{ iniciaisDe(p.nome) }}</span>
           <span class="texto">
             <strong>{{ p.nome }}</strong>
-            <small>{{ p.ministerios.map((m) => m.nome).join(' · ') || 'Sem ministério' }}</small>
+            <small>{{ resumirNomes(p.ministerios.map((m) => m.nome), 2, 'Sem ministério') }}</small>
           </span>
           <span v-if="p.adm" class="pilula marca">Adm</span>
           <span v-else-if="!p.ativo" class="pilula mudo">Inativa</span>
           <span v-else-if="!p.tem_login" class="pilula atencao"><i />Sem acesso</span>
         </button>
       </div>
+      <button v-if="restantes" class="botao contorno largo" @click="mais">Mostrar mais ({{ restantes }} restantes)</button>
       <button class="botao suave largo" @click="abrirNova">Nova pessoa</button>
     </template>
 

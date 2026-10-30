@@ -79,7 +79,7 @@ onMounted(carregar);
       <p>{{ ministerio?.nome }} · quem serve{{ ligado('bandas') ? ', em quê e em qual banda' : ' e em quê' }}</p>
     </div>
 
-    <div class="segmentos" role="tablist">
+    <div class="segmentos rolavel" role="tablist">
       <button
         v-for="a in abas" :key="a.chave" role="tab" :aria-selected="aba === a.chave" @click="escolher(a.chave)"
       >{{ a.texto }}<template v-if="a.chave === 'pedidos' && pedidos.length"> ({{ pedidos.length }})</template></button>

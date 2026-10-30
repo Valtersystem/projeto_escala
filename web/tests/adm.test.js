@@ -447,3 +447,57 @@ describe('Adm: relatório geral', () => {
     expect(botao(tela, 'Tentar de novo')).toBeTruthy();
   });
 });
+
+describe('Adm: pessoas em volume', () => {
+  const MUITAS = Array.from({ length: 70 }, (_, i) => pessoa(100 + i, `Pessoa ${String(i).padStart(2, '0')}`, {
+    ministerios: i === 5 ? ['Louvor', 'Mídia', 'Kids', 'Jovens', 'Casais'].map((nome, j) => ({ id: j + 1, nome })) : [{ id: 1, nome: i % 2 ? 'Louvor' : 'Mídia' }],
+  }));
+  const abrirMuitas = () => abrir(AdmPessoas, { 'GET /pessoas': { corpo: { pessoas: MUITAS } } });
+
+  it('mostra 30, conta o total e libera o resto de 30 em 30', async () => {
+    const { tela } = await abrirMuitas();
+
+    expect(tela.findAll('.linha-pessoa')).toHaveLength(30);
+    expect(tela.find('.contagem').text()).toBe('70 pessoa(s)');
+    expect(botao(tela, 'Mostrar mais (40 restantes)')).toBeTruthy();
+
+    await botao(tela, 'Mostrar mais (40 restantes)').trigger('click');
+    expect(tela.findAll('.linha-pessoa')).toHaveLength(60);
+
+    await botao(tela, 'Mostrar mais (10 restantes)').trigger('click');
+    expect(tela.findAll('.linha-pessoa')).toHaveLength(70);
+    expect(tela.text()).not.toContain('Mostrar mais');
+  });
+
+  it('resume os ministérios: dois nomes e quantos mais', async () => {
+    const { tela } = await abrirMuitas();
+
+    expect(tela.findAll('.linha-pessoa')[5].text()).toContain('Louvor · Mídia · +3');
+    expect(tela.findAll('.linha-pessoa')[5].text()).not.toContain('Casais');
+  });
+
+  it('a busca acha pelo nome ou pelo ministério, mostra "x de y" e volta ao primeiro bloco', async () => {
+    const { tela } = await abrirMuitas();
+    await botao(tela, 'Mostrar mais (40 restantes)').trigger('click');
+
+    await tela.find('#busca').setValue('pessoa 07');
+    expect(tela.findAll('.linha-pessoa')).toHaveLength(1);
+    expect(tela.find('.contagem').text()).toBe('1 de 70 pessoa(s)');
+
+    await tela.find('#busca').setValue('casais'); // só a de número 05 está em Casais
+    expect(tela.findAll('.linha-pessoa')).toHaveLength(1);
+    expect(tela.findAll('.linha-pessoa')[0].text()).toContain('Pessoa 05');
+
+    await tela.find('#busca').setValue('');
+    expect(tela.findAll('.linha-pessoa')).toHaveLength(30); // não ficou com 60 abertas
+  });
+
+  it('sem resultado, avisa', async () => {
+    const { tela } = await abrirMuitas();
+
+    await tela.find('#busca').setValue('zzz');
+
+    expect(tela.text()).toContain('Ninguém com esse nome');
+    expect(tela.text()).not.toContain('Mostrar mais');
+  });
+});

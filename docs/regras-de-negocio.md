@@ -563,6 +563,13 @@ O protótipo troca de perfil por um botão, sem login (`Adm`, `Líder`, `Volunt�
 - **T-243** Dado o interruptor, então ligar e desligar manda a lista de ativos, avisa ("Nada foi apagado" ao desligar), recarrega as abas e mostra o erro da API se falhar.
 - **T-244** Dado o módulo desligado, quando se abre `?aba=bandas`, então cai em Pessoas; e o subtítulo da equipe só fala em banda com o módulo ligado.
 
+**RN-136** Listas longas no app não viram rolagens enormes. Em **Adm › Pessoas**: a lista mostra 30 pessoas e um "Mostrar mais (N restantes)" libera de 30 em 30; há contagem ("120 pessoa(s)", ou "3 de 120" ao buscar); a busca acha pelo nome **ou pelo ministério** e volta ao primeiro bloco; os ministérios de cada pessoa aparecem resumidos ("Louvor · Mídia · +3"). Na **equipe do líder**, com mais de 8 pessoas aparecem a busca por nome e a contagem, e os postos de cada um também vêm resumidos. As abas da equipe não quebram linha: rolam de lado quando não cabem.
+
+- **T-245** Dado resumo de nomes, então mostra os dois primeiros e quantos ficaram de fora; lista vazia mostra o texto indicado.
+- **T-246** Dada uma lista longa, então mostra o primeiro bloco, conta o que falta, libera de 30 em 30 e volta ao começo ao reiniciar.
+- **T-247** Dado o Adm com 70 pessoas, então vê 30, a contagem total e o "Mostrar mais"; a busca por nome ou ministério mostra "x de y" e não deixa blocos abertos de antes.
+- **T-248** Dada equipe com 8 pessoas ou menos, então não há busca; com mais de 8, há contagem e filtro por nome, com aviso quando ninguém bate.
+
 ### No app (v1)
 
 O app cobre todas as regras acima: link público `/entrar/<código>` com o formulário do voluntário; aba **Pedidos** na equipe do líder (com a quantidade e o link para divulgar, copiar ou mandar no WhatsApp); aba **Relatório** do Adm com o histórico de alterações; botão "Histórico de alterações" no relatório do líder; telas "Esqueceu a senha?" e "Nova senha"; e o botão "Continuar com o Google" na tela de login, que só aparece com `VITE_GOOGLE_CLIENT_ID`.

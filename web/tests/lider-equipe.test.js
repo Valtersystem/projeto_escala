@@ -507,3 +507,40 @@ describe('equipe do líder: módulos', () => {
     expect(desligado.tela.find('.saudacao').text()).not.toContain('banda');
   });
 });
+
+describe('equipe do líder: equipe grande', () => {
+  const GRANDE = Array.from({ length: 12 }, (_, i) => pessoa(20 + i, `Voluntário ${String.fromCharCode(65 + i)}`));
+  const abrirGrande = (n) => abrir({ 'GET /pessoas?ministerio_id=1': { corpo: { pessoas: GRANDE.slice(0, n) } } });
+
+  it('com 8 pessoas ou menos não tem busca nem contagem', async () => {
+    const { tela } = await abrirGrande(8);
+
+    expect(tela.find('#busca-equipe').exists()).toBe(false);
+    expect(tela.find('.contagem').exists()).toBe(false);
+  });
+
+  it('com mais de 8, mostra a contagem e filtra pelo nome', async () => {
+    const { tela } = await abrirGrande(12);
+
+    expect(tela.find('.contagem').text()).toBe('12 pessoa(s)');
+    expect(tela.findAll('.linha-pessoa')).toHaveLength(12);
+
+    await tela.find('#busca-equipe').setValue('voluntário c');
+    expect(tela.findAll('.linha-pessoa')).toHaveLength(1);
+    expect(tela.find('.contagem').text()).toBe('1 de 12 pessoa(s)');
+
+    await tela.find('#busca-equipe').setValue('nada');
+    expect(tela.text()).toContain('Ninguém com esse nome');
+    expect(tela.find('.linha-pessoa').exists()).toBe(false);
+  });
+
+  it('resume os postos da pessoa', async () => {
+    const postos = [1, 2, 3, 4].map((id) => ({ id, nome: `Posto ${id}`, descricao: null, vagas: 1 }));
+    const { tela } = await abrir({
+      'GET /ministerios/1/postos': { corpo: { postos } },
+      'GET /pessoas?ministerio_id=1': { corpo: { pessoas: [pessoa(7, 'Helena Costa', { posto_ids: [1, 2, 3, 4] })] } },
+    });
+
+    expect(tela.find('.linha-pessoa').text()).toContain('Posto 1 · Posto 2 · +2');
+  });
+});

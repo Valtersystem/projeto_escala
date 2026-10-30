@@ -60,7 +60,7 @@ Para ter dados prontos, na pasta `api`: `php artisan migrate:fresh && php artisa
 ## Testes e build
 
 ```bash
-npm test                 # 231 testes (Vitest)
+npm test                 # 244 testes (Vitest)
 npm run build            # gera dist/ com o service worker do PWA
 npm run icones           # refaz os PNGs do app a partir de public/icone.svg
 ```
