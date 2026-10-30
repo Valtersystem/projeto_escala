@@ -17,4 +17,14 @@ docker compose -f docker-compose.production.yml pull
 docker compose -f docker-compose.production.yml up -d --no-build --remove-orphans
 docker compose -f docker-compose.production.yml exec -T app php artisan migrate --force --no-interaction
 docker compose -f docker-compose.production.yml exec -T app php artisan optimize --no-interaction
-docker compose -f docker-compose.production.yml exec -T web wget -q -O /dev/null http://localhost/up
+
+for attempt in $(seq 1 20); do
+    if docker compose -f docker-compose.production.yml exec -T web wget -q -O /dev/null http://127.0.0.1/up; then
+        exit 0
+    fi
+
+    sleep 1
+done
+
+echo 'A aplicação não respondeu ao health check.' >&2
+exit 1
