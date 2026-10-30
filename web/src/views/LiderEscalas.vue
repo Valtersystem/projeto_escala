@@ -6,7 +6,8 @@ import Folha from '../components/Folha.vue';
 import { api } from '../api/cliente.js';
 import { useMensagens } from '../stores/mensagens.js';
 import { useModo } from '../stores/modo.js';
-import { dataCurta, mesPorExtenso } from '../utils/datas.js';
+import { dataCurta, hojeIso, mesDe, mesPorExtenso } from '../utils/datas.js';
+import { usePagina } from '../utils/listas.js';
 import { proximosMeses, statusDaEscala } from '../utils/status.js';
 
 const modo = useModo();
@@ -21,6 +22,29 @@ const abrindo = ref(false);
 const mes = ref('');
 const prazo = ref('');
 const enviando = ref(false);
+
+// Em dia: do mês atual em diante e tudo que ainda não foi publicado. O resto é histórico, atrás de um botão.
+const mesAtual = mesDe(hojeIso());
+const emDia = computed(() => escalas.value.filter((e) => e.mes >= mesAtual || e.status !== 'publicada'));
+const anteriores = computed(() => escalas.value.filter((e) => e.mes < mesAtual && e.status === 'publicada'));
+const verAnteriores = ref(false);
+const { visiveis: anterioresVisiveis, restantes, mais } = usePagina(anteriores, 12);
+
+// Uma lista só: as escalas em dia e, abertas as anteriores, um título por ano antes de cada grupo.
+const linhas = computed(() => {
+  const saida = emDia.value.map((escala) => ({ chave: `e${escala.id}`, escala }));
+  if (!verAnteriores.value) return saida;
+
+  let ano = null;
+  for (const escala of anterioresVisiveis.value) {
+    if (escala.mes.slice(0, 4) !== ano) {
+      ano = escala.mes.slice(0, 4);
+      saida.push({ chave: `a${ano}`, ano });
+    }
+    saida.push({ chave: `e${escala.id}`, escala });
+  }
+  return saida;
+});
 
 const mesesLivres = computed(() => proximosMeses().filter((m) => !escalas.value.some((e) => e.mes === m)));
 
@@ -94,16 +118,21 @@ onMounted(carregar);
         <p>Abra a escala de um mês, monte os turnos e libere para a equipe marcar a disponibilidade.</p>
       </div>
 
-      <RouterLink
-        v-for="escala in escalas" :key="escala.id" class="cartao pad escala"
-        :to="{ name: 'lider-escala', params: { escalaId: escala.id } }"
-      >
-        <div class="linha">
-          <strong>{{ mesPorExtenso(escala.mes) }}</strong>
-          <span class="pilula" :class="statusDaEscala(escala.status).tipo"><i />{{ statusDaEscala(escala.status).texto }}</span>
-        </div>
-        <p>{{ escala.total_de_turnos }} turno(s)<template v-if="escala.prazo && escala.status === 'aberta'"> · responder até {{ dataCurta(escala.prazo) }}</template></p>
-      </RouterLink>
+      <template v-for="linha in linhas" :key="linha.chave">
+        <div v-if="linha.ano" class="rotulo"><span>{{ linha.ano }}</span></div>
+        <RouterLink v-else class="cartao pad escala" :to="{ name: 'lider-escala', params: { escalaId: linha.escala.id } }">
+          <div class="linha">
+            <strong>{{ mesPorExtenso(linha.escala.mes) }}</strong>
+            <span class="pilula" :class="statusDaEscala(linha.escala.status).tipo"><i />{{ statusDaEscala(linha.escala.status).texto }}</span>
+          </div>
+          <p>{{ linha.escala.total_de_turnos }} turno(s)<template v-if="linha.escala.prazo && linha.escala.status === 'aberta'"> · responder até {{ dataCurta(linha.escala.prazo) }}</template></p>
+        </RouterLink>
+      </template>
+
+      <button v-if="verAnteriores && restantes" class="botao contorno largo" @click="mais">Mostrar mais ({{ restantes }} restantes)</button>
+      <button v-if="anteriores.length" class="botao suave largo" @click="verAnteriores = !verAnteriores">
+        {{ verAnteriores ? 'Esconder escalas anteriores' : `Ver escalas anteriores (${anteriores.length})` }}
+      </button>
 
       <button class="botao suave largo" :disabled="!mesesLivres.length" @click="abrirFolha">Abrir escala de um mês</button>
     </template>

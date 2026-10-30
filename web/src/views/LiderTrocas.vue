@@ -7,6 +7,7 @@ import { useMensagens } from '../stores/mensagens.js';
 import { useModo } from '../stores/modo.js';
 import { dataCurta, diaDaSemana } from '../utils/datas.js';
 import { descreverConflito } from '../utils/descricoes.js';
+import { usePagina } from '../utils/listas.js';
 import { iniciaisDe } from '../utils/status.js';
 
 const modo = useModo();
@@ -19,6 +20,8 @@ const ocupado = ref(false);
 
 const alvo = ref(null); // pedido que está sendo resolvido
 const candidatos = ref([]);
+const { visiveis: trocasVisiveis, restantes: trocasRestantes, mais: maisTrocas } = usePagina(trocas, 10);
+const { visiveis: candidatosVisiveis, restantes: candidatosRestantes, mais: maisCandidatos, reiniciar: reiniciarCandidatos } = usePagina(candidatos, 15);
 const carregandoCandidatos = ref(false);
 
 const primeiro = (nome) => nome.split(' ')[0];
@@ -41,6 +44,7 @@ async function carregar() {
 async function resolver(troca) {
   alvo.value = troca;
   candidatos.value = [];
+  reiniciarCandidatos();
   carregandoCandidatos.value = true;
 
   try {
@@ -96,7 +100,7 @@ onMounted(carregar);
       <p>Quando alguém não puder servir num turno, o pedido cai aqui.</p>
     </div>
 
-    <article v-for="troca in trocas" :key="troca.id" class="cartao pad troca">
+    <article v-for="troca in trocasVisiveis" :key="troca.id" class="cartao pad troca">
       <div class="linha">
         <span class="pilula critico"><i />Substituição</span>
         <span class="quando">{{ diaDaSemana(troca.turno.data) }}, {{ dataCurta(troca.turno.data) }}</span>
@@ -115,6 +119,7 @@ onMounted(carregar);
         <button class="botao primario" :disabled="ocupado" @click="resolver(troca)">Resolver</button>
       </div>
     </article>
+    <button v-if="trocasRestantes" class="botao contorno largo" @click="maisTrocas">Mostrar mais ({{ trocasRestantes }} restantes)</button>
 
     <Folha
       :aberta="!!alvo" titulo="Resolver substituição"
@@ -125,7 +130,7 @@ onMounted(carregar);
         <p v-if="carregandoCandidatos" class="vazio">Carregando…</p>
         <div v-else-if="!candidatos.length" class="vazio"><b>Ninguém disponível</b>Nenhuma outra pessoa do posto está livre. Você pode deixar a vaga em aberto.</div>
         <div v-else class="cartao lista">
-          <div v-for="c in candidatos" :key="c.pessoa_id" class="candidato">
+          <div v-for="c in candidatosVisiveis" :key="c.pessoa_id" class="candidato">
             <div class="linha">
               <span class="inicial" :class="{ mudo: c.choques.length }">{{ iniciaisDe(c.nome) }}</span>
               <span class="texto">
@@ -139,6 +144,7 @@ onMounted(carregar);
             <p v-if="c.choques.length" class="choque">⚠ já escalado em {{ descreverConflito(c.choques[0]) }}</p>
           </div>
         </div>
+        <button v-if="candidatosRestantes" class="botao contorno largo" @click="maisCandidatos">Mostrar mais ({{ candidatosRestantes }} restantes)</button>
       </div>
       <template #rodape><button class="botao contorno largo" :disabled="ocupado" @click="vagaEmAberto">Deixar a vaga em aberto</button></template>
     </Folha>

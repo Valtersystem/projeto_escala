@@ -6,6 +6,7 @@ import HistoricoLista from '../components/HistoricoLista.vue';
 import { api } from '../api/cliente.js';
 import { useModo } from '../stores/modo.js';
 import { diaDaSemana, diaDoMes, mesPorExtenso } from '../utils/datas.js';
+import { usePagina } from '../utils/listas.js';
 
 const modo = useModo();
 
@@ -16,6 +17,7 @@ const meses = ref([]);
 const mes = ref('');
 const historicoAberto = ref(false);
 
+const { visiveis: pessoasVisiveis, restantes: pessoasRestantes, mais: maisPessoas, reiniciar: reiniciarPessoas } = usePagina(computed(() => relatorio.value?.turnos_por_pessoa ?? []), 10);
 const maximo = computed(() => Math.max(1, ...(relatorio.value?.turnos_por_pessoa ?? []).map((p) => p.turnos)));
 const vazio = computed(() => !relatorio.value?.total_de_turnos);
 
@@ -42,6 +44,7 @@ async function carregar() {
 }
 
 watch(() => [modo.ministerio?.id, mes.value], carregar);
+watch(mes, reiniciarPessoas);
 onMounted(carregar);
 </script>
 
@@ -83,13 +86,14 @@ onMounted(carregar);
 
       <div class="rotulo"><span>Turnos por pessoa</span></div>
       <div class="cartao pad barras">
-        <div v-for="p in relatorio.turnos_por_pessoa" :key="p.pessoa_id" class="barra">
+        <div v-for="p in pessoasVisiveis" :key="p.pessoa_id" class="barra">
           <span class="nome">{{ p.nome.split(' ')[0] }}</span>
           <span class="trilho"><i :class="{ acima: p.acima_do_limite }" :style="{ width: `${(p.turnos / maximo) * 100}%` }" /></span>
           <span class="valor">{{ p.turnos }}</span>
         </div>
         <p v-if="relatorio.turnos_por_pessoa.some((p) => p.acima_do_limite)" class="nota">Em laranja: acima do limite de turnos por mês.</p>
       </div>
+      <button v-if="pessoasRestantes" class="botao contorno largo" @click="maisPessoas">Mostrar mais ({{ pessoasRestantes }} restantes)</button>
 
       <template v-if="relatorio.onde_aperta.length">
         <div class="rotulo"><span>Onde aperta</span></div>

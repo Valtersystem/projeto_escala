@@ -544,3 +544,30 @@ describe('equipe do líder: equipe grande', () => {
     expect(tela.find('.linha-pessoa').text()).toContain('Posto 1 · Posto 2 · +2');
   });
 });
+
+describe('equipe do líder: 50 voluntários', () => {
+  const CINQUENTA = Array.from({ length: 50 }, (_, i) => pessoa(100 + i, `Voluntário ${String(i).padStart(2, '0')}`));
+  const abrirCinquenta = () => abrir({ 'GET /pessoas?ministerio_id=1': { corpo: { pessoas: CINQUENTA } } });
+
+  it('mostra 30, conta os 50 e libera o resto', async () => {
+    const { tela } = await abrirCinquenta();
+
+    expect(tela.findAll('.linha-pessoa')).toHaveLength(30);
+    expect(tela.find('.contagem').text()).toBe('50 pessoa(s)');
+
+    await botao(tela, 'Mostrar mais (20 restantes)').trigger('click');
+    expect(tela.findAll('.linha-pessoa')).toHaveLength(50);
+    expect(tela.text()).not.toContain('Mostrar mais');
+  });
+
+  it('a busca olha as 50, não só as 30 da tela, e ao limpar volta a 30', async () => {
+    const { tela } = await abrirCinquenta();
+    await botao(tela, 'Mostrar mais (20 restantes)').trigger('click');
+
+    await tela.find('#busca-equipe').setValue('voluntário 4');
+    expect(tela.findAll('.linha-pessoa')).toHaveLength(10); // 40 a 49
+
+    await tela.find('#busca-equipe').setValue('');
+    expect(tela.findAll('.linha-pessoa')).toHaveLength(30);
+  });
+});

@@ -570,6 +570,21 @@ O protótipo troca de perfil por um botão, sem login (`Adm`, `Líder`, `Volunt�
 - **T-247** Dado o Adm com 70 pessoas, então vê 30, a contagem total e o "Mostrar mais"; a busca por nome ou ministério mostra "x de y" e não deixa blocos abertos de antes.
 - **T-248** Dada equipe com 8 pessoas ou menos, então não há busca; com mais de 8, há contagem e filtro por nome, com aviso quando ninguém bate.
 
+**RN-137** A área do líder aguenta ministério grande e anos de histórico, sempre sem apagar nada:
+- **Escalas:** abre só com o que está em dia (do mês atual em diante e qualquer escala ainda não publicada, para ninguém esquecer um rascunho). As escalas publicadas de meses passados ficam atrás de "Ver escalas anteriores (N)", separadas por ano e de 12 em 12.
+- **Equipe:** 30 pessoas por vez ("Mostrar mais"), com a busca olhando a equipe inteira.
+- **Escala do mês:** com mais de 12 turnos e a escala já liberada, aparece o filtro "Todos / Faltam pessoas" (turnos com menos confirmados que vagas); os turnos vêm agrupados por dia, 30 por vez.
+- **Relatório:** as 10 primeiras barras de "turnos por pessoa" e "Mostrar mais"; trocar o mês volta às 10.
+- **Trocas:** 10 pedidos por vez; "quem pode entrar" mostra 15 candidatos por vez e recomeça a cada pedido.
+
+- **T-249** Dadas escalas de 2 anos, então só aparecem as em dia (mês atual em diante e as não publicadas); a publicada do mês atual continua à vista.
+- **T-250** Dado "Ver escalas anteriores (N)", então abre por ano, 12 por vez, e dá para esconder de novo.
+- **T-251** Dada equipe de 50, então mostra 30 com contagem e libera o resto; a busca olha as 50 e, ao limpar, volta a 30.
+- **T-252** Dada escala com 40 turnos, então agrupa por dia, mostra 30 e libera o resto.
+- **T-253** Dado o filtro "Faltam pessoas", então mostra só turnos com vaga em aberto, avisa quando não há nenhum e volta ao primeiro bloco ao trocar de filtro; escala pequena ou em rascunho não tem filtro.
+- **T-254** Dado o relatório de 50 pessoas, então mostra 10 barras (relativas ao maior de todos), libera o resto e volta às 10 ao trocar o mês.
+- **T-255** Dados 23 pedidos de troca, então mostra 10 por vez; os candidatos vêm 15 por vez e recomeçam a cada pedido.
+
 ### No app (v1)
 
 O app cobre todas as regras acima: link público `/entrar/<código>` com o formulário do voluntário; aba **Pedidos** na equipe do líder (com a quantidade e o link para divulgar, copiar ou mandar no WhatsApp); aba **Relatório** do Adm com o histórico de alterações; botão "Histórico de alterações" no relatório do líder; telas "Esqueceu a senha?" e "Nova senha"; e o botão "Continuar com o Google" na tela de login, que só aparece com `VITE_GOOGLE_CLIENT_ID`.

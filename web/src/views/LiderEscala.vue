@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { RouterLink } from 'vue-router';
 import Alerta from '../components/Alerta.vue';
 import Folha from '../components/Folha.vue';
@@ -9,8 +9,9 @@ import Icone from '../components/Icone.vue';
 import TurnoFolha from '../components/TurnoFolha.vue';
 import { api } from '../api/cliente.js';
 import { useMensagens } from '../stores/mensagens.js';
-import { dataCurta, diaDaSemana, diaDoMes, mesPorExtenso } from '../utils/datas.js';
+import { dataCurta, diaDaSemana, mesPorExtenso } from '../utils/datas.js';
 import { descreverConflito } from '../utils/descricoes.js';
+import { usePagina } from '../utils/listas.js';
 import { iniciaisDe, statusDaEscala } from '../utils/status.js';
 
 const props = defineProps({ escalaId: { type: String, required: true } });
@@ -28,6 +29,23 @@ const status = computed(() => statusDaEscala(escala.value?.status));
 
 const vagas = computed(() => turnos.value.reduce((soma, t) => soma + t.vagas, 0));
 const preenchidas = computed(() => turnos.value.reduce((soma, t) => soma + Math.min(t.confirmados_total, t.vagas), 0));
+
+// Escala grande: filtro "Faltam pessoas", turnos agrupados por dia e em blocos (RN-136).
+const TURNOS_SEM_FILTRO = 12;
+const filtro = ref('todos'); // 'todos' | 'faltam'
+const faltam = computed(() => turnos.value.filter((t) => t.confirmados_total < t.vagas));
+const filtrados = computed(() => (filtro.value === 'faltam' ? faltam.value : turnos.value));
+const { visiveis, restantes, mais, reiniciar } = usePagina(filtrados);
+watch(filtro, reiniciar);
+
+const porDia = computed(() => {
+  const grupos = [];
+  for (const turno of visiveis.value) {
+    if (grupos.at(-1)?.data !== turno.data) grupos.push({ data: turno.data, turnos: [] });
+    grupos.at(-1).turnos.push(turno);
+  }
+  return grupos;
+});
 
 // Sheets
 const gerando = ref(false);
@@ -144,21 +162,34 @@ onMounted(carregar);
         <p>Gere os turnos a partir da grade de cultos, ou crie um turno avulso.</p>
       </div>
 
-      <div v-else class="cartao lista">
-        <button v-for="turno in turnos" :key="turno.id" class="turno" @click="tocar(turno)">
-          <div class="data"><span>{{ diaDaSemana(turno.data) }}</span><b>{{ diaDoMes(turno.data) }}</b></div>
-          <div class="principal">
-            <strong>{{ turno.culto || turno.posto?.nome }}</strong>
-            <small>{{ turno.inicio }} às {{ turno.fim }} · {{ turno.posto?.nome }}<template v-if="turno.banda"> · {{ turno.banda.nome }}</template></small>
-            <small v-if="escala.status === 'rascunho'">{{ turno.vagas }} vaga(s)</small>
-            <small v-else>{{ turno.marcaram_total }} marcaram · {{ turno.confirmados_total }} de {{ turno.vagas }} confirmados</small>
+      <template v-else>
+        <div v-if="escala.status !== 'rascunho' && turnos.length > TURNOS_SEM_FILTRO" class="segmentos" role="tablist">
+          <button role="tab" :aria-selected="filtro === 'todos'" @click="filtro = 'todos'">Todos ({{ turnos.length }})</button>
+          <button role="tab" :aria-selected="filtro === 'faltam'" @click="filtro = 'faltam'">Faltam pessoas ({{ faltam.length }})</button>
+        </div>
+
+        <div v-if="!filtrados.length" class="cartao pad vazio"><b>Nenhum turno com vaga em aberto</b><p>Todas as vagas têm alguém confirmado.</p></div>
+
+        <template v-for="grupo in porDia" :key="grupo.data">
+          <div class="rotulo dia-titulo"><span>{{ diaDaSemana(grupo.data) }}, {{ dataCurta(grupo.data) }}</span></div>
+          <div class="cartao lista">
+            <button v-for="turno in grupo.turnos" :key="turno.id" class="turno" @click="tocar(turno)">
+              <div class="principal">
+                <strong>{{ turno.culto || turno.posto?.nome }}</strong>
+                <small>{{ turno.inicio }} às {{ turno.fim }} · {{ turno.posto?.nome }}<template v-if="turno.banda"> · {{ turno.banda.nome }}</template></small>
+                <small v-if="escala.status === 'rascunho'">{{ turno.vagas }} vaga(s)</small>
+                <small v-else>{{ turno.marcaram_total }} marcaram · {{ turno.confirmados_total }} de {{ turno.vagas }} confirmados</small>
+              </div>
+              <div v-if="turno.confirmados.length" class="pilha">
+                <span v-for="c in turno.confirmados.slice(0, 3)" :key="c.pessoa_id" class="inicial pequena" :class="{ mudo: c.sem_funcao }" :title="c.nome">{{ iniciaisDe(c.nome) }}</span>
+              </div>
+              <span v-if="escala.status !== 'rascunho' && !turno.marcaram_total && !turno.confirmados_total" class="pilula critico"><i />Vazio</span>
+            </button>
           </div>
-          <div v-if="turno.confirmados.length" class="pilha">
-            <span v-for="c in turno.confirmados.slice(0, 3)" :key="c.pessoa_id" class="inicial pequena" :class="{ mudo: c.sem_funcao }" :title="c.nome">{{ iniciaisDe(c.nome) }}</span>
-          </div>
-          <span v-if="escala.status !== 'rascunho' && !turno.marcaram_total && !turno.confirmados_total" class="pilula critico"><i />Vazio</span>
-        </button>
-      </div>
+        </template>
+
+        <button v-if="restantes" class="botao contorno largo" @click="mais">Mostrar mais ({{ restantes }} restantes)</button>
+      </template>
 
       <div class="acao-principal">
         <button v-if="escala.status === 'rascunho'" class="botao primario largo" :disabled="ocupado || !turnos.length" @click="liberar">Liberar para a equipe</button>
@@ -212,9 +243,6 @@ onMounted(carregar);
 .link { color: var(--brand); font-weight: 600; font-size: 13px; }
 .botoes { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
 .turno { display: flex; align-items: center; gap: 12px; padding: 12px 14px; width: 100%; }
-.data { width: 44px; text-align: center; font-family: var(--mono); flex: none; }
-.data span { display: block; font-size: 9.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-3); }
-.data b { display: block; font-size: 18px; font-weight: 600; }
 .principal { flex: 1; min-width: 0; }
 .principal strong { display: block; font-size: 14.5px; font-weight: 600; }
 .principal small { display: block; color: var(--ink-3); font-size: 12.5px; margin-top: 1px; }

@@ -30,15 +30,20 @@ describe('lista de escalas do líder', () => {
   it('mostra cada mês com o estado, os turnos e o prazo (só da que está recolhendo)', async () => {
     baseApi();
     const { tela } = await montarTela(LiderEscalas, { entrada: '/lider', pessoa: LIDER, modo: 'lider' });
-    const cartoes = tela.findAll('a.escala');
+    let cartoes = tela.findAll('a.escala');
 
-    expect(cartoes).toHaveLength(2);
+    expect(cartoes).toHaveLength(1); // outubro já passou e está publicada: fica em "anteriores"
     expect(cartoes[0].text()).toContain('novembro de 2026');
     expect(cartoes[0].text()).toContain('Recolhendo');
     expect(cartoes[0].text()).toContain('responder até 13 de novembro');
+    expect(cartoes[0].attributes('href')).toBe('/lider/escalas/5');
+
+    await botao(tela, 'Ver escalas anteriores (1)').trigger('click');
+    cartoes = tela.findAll('a.escala');
+
+    expect(cartoes).toHaveLength(2);
     expect(cartoes[1].text()).toContain('Publicada');
     expect(cartoes[1].text()).not.toContain('responder até');
-    expect(cartoes[0].attributes('href')).toBe('/lider/escalas/5');
   });
 
   it('avisa quando há pedidos de substituição esperando', async () => {
@@ -379,5 +384,159 @@ describe('turno avulso e edição', () => {
 
     expect(fetch.chamadas.some((c) => c.metodo === 'DELETE' && c.caminho === '/turnos/10')).toBe(true);
     expect(useMensagens().texto).toBe('Turno excluído.');
+  });
+});
+
+describe('escalas do líder: anos de histórico', () => {
+  const mes = (ano, m) => `${ano}-${String(m).padStart(2, '0')}`;
+
+  // 30 meses publicados (de 2026-10 para trás, sem 2026-08) + rascunho de agosto, que ninguém publicou, + novembro e dezembro.
+  const publicadas = [];
+  for (let k = 0, ano = 2026, m = 10; publicadas.length < 30; k++, m--) {
+    if (m === 0) { ano--; m = 12; }
+    if (ano === 2026 && m === 8) continue;
+    publicadas.push(escala({ id: 100 + k, mes: mes(ano, m), status: 'publicada', total_de_turnos: 8 }));
+  }
+  const ESCALAS = [
+    escala({ id: 3, mes: '2026-12', status: 'rascunho' }),
+    escala({ id: 2, mes: '2026-11', status: 'aberta' }),
+    escala({ id: 4, mes: '2026-08', status: 'rascunho' }),
+    ...publicadas,
+  ];
+
+  const abrir = async (escalas = ESCALAS) => {
+    simularApi({
+      'GET /ministerios/1/trocas': { corpo: { total_abertas: 0, trocas: [] } },
+      'GET /ministerios/1/escalas': { corpo: { escalas } },
+    });
+    return montarTela(LiderEscalas, { entrada: '/lider', pessoa: LIDER, modo: 'lider' });
+  };
+
+  it('abre só com o que está em dia: mês atual em diante e o que ainda não foi publicado', async () => {
+    const { tela } = await abrir();
+
+    expect(tela.findAll('a.escala').map((c) => c.text().split('\n')[0].trim())).toHaveLength(3);
+    expect(tela.text()).toContain('dezembro de 2026');
+    expect(tela.text()).toContain('novembro de 2026');
+    expect(tela.text()).toContain('agosto de 2026'); // rascunho esquecido continua à vista
+    expect(tela.text()).not.toContain('outubro de 2026');
+    expect(botao(tela, 'Ver escalas anteriores (30)')).toBeTruthy();
+  });
+
+  it('as anteriores vêm por ano, 12 de cada vez, e dá para esconder de novo', async () => {
+    const { tela } = await abrir();
+
+    await botao(tela, 'Ver escalas anteriores (30)').trigger('click');
+    expect(tela.findAll('a.escala')).toHaveLength(15);
+    expect(tela.findAll('.rotulo').map((r) => r.text())).toEqual(['2026', '2025']);
+    expect(tela.text()).toContain('outubro de 2026');
+    expect(botao(tela, 'Mostrar mais (18 restantes)')).toBeTruthy();
+
+    await botao(tela, 'Mostrar mais (18 restantes)').trigger('click');
+    expect(tela.findAll('a.escala')).toHaveLength(27);
+    expect(tela.findAll('.rotulo').map((r) => r.text())).toEqual(['2026', '2025', '2024']);
+
+    await botao(tela, 'Mostrar mais (6 restantes)').trigger('click');
+    expect(tela.findAll('a.escala')).toHaveLength(33);
+    expect(tela.text()).not.toContain('Mostrar mais');
+
+    await botao(tela, 'Esconder escalas anteriores').trigger('click');
+    expect(tela.findAll('a.escala')).toHaveLength(3);
+    expect(tela.findAll('.rotulo')).toHaveLength(0);
+  });
+
+  it('a escala publicada do mês atual ainda é do mês: só o passado vai para anteriores', async () => {
+    const { tela } = await abrir([escala({ id: 2, mes: '2026-11', status: 'publicada' }), escala({ id: 1, mes: '2026-10', status: 'publicada' })]);
+
+    expect(tela.findAll('a.escala')).toHaveLength(1);
+    expect(tela.text()).toContain('novembro de 2026');
+    expect(botao(tela, 'Ver escalas anteriores (1)')).toBeTruthy();
+  });
+
+  it('sem escalas anteriores, não aparece o botão; e o mês livre continua considerando todas', async () => {
+    const { tela } = await abrir([escala({ id: 2, mes: '2026-11', status: 'aberta' })]);
+
+    expect(tela.text()).not.toContain('escalas anteriores');
+    expect(tela.findAll('a.escala')).toHaveLength(1);
+  });
+
+  it('o seletor de "novo mês" não oferece mês que já tem escala antiga', async () => {
+    const { tela } = await abrir([escala({ id: 2, mes: '2026-11', status: 'aberta' }), escala({ id: 1, mes: '2026-09', status: 'publicada' })]);
+
+    await botao(tela, 'Abrir escala de um mês').trigger('click');
+
+    expect([...tela.find('#mes').element.options].map((o) => o.value)).not.toContain('2026-11');
+  });
+});
+
+describe('escala do líder: escala grande', () => {
+  // 40 turnos em 10 dias (4 por dia), uma metade com a vaga preenchida e a outra sem ninguém.
+  const turnos = Array.from({ length: 40 }, (_, i) => turno(200 + i, `2026-11-${String(1 + Math.floor(i / 4)).padStart(2, '0')}`, {
+    inicio: `0${i % 4 + 6}:00`, confirmados_total: i % 2 ? 2 : 0, marcaram_total: 3, vagas: 2,
+    confirmados: i % 2 ? [{ pessoa_id: 1, nome: 'Helena Costa', sem_funcao: false }] : [],
+  }));
+
+  it('agrupa por dia com o título do dia e mostra 30 turnos de cada vez', async () => {
+    const { tela } = await abrirEscala({ status: 'aberta', turnos });
+
+    expect(tela.findAll('button.turno')).toHaveLength(30);
+    const titulos = tela.findAll('.dia-titulo').map((r) => r.text());
+    expect(titulos).toHaveLength(8); // 30 turnos = 7 dias inteiros + 2 do oitavo
+    expect(titulos[0]).toBe('dom, 01 de novembro');
+    expect(botao(tela, 'Mostrar mais (10 restantes)')).toBeTruthy();
+
+    await botao(tela, 'Mostrar mais (10 restantes)').trigger('click');
+    expect(tela.findAll('button.turno')).toHaveLength(40);
+    expect(tela.findAll('.dia-titulo')).toHaveLength(10);
+    expect(tela.text()).not.toContain('Mostrar mais');
+  });
+
+  it('o filtro "Faltam pessoas" mostra só os turnos com vaga em aberto', async () => {
+    const { tela } = await abrirEscala({ status: 'aberta', turnos });
+
+    expect(botao(tela, 'Todos (40)')).toBeTruthy();
+    await botao(tela, 'Faltam pessoas (20)').trigger('click');
+
+    expect(tela.findAll('button.turno')).toHaveLength(20);
+    expect(tela.findAll('button.turno').every((t) => t.text().includes('0 de 2 confirmados'))).toBe(true);
+
+    await botao(tela, 'Todos (40)').trigger('click');
+    expect(tela.findAll('button.turno')).toHaveLength(30);
+  });
+
+  it('trocar de filtro volta ao primeiro bloco', async () => {
+    const { tela } = await abrirEscala({ status: 'aberta', turnos });
+    await botao(tela, 'Mostrar mais (10 restantes)').trigger('click');
+    expect(tela.findAll('button.turno')).toHaveLength(40);
+
+    await botao(tela, 'Faltam pessoas (20)').trigger('click');
+    await botao(tela, 'Todos (40)').trigger('click');
+
+    expect(tela.findAll('button.turno')).toHaveLength(30);
+  });
+
+  it('quando todas as vagas têm gente, o filtro avisa em vez de ficar em branco', async () => {
+    const cheios = turnos.map((t) => ({ ...t, confirmados_total: 2 }));
+    const { tela } = await abrirEscala({ status: 'aberta', turnos: cheios });
+
+    await botao(tela, 'Faltam pessoas (0)').trigger('click');
+
+    expect(tela.text()).toContain('Nenhum turno com vaga em aberto');
+    expect(tela.findAll('button.turno')).toHaveLength(0);
+  });
+
+  it('escala pequena ou em rascunho não ganha filtro', async () => {
+    const pequena = await abrirEscala({ status: 'aberta' });
+    expect(pequena.tela.find('[role="tablist"]').exists()).toBe(false);
+
+    const rascunho = await abrirEscala({ status: 'rascunho', turnos });
+    expect(rascunho.tela.find('[role="tablist"]').exists()).toBe(false);
+  });
+
+  it('turnos do mesmo dia ficam sob o mesmo título', async () => {
+    const { tela } = await abrirEscala({ status: 'aberta', turnos: turnos.slice(0, 4) });
+
+    expect(tela.findAll('.dia-titulo')).toHaveLength(1);
+    expect(tela.findAll('button.turno')).toHaveLength(4);
   });
 });

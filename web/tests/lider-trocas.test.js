@@ -228,3 +228,74 @@ describe('relatório do líder', () => {
     expect(tela.text()).toContain('Erro interno.');
   });
 });
+
+describe('relatório e trocas com muita gente', () => {
+  it('relatório: mostra as 10 primeiras barras e libera o resto', async () => {
+    const muitas = Array.from({ length: 50 }, (_, i) => ({ pessoa_id: i + 1, nome: `Pessoa${i}`, turnos: 50 - i, acima_do_limite: false }));
+    simularApi({
+      'GET /ministerios/1/relatorio': { corpo: { mes: null, total_de_turnos: 10, total_de_vagas: 20, vagas_preenchidas_pct: 50, turnos_sem_ninguem: 0, voluntarios_ativos: 50, turnos_por_pessoa: muitas, onde_aperta: [] } },
+      'GET /ministerios/1/escalas': { corpo: { escalas: [{ mes: '2026-12', status: 'aberta' }, { mes: '2026-11', status: 'publicada' }] } },
+    });
+    const { tela } = await montarTela(LiderRelatorio, { entrada: '/lider/relatorio', pessoa: LIDER, modo: 'lider' });
+
+    expect(tela.findAll('.barra')).toHaveLength(10);
+    expect(tela.findAll('.barra')[0].text()).toContain('Pessoa0');
+    expect(tela.findAll('.barra')[0].find('i').attributes('style')).toContain('width: 100%'); // a barra continua relativa ao maior de todos
+
+    await botao(tela, 'Mostrar mais (40 restantes)').trigger('click');
+    expect(tela.findAll('.barra')).toHaveLength(20);
+  });
+
+  it('relatório: trocar o mês volta às 10 primeiras barras', async () => {
+    const muitas = Array.from({ length: 50 }, (_, i) => ({ pessoa_id: i + 1, nome: `Pessoa${i}`, turnos: 50 - i, acima_do_limite: false }));
+    simularApi({
+      'GET /ministerios/1/relatorio?mes=2026-11': { corpo: { mes: '2026-11', total_de_turnos: 10, total_de_vagas: 20, vagas_preenchidas_pct: 50, turnos_sem_ninguem: 0, voluntarios_ativos: 50, turnos_por_pessoa: muitas, onde_aperta: [] } },
+      'GET /ministerios/1/relatorio': { corpo: { mes: null, total_de_turnos: 10, total_de_vagas: 20, vagas_preenchidas_pct: 50, turnos_sem_ninguem: 0, voluntarios_ativos: 50, turnos_por_pessoa: muitas, onde_aperta: [] } },
+      'GET /ministerios/1/escalas': { corpo: { escalas: [{ mes: '2026-12', status: 'aberta' }, { mes: '2026-11', status: 'publicada' }] } },
+    });
+    const { tela } = await montarTela(LiderRelatorio, { entrada: '/lider/relatorio', pessoa: LIDER, modo: 'lider' });
+    await botao(tela, 'Mostrar mais (40 restantes)').trigger('click');
+    expect(tela.findAll('.barra')).toHaveLength(20);
+
+    await tela.find('select').setValue('2026-11');
+    await esperar();
+
+    expect(tela.findAll('.barra')).toHaveLength(10);
+  });
+
+  it('trocas: 10 pedidos por vez', async () => {
+    const trocas = Array.from({ length: 23 }, (_, i) => troca(i + 1, `Pessoa ${i}`));
+    simularApi({ 'GET /ministerios/1/trocas': { corpo: { total_abertas: 23, trocas } } });
+    const { tela } = await montarTela(LiderTrocas, { entrada: '/lider/trocas', pessoa: LIDER, modo: 'lider' });
+
+    expect(tela.findAll('article.troca')).toHaveLength(10);
+
+    await botao(tela, 'Mostrar mais (13 restantes)').trigger('click');
+    expect(tela.findAll('article.troca')).toHaveLength(20);
+
+    await botao(tela, 'Mostrar mais (3 restantes)').trigger('click');
+    expect(tela.findAll('article.troca')).toHaveLength(23);
+    expect(tela.text()).not.toContain('Mostrar mais');
+  });
+
+  it('quem pode entrar: 15 candidatos por vez e a lista recomeça a cada pedido', async () => {
+    const candidatos = Array.from({ length: 40 }, (_, i) => candidato(300 + i, `Candidato ${i}`));
+    simularApi({
+      'GET /ministerios/1/trocas': { corpo: { total_abertas: 2, trocas: [troca(1, 'Helena Costa'), troca(2, 'Bruno Souza')] } },
+      'GET /trocas/1/candidatos': { corpo: { candidatos } },
+      'GET /trocas/2/candidatos': { corpo: { candidatos } },
+    });
+    const { tela } = await montarTela(LiderTrocas, { entrada: '/lider/trocas', pessoa: LIDER, modo: 'lider' });
+
+    await tela.findAll('article.troca')[0].findAll('button').find((b) => b.text() === 'Resolver').trigger('click');
+    await esperar();
+    expect(tela.findAll('.candidato')).toHaveLength(15);
+
+    await botao(tela, 'Mostrar mais (25 restantes)').trigger('click');
+    expect(tela.findAll('.candidato')).toHaveLength(30);
+
+    await tela.findAll('article.troca')[1].findAll('button').find((b) => b.text() === 'Resolver').trigger('click');
+    await esperar();
+    expect(tela.findAll('.candidato')).toHaveLength(15); // não herdou os 30 do pedido anterior
+  });
+});

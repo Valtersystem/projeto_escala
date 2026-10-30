@@ -1,11 +1,11 @@
 <script setup>
 // A equipe do ministério: cadastrar, incluir quem já está na igreja, postos e funções de cada um e o convite de acesso.
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import ConviteDaPessoa from './ConviteDaPessoa.vue';
 import Folha from './Folha.vue';
 import { api } from '../api/cliente.js';
 import { useMensagens } from '../stores/mensagens.js';
-import { resumirNomes } from '../utils/listas.js';
+import { resumirNomes, usePagina } from '../utils/listas.js';
 import { iniciaisDe } from '../utils/status.js';
 
 const props = defineProps({
@@ -26,6 +26,9 @@ const filtradas = computed(() => {
   const termo = busca.value.trim().toLowerCase();
   return termo ? props.pessoas.filter((p) => p.nome.toLowerCase().includes(termo)) : props.pessoas;
 });
+
+const { visiveis, restantes, mais, reiniciar } = usePagina(filtradas);
+watch(busca, reiniciar);
 
 // --- uma pessoa ---
 const selecionadaId = ref(null);
@@ -139,7 +142,7 @@ async function incluir(pessoa) {
     <p v-if="pessoas.length > LIMITE_SEM_BUSCA" class="contagem">{{ busca.trim() ? `${filtradas.length} de ${pessoas.length}` : pessoas.length }} pessoa(s)</p>
     <div v-if="pessoas.length && !filtradas.length" class="cartao pad vazio"><b>Ninguém com esse nome</b></div>
     <div v-else-if="pessoas.length" class="cartao lista">
-      <button v-for="p in filtradas" :key="p.id" class="linha-pessoa" @click="abrir(p)">
+      <button v-for="p in visiveis" :key="p.id" class="linha-pessoa" @click="abrir(p)">
         <span class="inicial" :class="{ mudo: !p.ativo }">{{ iniciaisDe(p.nome) }}</span>
         <span class="texto">
           <strong>{{ p.nome }}</strong>
@@ -149,6 +152,7 @@ async function incluir(pessoa) {
         <span v-else-if="!p.tem_login" class="pilula atencao"><i />Sem acesso</span>
       </button>
     </div>
+    <button v-if="restantes" class="botao contorno largo" @click="mais">Mostrar mais ({{ restantes }} restantes)</button>
     <button class="botao suave largo" @click="abrirInclusao">Adicionar pessoa</button>
 
     <!-- adicionar -->
