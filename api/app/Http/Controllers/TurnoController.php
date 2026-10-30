@@ -6,6 +6,7 @@ use App\Support\Registro;
 use App\Domain\EstadoEscala;
 use App\Domain\GradeDeCultos;
 use App\Domain\Horario;
+use App\Domain\Modulos;
 use App\Domain\Rodizio;
 use App\Exceptions\RegraDeNegocio;
 use App\Models\Culto;
@@ -42,6 +43,8 @@ class TurnoController extends Controller
             'fim' => ['required', new HorarioValido()],
             'vagas' => ['nullable', 'integer'],
         ]);
+
+        $this->exigirModuloDeBandas($ministerio, $dados);
 
         $posto = $ministerio->postos()->findOrFail($dados['posto_id']);
         $culto = isset($dados['culto_id']) ? Culto::find($dados['culto_id']) : null;
@@ -83,6 +86,8 @@ class TurnoController extends Controller
             'fim' => ['sometimes', new HorarioValido()],
             'vagas' => ['sometimes', 'integer'],
         ]);
+
+        $this->exigirModuloDeBandas($ministerio, $dados);
 
         $versao = $dados['versao'];
         unset($dados['versao']);
@@ -238,6 +243,14 @@ class TurnoController extends Controller
         return $plano;
     }
 
+    /** RN-135: escolher banda para um turno exige o módulo ligado (tirar a banda, `null`, sempre pode). */
+    private function exigirModuloDeBandas(Ministerio $ministerio, array $dados): void
+    {
+        if (($dados['banda_id'] ?? null) !== null && ! $ministerio->usa(Modulos::BANDAS)) {
+            throw new RegraDeNegocio('Ative o módulo Bandas deste ministério para escolher uma banda.');
+        }
+    }
+
     /**
      * RN-30: continua a sequência a partir da banda do último turno anterior do ministério.
      *
@@ -246,7 +259,7 @@ class TurnoController extends Controller
      */
     private function aplicarRodizio(Ministerio $ministerio, array $plano): array
     {
-        $bandas = $ministerio->bandas()->pluck('id')->all();
+        $bandas = $ministerio->usa(Modulos::BANDAS) ? $ministerio->bandas()->pluck('id')->all() : [];
 
         if ($bandas === []) {
             return $plano;

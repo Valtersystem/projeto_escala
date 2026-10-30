@@ -14,6 +14,7 @@ use App\Http\Controllers\EuController;
 use App\Http\Controllers\FuncaoController;
 use App\Http\Controllers\MinhaEscalaController;
 use App\Http\Controllers\MinisterioController;
+use App\Http\Controllers\ModuloController;
 use App\Http\Controllers\PessoaController;
 use App\Http\Controllers\PostoController;
 use App\Http\Controllers\RelatorioController;
@@ -57,6 +58,9 @@ Route::middleware(['auth:sanctum', DefinirIgrejaAtual::class])->group(function (
     Route::post('/ministerios/{ministerio}/postos', [PostoController::class, 'store']);
     Route::patch('/postos/{posto}', [PostoController::class, 'update']);
     Route::delete('/postos/{posto}', [PostoController::class, 'destroy']);
+
+    Route::get('/ministerios/{ministerio}/modulos', [ModuloController::class, 'index']);
+    Route::put('/ministerios/{ministerio}/modulos', [ModuloController::class, 'update']);
 
     Route::get('/ministerios/{ministerio}/bandas', [BandaController::class, 'index']);
     Route::post('/ministerios/{ministerio}/bandas', [BandaController::class, 'store']);

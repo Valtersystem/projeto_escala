@@ -5,16 +5,18 @@ import Alerta from '../components/Alerta.vue';
 import EquipePedidos from '../components/EquipePedidos.vue';
 import EquipePessoas from '../components/EquipePessoas.vue';
 import EquipeBandas from '../components/EquipeBandas.vue';
+import EquipeModulos from '../components/EquipeModulos.vue';
 import EquipeLista from '../components/EquipeLista.vue';
 import { api } from '../api/cliente.js';
 import { useModo } from '../stores/modo.js';
 
 const ABAS = [
   { chave: 'pessoas', texto: 'Pessoas' },
-  { chave: 'bandas', texto: 'Bandas' },
+  { chave: 'bandas', texto: 'Bandas', modulo: 'bandas' },
   { chave: 'pedidos', texto: 'Pedidos' },
   { chave: 'postos', texto: 'Postos' },
   { chave: 'funcoes', texto: 'Funções' },
+  { chave: 'modulos', texto: 'Módulos' },
 ];
 
 const modo = useModo();
@@ -28,12 +30,14 @@ const bandas = ref([]);
 const postos = ref([]);
 const funcoes = ref([]);
 const pedidos = ref([]);
+const modulos = ref([]);
 
-const aba = computed(() => (ABAS.some((a) => a.chave === rota.query.aba) ? rota.query.aba : 'pessoas'));
 const ministerio = computed(() => modo.ministerio);
 
-// Bandas só fazem sentido onde há rodízio de bandas; os outros ministérios veem as outras três abas.
-const abas = computed(() => (bandas.value.length || aba.value === 'bandas' || ministerio.value?.nome === 'Louvor' ? ABAS : ABAS.filter((a) => a.chave !== 'bandas')));
+// A aba de um módulo só aparece com o módulo ligado (RN-135).
+const ligado = (chave) => modulos.value.some((m) => m.chave === chave && m.ativo);
+const abas = computed(() => ABAS.filter((a) => !a.modulo || ligado(a.modulo)));
+const aba = computed(() => (abas.value.some((a) => a.chave === rota.query.aba) ? rota.query.aba : 'pessoas'));
 
 const escolher = (chave) => roteador.replace({ query: { ...rota.query, aba: chave } });
 
@@ -42,18 +46,20 @@ async function carregar() {
   const id = ministerio.value.id;
 
   try {
-    const [p, b, po, f, pe] = await Promise.all([
+    const [p, b, po, f, pe, mo] = await Promise.all([
       api.get(`/pessoas?ministerio_id=${id}`),
       api.get(`/ministerios/${id}/bandas`),
       api.get(`/ministerios/${id}/postos`),
       api.get(`/ministerios/${id}/funcoes`),
       api.get(`/ministerios/${id}/pedidos-de-entrada`),
+      api.get(`/ministerios/${id}/modulos`),
     ]);
     pessoas.value = p.pessoas;
     bandas.value = b.bandas;
     postos.value = po.postos;
     funcoes.value = f.funcoes;
     pedidos.value = pe.pedidos;
+    modulos.value = mo.modulos;
     erro.value = '';
   } catch (e) {
     erro.value = e.message;
@@ -70,7 +76,7 @@ onMounted(carregar);
   <section class="tela">
     <div class="saudacao">
       <h2>Equipe</h2>
-      <p>{{ ministerio?.nome }} · quem serve, em quê e em qual banda</p>
+      <p>{{ ministerio?.nome }} · quem serve{{ ligado('bandas') ? ', em quê e em qual banda' : ' e em quê' }}</p>
     </div>
 
     <div class="segmentos" role="tablist">
@@ -91,7 +97,10 @@ onMounted(carregar);
       <EquipeLista
         v-else-if="aba === 'postos'" :key="'postos'" tipo="postos" :ministerio="ministerio" :itens="postos" @mudou="carregar"
       />
-      <EquipeLista v-else :key="'funcoes'" tipo="funcoes" :ministerio="ministerio" :itens="funcoes" @mudou="carregar" />
+      <EquipeLista
+        v-else-if="aba === 'funcoes'" :key="'funcoes'" tipo="funcoes" :ministerio="ministerio" :itens="funcoes" @mudou="carregar"
+      />
+      <EquipeModulos v-else :ministerio="ministerio" :modulos="modulos" @mudou="carregar" />
     </template>
   </section>
 </template>

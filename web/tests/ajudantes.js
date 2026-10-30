@@ -10,7 +10,7 @@ export function simularApi(rotas = {}) {
   const chamadas = [];
 
   const simulado = vi.fn(async (url, opcoes = {}) => {
-    const caminho = String(url).replace(/^https?:\/\/[^/]+\/api/, '');
+    const caminho = String(url).replace(/^(https?:\/\/[^/]+)?\/api/, '');
     const metodo = opcoes.method ?? 'GET';
     const corpo = opcoes.body ? JSON.parse(opcoes.body) : undefined;
     chamadas.push({ metodo, caminho, corpo, cabecalhos: opcoes.headers });

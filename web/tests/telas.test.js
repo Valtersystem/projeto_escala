@@ -40,34 +40,156 @@ describe('minha escala', () => {
     return montarTela(MinhaEscala, { entrada: '/minha-escala' }).then((r) => ({ ...r, fetch }));
   };
 
-  it('agrupa por mês e esconde os turnos que já passaram', async () => {
+  const mudarMes = (tela, rotulo) => tela.find(`[aria-label="${rotulo}"]`).trigger('click');
+  const celula = (tela, texto) => tela.findAll('.calendario .dia:not(.vazio)').find((c) => c.text() === texto);
+
+  it('abre no mês do próximo turno e navega entre os meses', async () => {
     const { tela } = await abrir();
 
-    expect(tela.text()).toContain('novembro de 2026');
-    expect(tela.text()).toContain('dezembro de 2026');
+    expect(tela.text()).toContain('Turnos de novembro de 2026');
+    expect(tela.findAll('article.turno')).toHaveLength(3); // o de 01/11 já passou, mas segue no mês
+
+    await mudarMes(tela, 'Próximo mês');
+    expect(tela.text()).toContain('Turnos de dezembro de 2026');
+    expect(tela.findAll('article.turno')).toHaveLength(1);
+
+    await mudarMes(tela, 'Mês anterior');
+    await mudarMes(tela, 'Mês anterior');
+    expect(tela.text()).toContain('Turnos de outubro de 2026');
+    expect(tela.text()).toContain('Nada neste mês');
+  });
+
+  it('abre no mês do próximo turno, não no do mais antigo', async () => {
+    simularApi({ 'GET /minha-escala': { corpo: { turnos: [turno(1, '2026-10-04'), turno(2, '2026-12-13')], aguardando: [] } } });
+    const { tela } = await montarTela(MinhaEscala, { entrada: '/minha-escala' });
+
+    expect(tela.text()).toContain('Turnos de dezembro de 2026');
+  });
+
+  it('só com turnos que já passaram, abre no mês do primeiro', async () => {
+    simularApi({ 'GET /minha-escala': { corpo: { turnos: [turno(1, '2026-10-04')], aguardando: [] } } });
+    const { tela } = await montarTela(MinhaEscala, { entrada: '/minha-escala' });
+
+    expect(tela.text()).toContain('Turnos de outubro de 2026');
+  });
+
+  it('desenha o mês: começa no dia da semana certo e marca os dias com turno', async () => {
+    const { tela } = await abrir();
+
+    expect(tela.findAll('.calendario .dia.vazio')).toHaveLength(0); // 1º de novembro de 2026 é domingo
+    expect(tela.findAll('.calendario .dia:not(.vazio)')).toHaveLength(30);
+    expect(celula(tela, '15').classes()).toContain('confirmado');
+    expect(celula(tela, '22').classes()).toContain('choque');
+    expect(celula(tela, '10').classes()).toContain('hoje');
+    expect(celula(tela, '16').classes()).not.toContain('confirmado');
+
+    await mudarMes(tela, 'Próximo mês');
+    expect(tela.findAll('.calendario .dia.vazio')).toHaveLength(2); // 1º de dezembro é terça
+    expect(tela.findAll('.calendario .dia:not(.vazio)')).toHaveLength(31);
+  });
+
+  it('tocar num dia mostra só os turnos dele; tocar de novo ou "Ver o mês" volta', async () => {
+    const { tela } = await abrir();
+
+    await celula(tela, '15').trigger('click');
+    expect(tela.findAll('article.turno')).toHaveLength(1);
+    expect(tela.text()).toContain('15 de novembro');
+    expect(celula(tela, '15').attributes('aria-pressed')).toBe('true');
+
+    await botao(tela, 'Ver o mês').trigger('click');
     expect(tela.findAll('article.turno')).toHaveLength(3);
-    expect(tela.text()).toContain('Ver 1 turno(s) passado(s)');
 
-    await botao(tela, 'Ver 1 turno(s) passado(s)').trigger('click');
+    await celula(tela, '15').trigger('click');
+    await celula(tela, '15').trigger('click');
+    expect(tela.findAll('article.turno')).toHaveLength(3);
+  });
 
-    expect(tela.findAll('article.turno')).toHaveLength(4);
-    expect(tela.text()).toContain('Esconder turnos passados');
+  it('dia sem turno não é clicável, e trocar de mês limpa o dia escolhido', async () => {
+    const { tela } = await abrir();
+
+    await celula(tela, '16').trigger('click');
+    expect(tela.findAll('article.turno')).toHaveLength(3);
+    expect(celula(tela, '16').attributes('aria-disabled')).toBe('true');
+
+    await celula(tela, '15').trigger('click');
+    await mudarMes(tela, 'Próximo mês');
+    expect(tela.findAll('article.turno')).toHaveLength(1);
+    expect(tela.text()).toContain('Turnos de dezembro de 2026');
+  });
+
+  describe('dias marcados que o líder ainda não confirmou', () => {
+    const aguardando = [
+      { id: 20, data: '2026-11-29', inicio: '19:00', fim: '21:00', culto: 'Culto da Noite', ministerio: 'Mídia', posto: { id: 3, nome: 'Câmera' }, banda: null },
+      { id: 21, data: '2026-11-15', inicio: '19:00', fim: '21:00', culto: 'Culto da Noite', ministerio: 'Mídia', posto: { id: 3, nome: 'Câmera' }, banda: null },
+    ];
+    const comAguardando = () => abrir({ 'GET /minha-escala': { corpo: { ...MINHA_ESCALA, aguardando } } });
+
+    it('aparecem no calendário em cinza e na lista com o aviso, sem o botão de substituição', async () => {
+      const { tela } = await comAguardando();
+
+      expect(tela.text()).toContain('4 turno(s) confirmado(s) · 2 aguardando');
+      expect(celula(tela, '29').classes()).toContain('aguardando');
+      expect(celula(tela, '15').classes()).toContain('confirmado'); // confirmado pesa mais que aguardando
+      expect(tela.findAll('article.turno')).toHaveLength(5);
+
+      await celula(tela, '29').trigger('click');
+      const [linha] = tela.findAll('article.turno');
+      expect(linha.text()).toContain('Aguardando o líder confirmar');
+      expect(linha.text()).toContain('Culto da Noite');
+      expect(linha.text()).not.toContain('Não vou poder');
+      expect(linha.text()).not.toContain('função a combinar');
+    });
+
+    it('explica que aguardando não é escala, e some a explicação ao escolher um dia', async () => {
+      const { tela } = await comAguardando();
+
+      expect(tela.text()).toContain('Aguardando não é escala');
+
+      await celula(tela, '15').trigger('click');
+      expect(tela.text()).not.toContain('Aguardando não é escala');
+    });
+
+    it('sem nada aguardando, não fala em aguardando', async () => {
+      const { tela } = await abrir();
+
+      expect(tela.find('.saudacao').text()).not.toContain('aguardando');
+      expect(tela.text()).not.toContain('Aguardando não é escala');
+      expect(tela.find('article.espera').exists()).toBe(false);
+    });
+
+    it('só aguardando: abre no mês do primeiro, sem turno confirmado', async () => {
+      simularApi({ 'GET /minha-escala': { corpo: { turnos: [], aguardando: [{ ...aguardando[0], data: '2027-02-07' }] } } });
+      const { tela } = await montarTela(MinhaEscala, { entrada: '/minha-escala' });
+
+      expect(tela.text()).toContain('Nenhum turno confirmado ainda · 1 aguardando');
+      expect(tela.text()).toContain('Turnos de fevereiro de 2027');
+      expect(tela.findAll('article.turno')).toHaveLength(1);
+    });
+
+    it('um turno com choque no dia pinta o dia de choque mesmo com outro aguardando', async () => {
+      const { tela } = await abrir({ 'GET /minha-escala': { corpo: { ...MINHA_ESCALA, aguardando: [{ ...aguardando[0], data: '2026-11-22' }] } } });
+
+      expect(celula(tela, '22').classes()).toContain('choque');
+    });
   });
 
   it('mostra funções, "função a combinar", banda e ministério', async () => {
     const { tela } = await abrir();
-    const [primeiro, , ultimo] = tela.findAll('article.turno');
+    const [primeiro] = tela.findAll('article.turno');
 
     expect(primeiro.text()).toContain('Culto da Manhã');
     expect(primeiro.text()).toContain('Louvor · 08:00 às 11:30 · Som · Banda 2');
     expect(primeiro.text()).toContain('Voz');
-    expect(ultimo.text()).toContain('função a combinar');
-    expect(ultimo.text()).toContain('Som'); // sem culto, o título é o posto
+
+    await mudarMes(tela, 'Próximo mês');
+    const [dezembro] = tela.findAll('article.turno');
+    expect(dezembro.text()).toContain('função a combinar');
+    expect(dezembro.text()).toContain('Som'); // sem culto, o título é o posto
   });
 
   it('avisa o choque com o outro turno', async () => {
     const { tela } = await abrir();
-    const segundo = tela.findAll('article.turno')[1];
+    const segundo = tela.findAll('article.turno')[2];
 
     expect(segundo.text()).toContain('⚠ Choque de escala em 22 de novembro: Mídia · Câmera 09:00–10:00. Avise o líder.');
   });
@@ -110,7 +232,7 @@ describe('minha escala', () => {
 
   it('turno com pedido aberto mostra o estado e deixa cancelar', async () => {
     const { tela, fetch } = await abrir({ 'DELETE /trocas/5': { status: 204 } });
-    const comPedido = tela.findAll('article.turno')[1];
+    const comPedido = tela.findAll('article.turno')[2];
 
     expect(comPedido.text()).toContain('Substituição pedida');
     expect(comPedido.text()).not.toContain('Não vou poder');
@@ -124,8 +246,6 @@ describe('minha escala', () => {
 
   it('turno passado não oferece "Não vou poder"', async () => {
     const { tela } = await abrir();
-
-    await botao(tela, 'Ver 1 turno(s) passado(s)').trigger('click');
     const passado = tela.findAll('article.turno')[0];
 
     expect(passado.text()).toContain('01');

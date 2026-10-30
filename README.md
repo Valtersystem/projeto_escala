@@ -5,8 +5,8 @@ Sistema para a igreja montar as escalas dos ministérios: o voluntário marca em
 | Pasta | O que é |
 |---|---|
 | [`docs/regras-de-negocio.md`](docs/regras-de-negocio.md) | As regras (RN-xx), os casos de teste (T-xx) e as decisões da v1 |
-| [`api/`](api/README.md) | API em Laravel 13 (Sanctum), com 245 testes |
-| [`web/`](web/README.md) | App em Vue 3 + PWA (voluntário e líder), com 215 testes |
+| [`api/`](api/README.md) | API em Laravel 13 (Sanctum), com 255 testes |
+| [`web/`](web/README.md) | App em Vue 3 + PWA (voluntário e líder), com 231 testes |
 | `index.html` | Protótipo original (uma página só, dados no navegador). Serve de referência visual e já está no ar pelo GitHub Pages |
 
 ## Subindo tudo para testar

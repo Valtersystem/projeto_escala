@@ -129,7 +129,7 @@ O protótipo troca de perfil por um botão, sem login (`Adm`, `Líder`, `Volunt�
 
 ## 7. Rodízio de bandas
 
-**RN-29** Se o ministério tem bandas, ao gerar turnos cada turno recebe uma banda, em sequência: banda 1, 2, 3, 1, 2, 3…
+**RN-29** Se o ministério usa o módulo Bandas (RN-135) e tem bandas, ao gerar turnos cada turno recebe uma banda, em sequência: banda 1, 2, 3, 1, 2, 3…
 **RN-30** A sequência é contínua entre meses. O primeiro turno do mês novo recebe a banda seguinte à do último turno anterior do mesmo ministério. Se não houver turno anterior com banda, começa pela primeira banda da lista.
 **RN-31** Os turnos são ordenados por data e horário de início antes de receber banda. Turnos do mesmo horário (de postos diferentes) recebem a mesma banda: o rodízio avança por horário, não por turno (D-05).
 **RN-32** O líder pode escolher a banda à mão ao criar um turno avulso. Banda vazia é permitida.
@@ -540,6 +540,28 @@ O protótipo troca de perfil por um botão, sem login (`Adm`, `Líder`, `Volunt�
 - **T-226** Dado sem `GOOGLE_CLIENT_ID`, então a rota não existe (404) e o Google nem é consultado.
 - **T-227** Dada credencial ausente, então 422.
 - **T-228** Dado o login com Google, então há limite por IP (429).
+
+**RN-134** "Minha escala" tem um calendário do mês: o dia em que a pessoa serve (turno confirmado em escala publicada), o dia em que há choque de escala e o dia em que ela marcou disponibilidade e o líder ainda não confirmou (escala aberta). Esses últimos aparecem em cinza e na lista com o aviso "Aguardando o líder confirmar", sem botão de substituição: aguardando não é escala, só vira compromisso quando o líder publicar (RN-23 segue valendo para `turnos`). Tocar num dia filtra a lista; trocar de mês limpa o dia. A tela abre no mês do próximo turno confirmado.
+
+- **T-229** Dada a "minha escala", então os dias marcados e sem confirmação, de escala aberta, vêm à parte em `aguardando`; o já confirmado, o de escala publicada e o de outra pessoa não entram, e `turnos` não muda.
+- **T-230** Dado o calendário, então cada mês começa no dia da semana certo, os dias de turno ficam marcados (confirmado, aguardando, choque) e o choque pesa mais que o resto.
+- **T-231** Dado um dia sem turno, então não é clicável; dado um dia com turno, tocar filtra a lista e tocar de novo ou "Ver o mês" volta.
+- **T-232** Dada a navegação, então as setas trocam o mês e limpam o dia escolhido; a tela abre no mês do próximo turno confirmado (ou do primeiro, se todos já passaram).
+
+**RN-135** O líder escolhe quais **módulos** o ministério usa, na aba "Módulos" da equipe. Hoje existe o módulo **Bandas**; os próximos entram no mesmo catálogo e aparecem sozinhos na tela. Todo ministério novo nasce sem módulos; os que já tinham bandas continuam com o módulo ligado. Com o módulo **desligado** o ministério se comporta como se não tivesse bandas: a aba some, a lista de bandas vem vazia, não se cria banda nem se escolhe banda num turno (422 "Ative o módulo Bandas…"; tirar a banda de um turno sempre pode) e o rodízio não roda ao gerar turnos. **Nada é apagado**: bandas, membros e as bandas dos turnos já feitos ficam guardados e voltam ao ligar de novo. Só o líder do ministério liga e desliga (nem o Adm). Cada mudança entra no histórico ("Ativou/Desativou o módulo Bandas em Louvor"); salvar sem mudar nada não registra.
+
+- **T-233** Dado o líder, então ele vê o catálogo de módulos com o estado de cada um.
+- **T-234** Dado voluntário, Adm ou líder de outro ministério, então não vê nem muda os módulos (403).
+- **T-235** Dado o líder, quando liga e desliga, então a escolha fica guardada.
+- **T-236** Dado módulo que não existe, lista repetida ou `ativos` ausente ou malformado, então 422 e nada muda.
+- **T-237** Dada a mudança, então o histórico registra só o que mudou, com quem fez.
+- **T-238** Dado o módulo desligado, então a lista de bandas vem vazia, mas as bandas continuam guardadas e voltam ao religar.
+- **T-239** Dado o módulo desligado, então não cria banda nem escolhe banda num turno (criar ou editar); turno sem banda ou tirando a banda segue normal.
+- **T-240** Dado o módulo desligado e bandas guardadas, quando gera turnos, então ficam sem banda (sem rodízio).
+- **T-241** Dado o módulo ligado, quando gera turnos, então o rodízio roda.
+- **T-242** Dado o app do líder, então a aba Bandas só aparece com o módulo ligado (o nome do ministério não importa) e a aba Módulos sempre.
+- **T-243** Dado o interruptor, então ligar e desligar manda a lista de ativos, avisa ("Nada foi apagado" ao desligar), recarrega as abas e mostra o erro da API se falhar.
+- **T-244** Dado o módulo desligado, quando se abre `?aba=bandas`, então cai em Pessoas; e o subtítulo da equipe só fala em banda com o módulo ligado.
 
 ### No app (v1)
 

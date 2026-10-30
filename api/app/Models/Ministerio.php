@@ -9,12 +9,20 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['nome', 'lider_id', 'orientacoes'])]
+#[Fillable(['nome', 'lider_id', 'orientacoes', 'modulos'])]
 class Ministerio extends Model
 {
     use PertenceAIgreja;
 
     protected $table = 'ministerios';
+
+    protected $casts = ['modulos' => 'array'];
+
+    /** RN-135: o módulo está ligado neste ministério? */
+    public function usa(string $modulo): bool
+    {
+        return in_array($modulo, $this->modulos ?? [], true);
+    }
 
     public function lider(): BelongsTo
     {

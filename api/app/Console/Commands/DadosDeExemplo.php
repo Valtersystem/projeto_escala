@@ -113,7 +113,7 @@ class DadosDeExemplo extends Command
 
         // ---- ministérios, equipes e postos ----
         $midia = Ministerio::create(['nome' => 'Mídia', 'lider_id' => $this->p['ana']->id]);
-        $louvor = Ministerio::create(['nome' => 'Louvor', 'lider_id' => $this->p['marcos']->id]);
+        $louvor = Ministerio::create(['nome' => 'Louvor', 'lider_id' => $this->p['marcos']->id, 'modulos' => ['bandas']]);
         $recepcao = Ministerio::create(['nome' => 'Recepção', 'lider_id' => $this->p['juliana']->id]);
 
         $equipes = [

@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import LiderEquipe from '../src/views/LiderEquipe.vue';
+import { useMensagens } from '../src/stores/mensagens.js';
 import { LIDER, botao, botaoExato, esperar, montarTela, simularApi } from './ajudantes.js';
 
 beforeEach(() => {
@@ -12,6 +13,8 @@ const pessoa = (id, nome, extra = {}) => ({
   id, nome, email: `${nome.split(' ')[0].toLowerCase()}@exemplo.test`, telefone: '11 98888-7777', adm: false, ativo: true, tem_login: true,
   ministerios: [{ id: 1, nome: 'Louvor' }], posto_ids: [], funcao_ids: [], banda_ids: [], ...extra,
 });
+
+const BANDAS_LIGADO = { chave: 'bandas', nome: 'Bandas', descricao: 'Grupos fixos com rodízio.', ativo: true };
 
 const POSTOS = [{ id: 1, nome: 'Voz', descricao: null, vagas: 2 }, { id: 2, nome: 'Bateria', descricao: 'Palco', vagas: 1 }];
 const FUNCOES = [{ id: 1, nome: 'Guitarra' }];
@@ -26,6 +29,7 @@ function rotasBase(extra = {}) {
     'GET /ministerios/1/postos': { corpo: { postos: POSTOS } },
     'GET /ministerios/1/funcoes': { corpo: { funcoes: FUNCOES } },
     'GET /ministerios/1/pedidos-de-entrada': { corpo: { total: 0, pedidos: [] } },
+    'GET /ministerios/1/modulos': { corpo: { modulos: [BANDAS_LIGADO] } },
     ...extra,
   };
 }
@@ -341,12 +345,12 @@ describe('equipe do líder: postos e funções', () => {
 });
 
 describe('equipe do líder: navegação', () => {
-  it('mostra as quatro abas no Louvor', async () => {
+  it('com o módulo Bandas ligado, mostra a aba Bandas e a de Módulos', async () => {
     const { tela } = await abrir();
-    expect(tela.find('[role="tablist"]').findAll('[role="tab"]').map((t) => t.text())).toEqual(['Pessoas', 'Bandas', 'Pedidos', 'Postos', 'Funções']);
+    expect(tela.find('[role="tablist"]').findAll('[role="tab"]').map((t) => t.text())).toEqual(['Pessoas', 'Bandas', 'Pedidos', 'Postos', 'Funções', 'Módulos']);
   });
 
-  it('fora do Louvor e sem bandas, a aba Bandas não aparece', async () => {
+  it('sem o módulo Bandas ligado, a aba Bandas não aparece', async () => {
     const midia = { ...LIDER, ministerios: [{ id: 2, nome: 'Mídia', lider: true }] };
     simularApi({
       'GET /pessoas?ministerio_id=2': { corpo: { pessoas: [] } },
@@ -354,10 +358,11 @@ describe('equipe do líder: navegação', () => {
       'GET /ministerios/2/postos': { corpo: { postos: [] } },
       'GET /ministerios/2/funcoes': { corpo: { funcoes: [] } },
       'GET /ministerios/2/pedidos-de-entrada': { corpo: { total: 0, pedidos: [] } },
+      'GET /ministerios/2/modulos': { corpo: { modulos: [{ ...BANDAS_LIGADO, ativo: false }] } },
     });
     const { tela } = await montarTela(LiderEquipe, { entrada: '/lider/equipe', pessoa: midia, modo: 'lider' });
 
-    expect(tela.find('[role="tablist"]').findAll('[role="tab"]').map((t) => t.text())).toEqual(['Pessoas', 'Pedidos', 'Postos', 'Funções']);
+    expect(tela.find('[role="tablist"]').findAll('[role="tab"]').map((t) => t.text())).toEqual(['Pessoas', 'Pedidos', 'Postos', 'Funções', 'Módulos']);
   });
 
   it('falha ao carregar mostra o erro com "Tentar de novo"', async () => {
@@ -418,5 +423,87 @@ describe('equipe do líder: pedidos de entrada', () => {
   it('sem código da igreja, não mostra o link', async () => {
     const { tela } = await abrirPedidos();
     expect(tela.find('.divulgar').exists()).toBe(false);
+  });
+});
+
+describe('equipe do líder: módulos', () => {
+  const abas = (tela) => tela.find('[role="tablist"]').findAll('[role="tab"]').map((t) => t.text());
+
+  /** Uma API com estado: o PUT muda o que o GET seguinte devolve. */
+  const comEstado = (ativo) => {
+    const estado = { ativo };
+    return {
+      'GET /ministerios/1/modulos': () => ({ corpo: { modulos: [{ ...BANDAS_LIGADO, ativo: estado.ativo }] } }),
+      'PUT /ministerios/1/modulos': (c) => {
+        estado.ativo = c.ativos.includes('bandas');
+        return { corpo: { modulos: [{ ...BANDAS_LIGADO, ativo: estado.ativo }] } };
+      },
+    };
+  };
+
+  const abrirModulos = (ativo) => abrir(comEstado(ativo), '/lider/equipe?aba=modulos');
+
+  it('lista cada módulo com a descrição e o interruptor no estado certo', async () => {
+    const { tela } = await abrirModulos(true);
+    const interruptor = tela.find('.interruptor');
+
+    expect(interruptor.text()).toContain('Bandas');
+    expect(interruptor.text()).toContain('Grupos fixos com rodízio.');
+    expect(interruptor.attributes('aria-pressed')).toBe('true');
+    expect(tela.text()).toContain('Desligar esconde o módulo, mas guarda tudo');
+  });
+
+  it('ligar manda a lista de ativos, avisa e faz a aba Bandas aparecer', async () => {
+    const { tela, fetch } = await abrirModulos(false);
+    expect(abas(tela)).not.toContain('Bandas');
+
+    await tela.find('.interruptor').trigger('click');
+    await esperar();
+
+    expect(enviados(fetch, 'PUT', '/ministerios/1/modulos')[0].corpo).toEqual({ ativos: ['bandas'] });
+    expect(useMensagens().texto).toBe('Módulo Bandas ativado.');
+    expect(abas(tela)).toContain('Bandas');
+    expect(tela.find('.interruptor').attributes('aria-pressed')).toBe('true');
+  });
+
+  it('desligar manda a lista vazia, diz que nada foi apagado e a aba Bandas some', async () => {
+    const { tela, fetch } = await abrirModulos(true);
+
+    await tela.find('.interruptor').trigger('click');
+    await esperar();
+
+    expect(enviados(fetch, 'PUT', '/ministerios/1/modulos')[0].corpo).toEqual({ ativos: [] });
+    expect(useMensagens().texto).toBe('Módulo Bandas desativado. Nada foi apagado.');
+    expect(abas(tela)).not.toContain('Bandas');
+    expect(tela.find('.interruptor').attributes('aria-pressed')).toBe('false');
+  });
+
+  it('erro da API aparece e o interruptor continua como estava', async () => {
+    const { tela } = await abrirModulos(true);
+    simularApi(rotasBase({
+      'GET /ministerios/1/modulos': { corpo: { modulos: [BANDAS_LIGADO] } },
+      'PUT /ministerios/1/modulos': { status: 403, corpo: { message: 'Sem permissão.' } },
+    }));
+
+    await tela.find('.interruptor').trigger('click');
+    await esperar();
+
+    expect(useMensagens().tipo).toBe('erro');
+    expect(tela.find('.interruptor').attributes('aria-pressed')).toBe('true');
+  });
+
+  it('com o módulo desligado, abrir ?aba=bandas cai em Pessoas, mesmo no Louvor', async () => {
+    const { tela } = await abrir(comEstado(false), '/lider/equipe?aba=bandas');
+
+    expect(tela.findAll('.linha-pessoa')).toHaveLength(2);
+    expect(tela.find('[role="tab"][aria-selected="true"]').text()).toBe('Pessoas');
+  });
+
+  it('o subtítulo só fala em banda com o módulo ligado', async () => {
+    const ligado = await abrir(comEstado(true));
+    expect(ligado.tela.find('.saudacao').text()).toContain('em qual banda');
+
+    const desligado = await abrir(comEstado(false));
+    expect(desligado.tela.find('.saudacao').text()).not.toContain('banda');
   });
 });

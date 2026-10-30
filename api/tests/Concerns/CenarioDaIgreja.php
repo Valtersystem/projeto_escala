@@ -28,7 +28,7 @@ trait CenarioDaIgreja
         [$helenaU, $helena] = $this->pessoaComLogin($igreja, 'helena@teste.com', ['nome' => 'Helena']);
 
         [$louvor, $midia] = $this->naIgreja($igreja, function () use ($marcos, $ana, $helena) {
-            $louvor = Ministerio::create(['nome' => 'Louvor', 'lider_id' => $marcos->id]);
+            $louvor = Ministerio::create(['nome' => 'Louvor', 'lider_id' => $marcos->id, 'modulos' => ['bandas']]);
             $midia = Ministerio::create(['nome' => 'Mídia', 'lider_id' => $ana->id]);
             $louvor->equipe()->attach([$marcos->id, $helena->id]);
             $midia->equipe()->attach([$ana->id, $helena->id]);

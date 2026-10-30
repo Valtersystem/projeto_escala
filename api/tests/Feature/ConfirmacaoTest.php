@@ -332,4 +332,34 @@ class ConfirmacaoTest extends TestCase
         $this->assertSame([], $turnos[$livre->id]['choque']);
         $this->assertSame('Banda 1', $turnos[$primeiro->id]['banda']['nome']);
     }
+
+    public function test_t229_minha_escala_traz_a_parte_os_dias_marcados_que_o_lider_ainda_nao_confirmou(): void
+    {
+        $posto = $this->posto($this->c['louvor']);
+        $aberta = $this->escala($this->c['louvor'], 'aberta', '2026-12');
+
+        $marcado = $this->turno($aberta, $posto, '2026-12-06');
+        $jaConfirmado = $this->turno($aberta, $posto, '2026-12-13');
+        $naoMarcado = $this->turno($aberta, $posto, '2026-12-20');
+        $deOutra = $this->turno($aberta, $posto, '2026-12-27');
+        $publicado = $this->turno($this->escala($this->c['louvor'], 'publicada'), $posto, '2026-11-08');
+        $this->confirmar($jaConfirmado, $this->c['helena']->id);
+        $this->confirmar($publicado, $this->c['helena']->id);
+
+        foreach ([[$marcado, 'helena'], [$jaConfirmado, 'helena'], [$deOutra, 'marcos'], [$publicado, 'helena']] as [$turno, $quem]) {
+            DB::table('disponibilidades')->insert(['turno_id' => $turno->id, 'pessoa_id' => $this->c[$quem]->id, 'created_at' => now(), 'updated_at' => now()]);
+        }
+
+        $resposta = $this->como($this->c['helenaU'])->getJson('/api/minha-escala')->assertOk();
+
+        // Só o marcado e ainda sem confirmação; o confirmado e o de escala publicada não entram aqui.
+        $this->assertSame([$marcado->id], collect($resposta->json('aguardando'))->pluck('id')->all());
+        $this->assertSame('Louvor', $resposta->json('aguardando.0.ministerio'));
+        $this->assertArrayNotHasKey('vagas', $resposta->json('aguardando.0'));
+        $this->assertNotContains($naoMarcado->id, collect($resposta->json('aguardando'))->pluck('id')->all());
+        // RN-23 continua valendo: o dia só aguardando não vira turno.
+        $this->assertSame([$publicado->id], collect($resposta->json('turnos'))->pluck('id')->all());
+
+        $this->getJson('/api/minha-escala?mes=2026-11')->assertOk()->assertJsonCount(0, 'aguardando');
+    }
 }

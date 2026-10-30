@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Domain\Modulos;
+use App\Exceptions\RegraDeNegocio;
 use App\Models\Banda;
 use App\Models\Ministerio;
 use Illuminate\Http\JsonResponse;
@@ -18,6 +20,11 @@ class BandaController extends Controller
     {
         Gate::authorize('ver-ministerio', $ministerio);
 
+        // RN-135: com o módulo desligado o ministério se comporta como se não tivesse bandas (elas ficam guardadas).
+        if (! $ministerio->usa(Modulos::BANDAS)) {
+            return response()->json(['bandas' => []]);
+        }
+
         return response()->json([
             'bandas' => $ministerio->bandas()->with('membros:id,nome')->get()->map(fn (Banda $b) => $this->resumo($b))->values(),
         ]);
@@ -26,6 +33,10 @@ class BandaController extends Controller
     public function store(Request $request, Ministerio $ministerio): JsonResponse
     {
         Gate::authorize('lidera', $ministerio);
+
+        if (! $ministerio->usa(Modulos::BANDAS)) {
+            throw new RegraDeNegocio('Ative o módulo Bandas deste ministério antes de criar bandas.');
+        }
 
         $dados = $request->validate([
             'nome' => ['required', 'string', 'max:120'],
