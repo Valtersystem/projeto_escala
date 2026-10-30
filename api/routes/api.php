@@ -15,6 +15,8 @@ use App\Http\Controllers\MinhaEscalaController;
 use App\Http\Controllers\MinisterioController;
 use App\Http\Controllers\PessoaController;
 use App\Http\Controllers\PostoController;
+use App\Http\Controllers\RelatorioController;
+use App\Http\Controllers\TrocaController;
 use App\Http\Controllers\TurnoController;
 use App\Http\Middleware\DefinirIgrejaAtual;
 use Illuminate\Support\Facades\Route;
@@ -79,6 +81,16 @@ Route::middleware(['auth:sanctum', DefinirIgrejaAtual::class])->group(function (
     Route::post('/turnos/{turno}/confirmacoes', [ConfirmacaoController::class, 'confirmar']);
     Route::put('/turnos/{turno}/confirmacoes/{pessoa}/funcoes', [ConfirmacaoController::class, 'definirFuncoes']);
     Route::delete('/turnos/{turno}/confirmacoes/{pessoa}', [ConfirmacaoController::class, 'remover']);
+
+    Route::post('/turnos/{turno}/trocas', [TrocaController::class, 'store']);
+    Route::delete('/trocas/{troca}', [TrocaController::class, 'cancelar']);
+    Route::get('/ministerios/{ministerio}/trocas', [TrocaController::class, 'index']);
+    Route::get('/trocas/{troca}/candidatos', [TrocaController::class, 'candidatos']);
+    Route::post('/trocas/{troca}/manter', [TrocaController::class, 'manter']);
+    Route::post('/trocas/{troca}/substituir', [TrocaController::class, 'substituir']);
+    Route::post('/trocas/{troca}/vaga-aberta', [TrocaController::class, 'vagaAberta']);
+
+    Route::get('/ministerios/{ministerio}/relatorio', RelatorioController::class);
 
     Route::get('/minha-escala', MinhaEscalaController::class);
     Route::get('/avisos', [AvisoController::class, 'index']);

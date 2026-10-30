@@ -7,6 +7,7 @@ use App\Exceptions\RegraDeNegocio;
 use App\Models\Confirmacao;
 use App\Models\Igreja;
 use App\Models\Pessoa;
+use App\Models\Troca;
 use App\Models\Turno;
 use App\Services\CargaDaPessoa;
 use App\Support\Avisos;
@@ -166,6 +167,10 @@ class ConfirmacaoController extends Controller
         Gate::authorize('lidera', $turno->escala->ministerio);
 
         $turno->confirmacoes()->where('pessoa_id', $pessoa->id)->delete();
+
+        // Se a pessoa tinha pedido substituição, o líder já resolveu tirando-a: o pedido se encerra.
+        Troca::where('turno_id', $turno->id)->where('pessoa_id', $pessoa->id)->where('estado', 'aberto')
+            ->update(['estado' => 'resolvido', 'resolucao' => 'vaga_aberta']);
 
         return response()->noContent();
     }

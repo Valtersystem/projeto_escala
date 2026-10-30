@@ -35,6 +35,7 @@ php artisan test
 | `tests/Feature/CadastrosTest.php`, `ConviteTest.php` | Cadastros por papel e convite (`T-74` a `T-95`) |
 | `tests/Feature/BandasFuncoesCultosTest.php`, `EscalasTurnosTest.php` | Bandas, funções, cultos, escalas, turnos e rodízio (`T-96` a `T-124`) |
 | `tests/Feature/DisponibilidadeTest.php`, `ConfirmacaoTest.php` | Disponibilidade, confirmação, avisos e minha escala (`T-125` a `T-145`) |
+| `tests/Feature/TrocaTest.php`, `RelatorioTest.php` | Pedido de troca e relatório do líder (`T-146` a `T-165`) |
 | `app/Models/` | Modelos Eloquent; os que têm `igreja_id` usam o escopo por igreja |
 
 ## Decisões de modelagem
@@ -66,6 +67,9 @@ Todas ficam em `/api`. As protegidas exigem `Authorization: Bearer <token>`.
 | `GET /escalas/{id}/disponibilidade`, `PUT /turnos/{id}/disponibilidade`, `POST /escalas/{id}/disponibilidade/enviar` | voluntário da equipe | Marcar disponibilidade, ver choques, enviar |
 | `GET /turnos/{id}/pessoas`, `POST /turnos/{id}/confirmacoes`, `PUT`/`DELETE /turnos/{id}/confirmacoes/{pessoa}` | líder | Folha do turno, confirmar, funções, tirar |
 | `GET /minha-escala`, `GET /avisos`, `POST /avisos/lidos` | logado | Meus turnos publicados e meus avisos |
+| `POST /turnos/{id}/trocas`, `DELETE /trocas/{id}` | voluntário confirmado | Pedir e cancelar substituição |
+| `GET /ministerios/{id}/trocas`, `GET /trocas/{id}/candidatos`, `POST /trocas/{id}/manter`, `/substituir`, `/vaga-aberta` | líder | Ver e resolver pedidos |
+| `GET /ministerios/{id}/relatorio?mes=AAAA-MM` | líder | Relatório do ministério |
 | `GET/POST /pessoas`, `PATCH/DELETE /pessoas/{id}` | Adm ou líder | Pessoas (excluir: só Adm) |
 | `POST /pessoas/{id}/convite` | Adm ou líder da pessoa | Gera o link de convite |
 
@@ -78,4 +82,4 @@ Todas ficam em `/api`. As protegidas exigem `Authorization: Bearer <token>`.
 
 ## O que ainda falta
 
-Pedido de troca (substituição), relatórios, login com Google, auditoria (D-12) e pedido de entrada do voluntário (D-15). A recuperação de senha por e-mail fica por último e não entra na v1.
+Relatório geral do Adm (consolidado de todos os ministérios), login com Google, auditoria (D-12) e pedido de entrada do voluntário (D-15). A recuperação de senha por e-mail fica por último e não entra na v1.

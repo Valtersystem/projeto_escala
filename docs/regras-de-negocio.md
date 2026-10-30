@@ -370,6 +370,40 @@ O protótipo troca de perfil por um botão, sem login (`Adm`, `Líder`, `Volunt�
 
 ---
 
+## 11f. Pedido de troca e relatório do líder pela API (v1)
+
+**RN-96** Pede substituição quem está confirmado num turno de escala **publicada**, escolhendo um dos motivos (Viagem, Trabalho, Saúde, Compromisso de família, Imprevisto, Outro motivo) e, se quiser, uma observação. Só pode haver um pedido aberto por pessoa e turno; depois de cancelado, dá para pedir de novo. Quem pediu continua confirmado no turno, e o líder do ministério recebe um aviso.
+**RN-97** Só quem pediu cancela o pedido (o líder é avisado). Pedido já resolvido ou cancelado não muda mais.
+**RN-98** O líder lista os pedidos do ministério (abertos por padrão) e vê quantos estão abertos, com quantas pessoas marcaram disponibilidade no turno.
+**RN-99** Candidatos a entrar: pessoas **ativas da equipe**, que não estão confirmadas no turno e que atendem o posto — ou seja, têm aquele posto marcado, ou não têm nenhum posto marcado **neste ministério**. O líder também pode ser candidato. Ordem: quem é da banda do turno, depois quem marcou disponibilidade, depois quem tem menos turnos confirmados; empate por nome. Cada candidato traz o aviso de choque.
+**RN-100** O líder resolve de três formas: **manter** a pessoa (ela é avisada), **substituir** (o escolhido assume, herda as funções, e os dois são avisados) ou **deixar a vaga em aberto** (a pessoa sai do turno e é avisada). Na substituição, só vale quem está na lista de candidatos, e o choque não impede. Só o líder do ministério resolve.
+**RN-101** Se o líder tira a pessoa do turno pela folha do turno, o pedido aberto dela se encerra como "vaga em aberto". Se a pessoa já não está confirmada, manter, substituir e deixar em aberto são recusados.
+**RN-102** Em "minha escala", cada turno mostra o pedido aberto da pessoa, se houver.
+**RN-103** Relatório do ministério (só o líder; filtro opcional por mês): total de turnos e de vagas, % de vagas preenchidas (confirmados além das vagas não contam), turnos sem ninguém que tenha marcado disponibilidade, voluntários ativos, turnos confirmados por pessoa e a lista "onde aperta". **Escala em rascunho não entra**, porque ninguém pôde responder ainda. O alerta de limite por pessoa só existe quando o relatório é de um mês, já que o limite é mensal.
+
+- **T-146** Dado confirmado em escala publicada, quando pede substituição, então o pedido abre, a pessoa continua no turno e o líder é avisado.
+- **T-147** Dado motivo fora da lista, então é recusado; a observação é opcional.
+- **T-148** Dado quem não está confirmado, ou escala que não está publicada, então o pedido é recusado.
+- **T-149** Dado pedido aberto, então um segundo é recusado; depois de cancelado, dá para pedir de novo.
+- **T-150** Dado pedido aberto, quando a pessoa cancela, então o estado vira `cancelado` e o líder é avisado; só o dono cancela.
+- **T-151** Dado o líder, então vê os pedidos abertos, o total, e o filtro por estado; voluntária e líder de outro ministério não veem.
+- **T-152** Dados candidatos, então entram só ativos da equipe que atendem o posto e não estão no turno, na ordem certa.
+- **T-153** Dado turno com banda, então quem é da banda vem antes de quem só marcou.
+- **T-154** Dado candidato com turno confirmado no mesmo horário, então o choque aparece na lista.
+- **T-155** Dado pedido aberto, quando o líder mantém, então a pessoa fica no turno e é avisada; resolver de novo é recusado.
+- **T-156** Dado pedido aberto, quando o líder escolhe um substituto, então ele assume a vaga com as funções e os dois recebem aviso.
+- **T-157** Dado candidato com choque, então pode ser escolhido; quem não é candidato é recusado.
+- **T-158** Dado pedido aberto, quando o líder deixa a vaga em aberto, então a pessoa sai e é avisada.
+- **T-159** Dados voluntária, líder de outro ministério e Adm, então não resolvem pedidos nem veem candidatos.
+- **T-160** Dado pedido aberto, quando o líder tira a pessoa do turno, então o pedido se encerra.
+- **T-161** Dado pedido aberto, então "minha escala" mostra o pedido; depois de resolvido, não mostra.
+- **T-162** Dado ministério com turnos, então o relatório calcula %, turnos sem ninguém, ativos e turnos por pessoa.
+- **T-163** Dada escala em rascunho, então não entra no relatório.
+- **T-164** Dado relatório de um mês, então compara com o limite; sem mês, não compara.
+- **T-165** Dados Adm, voluntária e líder de outro ministério, então não veem o relatório.
+
+---
+
 ## 12. Decisões tomadas (v1)
 
 Decididas em 30/10/2026. A única ainda aberta é a D-18.

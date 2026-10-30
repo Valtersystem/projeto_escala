@@ -14,6 +14,9 @@ class Troca extends Model
 
     protected $table = 'trocas';
 
+    /** RN-51: motivos aceitos no pedido de substituição. */
+    public const MOTIVOS = ['Viagem', 'Trabalho', 'Saúde', 'Compromisso de família', 'Imprevisto', 'Outro motivo'];
+
     public function turno(): BelongsTo
     {
         return $this->belongsTo(Turno::class);
