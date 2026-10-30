@@ -1,6 +1,7 @@
 <script setup>
 // A equipe do ministério: cadastrar, incluir quem já está na igreja, postos e funções de cada um e o convite de acesso.
 import { computed, ref } from 'vue';
+import ConviteDaPessoa from './ConviteDaPessoa.vue';
 import Folha from './Folha.vue';
 import { api } from '../api/cliente.js';
 import { useMensagens } from '../stores/mensagens.js';
@@ -21,13 +22,11 @@ const ocupado = ref(false);
 const selecionadaId = ref(null);
 const selecionada = computed(() => props.pessoas.find((p) => p.id === selecionadaId.value) ?? null);
 const dados = ref({ nome: '', telefone: '', email: '' });
-const convite = ref(null);
 const confirmandoSaida = ref(false);
 
 function abrir(pessoa) {
   selecionadaId.value = pessoa.id;
   dados.value = { nome: pessoa.nome, telefone: pessoa.telefone ?? '', email: pessoa.email ?? '' };
-  convite.value = null;
   confirmandoSaida.value = false;
 }
 
@@ -72,27 +71,6 @@ function salvarDados() {
   if (!selecionada.value.tem_login) corpo.email = dados.value.email.trim() || null;
   return executar(() => api.patch(`/pessoas/${selecionada.value.id}`, corpo), 'Dados salvos.');
 }
-
-async function gerarConvite() {
-  const resposta = await executar(() => api.post(`/pessoas/${selecionada.value.id}/convite`));
-  if (resposta && resposta !== true) convite.value = resposta;
-}
-
-async function copiar() {
-  try {
-    await navigator.clipboard.writeText(convite.value.link);
-    mensagens.mostrar('Link copiado.');
-  } catch {
-    mensagens.mostrar('Não deu para copiar. Segure o link para copiar.');
-  }
-}
-
-const linkWhatsapp = computed(() => {
-  if (!convite.value) return '';
-  const texto = `Oi, ${selecionada.value.nome.split(' ')[0]}! Este é o seu acesso à escala: ${convite.value.link} (vale por 7 dias)`;
-  const numero = (selecionada.value.telefone ?? '').replace(/\D/g, '');
-  return `https://wa.me/${numero ? (numero.length <= 11 ? `55${numero}` : numero) : ''}?text=${encodeURIComponent(texto)}`;
-});
 
 async function sairDaEquipe() {
   if (!confirmandoSaida.value) {
@@ -208,19 +186,7 @@ async function incluir(pessoa) {
         </template>
 
         <div class="rotulo"><span>Acesso ao app</span></div>
-        <div v-if="convite" class="cartao pad convite">
-          <b>Link de acesso</b>
-          <code>{{ convite.link }}</code>
-          <p class="dica">Vale por 7 dias e só pode ser usado uma vez.</p>
-          <div class="duas">
-            <button class="botao contorno" @click="copiar">Copiar link</button>
-            <a class="botao primario" :href="linkWhatsapp" target="_blank" rel="noopener">WhatsApp</a>
-          </div>
-        </div>
-        <button v-else class="botao suave largo" :disabled="ocupado || (!selecionada.tem_login && !selecionada.email)" @click="gerarConvite">
-          {{ selecionada.tem_login ? 'Gerar novo link (nova senha)' : 'Gerar link de acesso' }}
-        </button>
-        <p v-if="!selecionada.tem_login && !selecionada.email && !convite" class="dica">Sem e-mail cadastrado a pessoa não consegue criar o login: preencha abaixo antes.</p>
+        <ConviteDaPessoa :pessoa="selecionada" />
 
         <div class="rotulo"><span>Dados</span></div>
         <form class="cartao" @submit.prevent="salvarDados">
@@ -246,8 +212,4 @@ async function incluir(pessoa) {
 .miolo { padding: 2px 16px 8px; display: flex; flex-direction: column; gap: 10px; }
 .rotulo { margin: 6px 4px -4px; }
 .linha-pessoa { text-align: left; }
-.convite { display: flex; flex-direction: column; gap: 8px; }
-.convite code { word-break: break-all; font-size: 12px; background: var(--surface-2); padding: 8px 10px; border-radius: 8px; user-select: all; }
-.duas { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
-a.botao { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
 </style>

@@ -26,7 +26,15 @@ App do voluntário e do líder em Vue 3, instalável como PWA. Conversa com a AP
 | Relatório | % de vagas, turnos sem ninguém, turnos por pessoa e onde aperta |
 | Equipe | Pessoas (cadastrar, incluir quem já está na igreja, postos e funções, ativar/desativar, tirar da equipe), link de acesso com copiar e WhatsApp, bandas (ordem do rodízio e membros), postos e funções |
 
-Faltam as telas do **Adm** (ministérios, pessoas, cultos). A API já tem tudo isso.
+**Adm** (aparece o seletor "Adm" só para quem administra a igreja; o Adm que não serve em ministério nenhum já abre nela)
+
+| Tela | O que faz |
+|---|---|
+| Ministérios | Cria, renomeia e exclui ministérios e escolhe o líder de cada um |
+| Cultos | A grade da igreja: semanal ou mensal (1º ao último), dia, início e fim |
+| Pessoas | Todos da igreja: busca, cadastro, ministérios onde serve, link de acesso, ativar/desativar, tornar Adm e excluir |
+
+Ainda faltam, no app, o relatório geral do Adm e o pedido de entrada do voluntário.
 
 ## Rodando
 
@@ -44,7 +52,7 @@ Para ter dados prontos, na pasta `api`: `php artisan migrate:fresh && php artisa
 ## Testes e build
 
 ```bash
-npm test                 # 154 testes (Vitest)
+npm test                 # 182 testes (Vitest)
 npm run build            # gera dist/ com o service worker do PWA
 npm run icones           # refaz os PNGs do app a partir de public/icone.svg
 ```

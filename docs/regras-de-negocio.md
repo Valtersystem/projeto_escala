@@ -448,7 +448,25 @@ O protótipo troca de perfil por um botão, sem login (`Adm`, `Líder`, `Volunt�
 - **T-174** Dado o líder definindo postos, então só os do ministério mudam; posto de outro ministério ou pessoa fora da equipe dá 422; sem permissão, 403.
 - **T-175** Dada a lista de quem está de fora, então só ativos que não estão na equipe, de outra igreja nunca, com os nomes dos ministérios onde já servem.
 
-(Os 154 testes do app cobrem o modo líder, as rotas protegidas, a lista e a criação de escalas, as ações por estado, a geração de turnos, o formulário de turno, a folha de confirmação, as trocas e o relatório; ficam em `web/tests/`.)
+## 11j. Área do Adm no app (v1)
+
+**RN-119** Só o Adm abre as telas de ministérios, cultos e pessoas; quem não é Adm volta ao Início. O modo "Adm" lembrado no aparelho não vale para quem deixou de ser Adm.
+
+**RN-120** O Adm que não serve em nenhum ministério abre direto na área do Adm e não vê a área do voluntário; quem também serve num ministério alterna pelo seletor.
+
+**RN-121** O líder do ministério é escolhido entre as pessoas ativas. Salvar sem mudar nada não chama a API; trocar só o líder não renomeia.
+
+**RN-122** O culto mensal pede qual do mês (1º ao 5º ou o último); o semanal não manda essa ordem. Turnos já gerados continuam ao alterar ou excluir o culto.
+
+**RN-123** O Adm não tira o próprio acesso de Adm nem exclui a si mesmo pelo app. Excluir ministério ou pessoa pede uma segunda confirmação.
+
+- **T-176** Dado quem não é Adm, quando abre uma rota do Adm, então vai ao Início.
+- **T-177** Dado o Adm sem ministério, quando abre o Início, então vai à área do Adm e não tem seletor de modo.
+- **T-178** Dado um ministério, quando o Adm troca só o líder, então só o líder é enviado.
+- **T-179** Dado um culto mensal, então a ordem é enviada (inclusive o último); no semanal, não.
+- **T-180** Dada a própria pessoa do Adm, então o botão de Adm fica travado e não há "Excluir pessoa".
+
+(Os 182 testes do app cobrem o modo líder, as rotas protegidas, a lista e a criação de escalas, as ações por estado, a geração de turnos, o formulário de turno, a folha de confirmação, as trocas e o relatório; ficam em `web/tests/`.)
 
 ---
 

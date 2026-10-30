@@ -28,22 +28,32 @@ const gravar = (chave, valor) => {
 export const useModo = defineStore('modo', () => {
   const sessao = useSessao();
 
-  const escolhido = ref(ler('escala.modo') === 'lider' ? 'lider' : 'voluntario');
+  const escolhido = ref(['lider', 'adm'].includes(ler('escala.modo')) ? ler('escala.modo') : 'voluntario');
   const ministerioEscolhido = ref(Number(ler('escala.ministerio')) || null);
   const trocasAbertas = ref(0);
 
   const ministeriosDoLider = computed(() => sessao.ministerios.filter((m) => m.lider));
   const ehLider = computed(() => ministeriosDoLider.value.length > 0);
 
-  /** Quem não lidera nada nunca está no modo líder, mesmo que o aparelho lembre disso. */
-  const modo = computed(() => (ehLider.value && escolhido.value === 'lider' ? 'lider' : 'voluntario'));
+  const ehAdm = computed(() => !!sessao.pessoa?.adm);
+
+  /** Quem não lidera nada nunca está no modo líder (nem quem não é Adm no modo Adm), mesmo que o aparelho lembre disso. */
+  const modo = computed(() => {
+    if (escolhido.value === 'lider' && ehLider.value) return 'lider';
+    if (escolhido.value === 'adm' && ehAdm.value) return 'adm';
+    return 'voluntario';
+  });
+
+  /** O Adm que não serve em ministério nenhum não tem o que fazer como voluntário. */
+  const temVoluntario = computed(() => sessao.ministerios.length > 0 || !ehAdm.value);
+  const modosDisponiveis = computed(() => [temVoluntario.value && 'voluntario', ehLider.value && 'lider', ehAdm.value && 'adm'].filter(Boolean));
 
   const ministerio = computed(
     () => ministeriosDoLider.value.find((m) => m.id === ministerioEscolhido.value) ?? ministeriosDoLider.value[0] ?? null,
   );
 
   function usar(novoModo) {
-    escolhido.value = novoModo === 'lider' ? 'lider' : 'voluntario';
+    escolhido.value = ['lider', 'adm'].includes(novoModo) ? novoModo : 'voluntario';
     gravar('escala.modo', escolhido.value);
   }
 
@@ -67,5 +77,5 @@ export const useModo = defineStore('modo', () => {
     }
   }
 
-  return { modo, ehLider, ministeriosDoLider, ministerio, trocasAbertas, usar, escolherMinisterio, atualizarTrocas };
+  return { modo, ehLider, ehAdm, modosDisponiveis, ministeriosDoLider, ministerio, trocasAbertas, usar, escolherMinisterio, atualizarTrocas };
 });

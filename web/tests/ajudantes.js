@@ -89,3 +89,10 @@ export const LIDER_DE_DOIS = { ...LIDER, ministerios: [{ id: 1, nome: 'Louvor', 
 
 /** O botão cujo texto é exatamente este (quando outro botão da tela contém o mesmo texto). */
 export const botaoExato = (tela, texto) => tela.findAll('button').find((b) => b.text() === texto);
+
+/** Adm da igreja, sem servir em nenhum ministério. */
+export const ADM = {
+  id: 9, nome: 'Paulo Adm', email: 'adm@exemplo.test', adm: true,
+  igreja: { id: 1, nome: 'Igreja Exemplo' },
+  ministerios: [],
+};

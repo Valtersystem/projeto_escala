@@ -24,6 +24,12 @@ const ABAS = {
     { nome: 'lider-relatorio', texto: 'Relatório', icone: 'grafico' },
     { nome: 'perfil', texto: 'Perfil', icone: 'pessoa' },
   ],
+  adm: [
+    { nome: 'adm-ministerios', texto: 'Ministérios', icone: 'equipe' },
+    { nome: 'adm-cultos', texto: 'Cultos', icone: 'calendario' },
+    { nome: 'adm-pessoas', texto: 'Pessoas', icone: 'pessoa' },
+    { nome: 'perfil', texto: 'Perfil', icone: 'pessoa' },
+  ],
 };
 
 const abas = computed(() => ABAS[modo.modo]);
@@ -32,10 +38,12 @@ const abas = computed(() => ABAS[modo.modo]);
 const ATIVA = { 'disponibilidade-escala': 'disponibilidade', 'lider-escala': 'lider-escalas' };
 const ativa = computed(() => ATIVA[rota.name] ?? rota.name);
 
+const INICIO = { lider: 'lider-escalas', adm: 'adm-ministerios', voluntario: 'inicio' };
+
 async function trocarModo(novo) {
   if (modo.modo === novo) return;
   modo.usar(novo);
-  await roteador.push({ name: novo === 'lider' ? 'lider-escalas' : 'inicio' });
+  await roteador.push({ name: INICIO[novo] });
 }
 
 // O número de pedidos de troca acompanha o ministério em uso.
@@ -57,9 +65,10 @@ watch(
       <div class="avatar" :title="sessao.pessoa?.nome">{{ sessao.iniciais }}</div>
     </header>
 
-    <div v-if="modo.ehLider" class="modos" role="tablist" aria-label="Como você quer usar o app">
-      <button role="tab" :aria-selected="modo.modo === 'voluntario'" @click="trocarModo('voluntario')">Voluntário</button>
-      <button role="tab" :aria-selected="modo.modo === 'lider'" @click="trocarModo('lider')">Líder</button>
+    <div v-if="modo.modosDisponiveis.length > 1" class="modos" role="tablist" aria-label="Como você quer usar o app">
+      <button v-if="modo.modosDisponiveis.includes('voluntario')" role="tab" :aria-selected="modo.modo === 'voluntario'" @click="trocarModo('voluntario')">Voluntário</button>
+      <button v-if="modo.ehLider" role="tab" :aria-selected="modo.modo === 'lider'" @click="trocarModo('lider')">Líder</button>
+      <button v-if="modo.ehAdm" role="tab" :aria-selected="modo.modo === 'adm'" @click="trocarModo('adm')">Adm</button>
     </div>
 
     <main><RouterView /></main>
