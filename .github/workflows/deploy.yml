@@ -67,10 +67,10 @@ jobs:
       - name: Preparar acesso SSH restrito
         env:
           VPS_HOST_KEY: ${{ secrets.SCHEDULE_VPS_HOST_KEY }}
-          VPS_SSH_KEY: ${{ secrets.SCHEDULE_VPS_SSH_KEY }}
+          VPS_SSH_KEY_BASE64: ${{ secrets.SCHEDULE_VPS_SSH_KEY_BASE64 }}
         run: |
           install -d -m 700 ~/.ssh
-          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/schedule_deploy
+          printf '%s' "$VPS_SSH_KEY_BASE64" | base64 --decode > ~/.ssh/schedule_deploy
           printf '%s\n' "$VPS_HOST_KEY" > ~/.ssh/known_hosts
           chmod 600 ~/.ssh/schedule_deploy ~/.ssh/known_hosts
 
