@@ -73,6 +73,7 @@ jobs:
           printf '%s' "$VPS_SSH_KEY_BASE64" | base64 --decode > ~/.ssh/schedule_deploy
           printf '%s\n' "$VPS_HOST_KEY" > ~/.ssh/known_hosts
           chmod 600 ~/.ssh/schedule_deploy ~/.ssh/known_hosts
+          ssh-keygen -y -f ~/.ssh/schedule_deploy | ssh-keygen -lf -
 
       - name: Publicar commit na VPS
         env:
