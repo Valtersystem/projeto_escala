@@ -1,0 +1,20 @@
+#!/bin/sh
+
+set -eu
+
+set -- ${SSH_ORIGINAL_COMMAND:-}
+
+if [ "$#" -ne 2 ] || [ "$1" != "deploy" ] || ! printf '%s' "$2" | grep -Eq '^[0-9a-f]{40}$'; then
+    echo 'Comando de deploy inválido.' >&2
+    exit 64
+fi
+
+export IMAGE_TAG="$2"
+
+cd /srv/projects/schedule
+
+docker compose -f docker-compose.production.yml pull
+docker compose -f docker-compose.production.yml up -d --no-build --remove-orphans
+docker compose -f docker-compose.production.yml exec -T app php artisan migrate --force --no-interaction
+docker compose -f docker-compose.production.yml exec -T app php artisan optimize --no-interaction
+docker compose -f docker-compose.production.yml exec -T web wget -q -O /dev/null http://localhost/up

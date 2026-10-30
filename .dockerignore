@@ -1,0 +1,14 @@
+.git
+.github
+.claude
+.agents
+.mcp.json
+boost.json
+api/.env
+api/.phpunit.result.cache
+api/database/database.sqlite
+api/vendor
+web/.env
+web/dist
+web/node_modules
+**/.DS_Store
