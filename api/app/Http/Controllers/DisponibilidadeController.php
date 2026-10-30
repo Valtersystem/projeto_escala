@@ -6,10 +6,8 @@ use App\Domain\EstadoEscala;
 use App\Exceptions\RegraDeNegocio;
 use App\Models\Disponibilidade;
 use App\Models\Escala;
-use App\Models\Igreja;
 use App\Models\Turno;
 use App\Services\CargaDaPessoa;
-use App\Support\IgrejaAtual;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -41,7 +39,7 @@ class DisponibilidadeController extends Controller
                 'id' => $escala->id,
                 'mes' => $escala->mes,
                 'prazo' => $escala->prazo?->toDateString(),
-                'prazo_encerrado' => $this->prazoEncerrado($escala),
+                'prazo_encerrado' => $escala->prazoEncerrado(),
             ],
             'total_marcados' => count($marcados),
             'turnos' => $turnos,
@@ -58,7 +56,7 @@ class DisponibilidadeController extends Controller
 
         $this->exigirEquipeEEscalaAberta($pessoa, $escala);
 
-        if ($this->prazoEncerrado($escala)) {
+        if ($escala->prazoEncerrado()) {
             throw new RegraDeNegocio('O prazo para responder esta escala terminou. Fale com o líder.');
         }
 
@@ -103,17 +101,5 @@ class DisponibilidadeController extends Controller
         if ($escala->status !== EstadoEscala::Aberta) {
             throw new RegraDeNegocio('Esta escala não está recebendo disponibilidade.');
         }
-    }
-
-    /** O prazo vale até o fim do dia dele, no fuso da igreja. */
-    private function prazoEncerrado(Escala $escala): bool
-    {
-        if (! $escala->prazo) {
-            return false;
-        }
-
-        $fuso = Igreja::find(app(IgrejaAtual::class)->id())?->fuso ?? config('app.timezone');
-
-        return $escala->prazo->toDateString() < now($fuso)->toDateString();
     }
 }

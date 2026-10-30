@@ -33,6 +33,37 @@ class EscalaController extends Controller
         return response()->json(['escalas' => $consulta->get()->map(fn (Escala $e) => $this->resumo($e))->values()]);
     }
 
+    /** A tela inicial do voluntário: escalas abertas dos ministérios em que serve e quantos turnos já marcou em cada. */
+    public function abertas(Request $request): JsonResponse
+    {
+        $pessoa = $request->attributes->get('pessoa');
+
+        $escalas = Escala::whereHas('ministerio.equipe', fn ($e) => $e->whereKey($pessoa->id))
+            ->where('status', EstadoEscala::Aberta->value)
+            ->with('ministerio:id,nome')->withCount('turnos')
+            ->orderBy('prazo')->orderBy('mes')->get();
+
+        $marcados = DB::table('disponibilidades')
+            ->join('turnos', 'turnos.id', '=', 'disponibilidades.turno_id')
+            ->where('disponibilidades.pessoa_id', $pessoa->id)
+            ->whereIn('turnos.escala_id', $escalas->pluck('id'))
+            ->groupBy('turnos.escala_id')
+            ->selectRaw('turnos.escala_id, count(*) as total')
+            ->pluck('total', 'escala_id');
+
+        return response()->json([
+            'escalas' => $escalas->map(fn (Escala $e) => [
+                'id' => $e->id,
+                'ministerio' => ['id' => $e->ministerio->id, 'nome' => $e->ministerio->nome],
+                'mes' => $e->mes,
+                'prazo' => $e->prazo?->toDateString(),
+                'prazo_encerrado' => $e->prazoEncerrado(),
+                'total_de_turnos' => $e->turnos_count,
+                'marquei' => (int) ($marcados[$e->id] ?? 0),
+            ])->values(),
+        ]);
+    }
+
     /** RN-16/RN-17: uma escala por ministério e mês; o prazo sugerido vem do ajuste da igreja. */
     public function store(Request $request, Ministerio $ministerio): JsonResponse
     {

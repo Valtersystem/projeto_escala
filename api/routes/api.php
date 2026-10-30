@@ -62,6 +62,8 @@ Route::middleware(['auth:sanctum', DefinirIgrejaAtual::class])->group(function (
 
     Route::get('/ministerios/{ministerio}/escalas', [EscalaController::class, 'index']);
     Route::post('/ministerios/{ministerio}/escalas', [EscalaController::class, 'store']);
+    // Antes de /escalas/{escala}, senão "abertas" seria tomado por um id.
+    Route::get('/escalas/abertas', [EscalaController::class, 'abertas']);
     Route::get('/escalas/{escala}', [EscalaController::class, 'show']);
     Route::patch('/escalas/{escala}', [EscalaController::class, 'update']);
     Route::post('/escalas/{escala}/liberar', [EscalaController::class, 'liberar']);

@@ -404,6 +404,23 @@ O protótipo troca de perfil por um botão, sem login (`Adm`, `Líder`, `Volunt�
 
 ---
 
+## 11g. Tela inicial do voluntário, dados de exemplo e sessão no app (v1)
+
+**RN-104** A API lista as escalas **abertas** dos ministérios em que a pessoa serve, da mais urgente (prazo mais próximo) para a menos, com quantos turnos ela já marcou, quantos turnos a escala tem e se o prazo já terminou. Rascunho, publicada e ministério em que a pessoa não serve não entram.
+**RN-105** O comando `escala:dados-de-exemplo` cria a "Igreja Exemplo" com ministérios, líderes, voluntários, bandas com rodízio, escalas (publicada, aberta e rascunho) e um choque de horário pronto para mostrar. As datas são relativas a hoje (depois do dia 20 começa no mês seguinte, para sempre haver turnos futuros). Não roda duas vezes, exige senha de 8 caracteres e, em produção, só com `--force`.
+**RN-106** No app, a sessão fica guardada no aparelho. Se a API responder 401 (token vencido ou revogado), o app volta ao login e, depois de entrar, retorna à tela que a pessoa tentava abrir. O retorno só vale para caminhos internos do app. Sair funciona mesmo sem internet.
+**RN-107** O app nunca mostra a quantidade de vagas ao voluntário (RN-64) e abre mesmo sem internet, mas as escalas são sempre buscadas da API: dado antigo de escala engana.
+
+- **T-166** Dados os logins de exemplo, então cada um entra com o papel certo (Adm, líder, voluntária em dois ministérios).
+- **T-167** Dado o Louvor de exemplo, então tem três meses em três estados e o rodízio segue contínuo entre eles.
+- **T-168** Dado o mês publicado, então cada turno tem duas pessoas confirmadas; no mês aberto, cada banda já marcou os seus turnos.
+- **T-169** Dado o Rafael, quando marca o turno da Mídia no mesmo horário do Louvor da banda dele, então vê o choque.
+- **T-170** Dada a tela inicial, então lista só as escalas abertas dos meus ministérios, com o que já marquei.
+
+(Os testes do app em si — 64 no total, para o cliente da API, a sessão, as rotas, o login, o convite, a disponibilidade, a minha escala, o início e o perfil — ficam em `web/tests/`.)
+
+---
+
 ## 12. Decisões tomadas (v1)
 
 Decididas em 30/10/2026. A única ainda aberta é a D-18.

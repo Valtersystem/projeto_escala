@@ -61,6 +61,7 @@ Todas ficam em `/api`. As protegidas exigem `Authorization: Bearer <token>`.
 | `GET/POST /ministerios/{id}/bandas`, `PATCH/DELETE /bandas/{id}`, `PUT /bandas/{id}/membros` | líder (ver: equipe) | Bandas e membros fixos |
 | `GET/POST /ministerios/{id}/funcoes`, `PATCH/DELETE /funcoes/{id}`, `PUT /ministerios/{id}/equipe/{pessoa}/funcoes` | líder (ver: equipe) | Funções e o que cada pessoa faz |
 | `GET /cultos`, `GET /cultos/{id}/ocorrencias?mes=AAAA-MM`, `POST/PATCH/DELETE /cultos` | todos veem; Adm altera | Grade de cultos |
+| `GET /escalas/abertas` | logado | Escalas abertas dos meus ministérios, com o que já marquei |
 | `GET/POST /ministerios/{id}/escalas`, `GET/PATCH /escalas/{id}` | líder (voluntário vê aberta e publicada) | Escalas do mês e prazo |
 | `POST /escalas/{id}/liberar`, `/publicar`, `/reabrir` | líder | Estados da escala |
 | `POST /escalas/{id}/turnos`, `POST /escalas/{id}/turnos/gerar`, `PATCH/DELETE /turnos/{id}` | líder | Turnos (avulso, gerar com rodízio, editar, excluir) |
@@ -77,6 +78,8 @@ Todas ficam em `/api`. As protegidas exigem `Authorization: Bearer <token>`.
 
 - **Isolamento por igreja:** os modelos com `igreja_id` usam o trait `PertenceAIgreja`. O middleware `DefinirIgrejaAtual` define a igreja pela pessoa logada e roda antes do route model binding (ver `bootstrap/app.php`). Sem igreja definida, a consulta volta vazia. Código de sistema usa `withoutGlobalScopes()` de propósito.
 - **Permissões:** definidas como Gates em `AppServiceProvider` (`adm`, `lidera`, `ver-ministerio`, `gerir-equipe`, `gerir-pessoa`).
+- **CORS:** os endereços do app vêm de `CORS_ALLOWED_ORIGINS` (padrão: `http://localhost:5173`). Em produção, ponha o endereço real do app.
+- **Dados de exemplo:** `php artisan escala:dados-de-exemplo` cria a "Igreja Exemplo" com ministérios, líderes, voluntários, bandas, escalas e um choque pronto para mostrar. Só para teste.
 - **Primeira igreja:** `php artisan escala:criar-igreja "Nome da igreja" "Nome do Adm" adm@email.com` (a senha é pedida). Depois o Adm cadastra e convida as pessoas.
 - **Link do convite:** usa `APP_FRONTEND_URL` (endereço do app Vue).
 

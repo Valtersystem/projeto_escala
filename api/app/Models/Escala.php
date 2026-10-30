@@ -25,6 +25,18 @@ class Escala extends Model
         ];
     }
 
+    /** D-02: o prazo vale até o fim do dia dele, no fuso da igreja. */
+    public function prazoEncerrado(): bool
+    {
+        if (! $this->prazo) {
+            return false;
+        }
+
+        $fuso = Igreja::find($this->igreja_id)?->fuso ?? config('app.timezone');
+
+        return $this->prazo->toDateString() < now($fuso)->toDateString();
+    }
+
     public function ministerio(): BelongsTo
     {
         return $this->belongsTo(Ministerio::class);

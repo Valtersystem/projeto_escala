@@ -153,6 +153,33 @@ class DisponibilidadeTest extends TestCase
         $this->assertSame([$noite->id], collect($turno['mesmo_dia'])->pluck('turno_id')->all());
     }
 
+    public function test_t170_a_tela_inicial_lista_so_as_escalas_abertas_dos_meus_ministerios_com_o_que_ja_marquei(): void
+    {
+        $posto = $this->posto($this->c['louvor']);
+        $aberta = $this->escala($this->c['louvor'], 'aberta', '2026-11', '2999-12-31');
+        $primeiro = $this->turno($aberta, $posto, '2026-11-01');
+        $this->turno($aberta, $posto, '2026-11-08');
+        $this->marcarDisponivel($primeiro, $this->c['helena']->id);
+
+        // Não entram: rascunho, publicada e escala de ministério em que ela não serve.
+        $this->escala($this->c['louvor'], 'rascunho', '2026-12');
+        $this->escala($this->c['louvor'], 'publicada', '2027-01');
+        $outro = $this->naIgreja($this->c['igreja'], fn () => \App\Models\Ministerio::create(['nome' => 'Recepção']));
+        $this->escala($outro, 'aberta', '2026-11');
+
+        $resposta = $this->como($this->c['helenaU'])->getJson('/api/escalas/abertas')->assertOk();
+
+        $this->assertCount(1, $resposta->json('escalas'));
+        $resposta->assertJsonPath('escalas.0.id', $aberta->id)
+            ->assertJsonPath('escalas.0.ministerio.nome', 'Louvor')
+            ->assertJsonPath('escalas.0.total_de_turnos', 2)
+            ->assertJsonPath('escalas.0.marquei', 1)
+            ->assertJsonPath('escalas.0.prazo_encerrado', false);
+
+        // Quem não serve em nenhum ministério com escala aberta recebe lista vazia.
+        $this->como($this->c['admU'])->getJson('/api/escalas/abertas')->assertOk()->assertJsonCount(0, 'escalas');
+    }
+
     public function test_t133_a_tela_nao_mostra_vagas_e_marca_o_que_e_do_meu_perfil(): void
     {
         $escala = $this->escala($this->c['louvor']);
